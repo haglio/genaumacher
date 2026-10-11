@@ -2,14 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path, PureWindowsPath
 
+from app_support import haglio_settings
 from app_support.flick_folder import audio_in, flat_flicks_in, flicks_folder_in, vr_flicks_in
-from app_support.overlay import overlay_value
 
-from genaumacher.content import EXAMPLE_CONTENT, LOCAL_CONTENT, PROJECT_DIR, load_content
-
-# The checkout root is `content`'s: it needs one to find the overlay beside it,
-# and cannot ask this module for it, since this module asks it for the overlay.
 PACKAGE_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = PACKAGE_DIR.parent
 SESSIONS_DIR = PROJECT_DIR / "sessions"
 RAW_CLIPS_DIR = PROJECT_DIR / "raw_clips"
 LAST_SESSION_FILE = SESSIONS_DIR / ".last_session.txt"
@@ -17,23 +14,18 @@ CLIP_POSTPROCESS_SCRIPT = PACKAGE_DIR / "clip_postprocess.py"
 
 
 def library_root() -> Path:
-    """Where the media library lives, as this machine's overlay names it.
+    """Where the media library lives, as the Haglio settings name it.
 
     Asked at the call rather than read into a constant at import: a module that
-    reads the overlay to be imported makes every consumer -- a test, a tool,
+    reads its settings to be imported makes every consumer -- a test, a tool,
     another app's smoke check -- pay for the file and inherit whichever copy
-    happened to be on disk first.  ``load_content`` caches the text, so asking
-    repeatedly costs one read.
+    happened to be on disk first.
     """
-    return Path(overlay_value(load_content(), "library_root", path=LOCAL_CONTENT))
+    return Path(haglio_settings.value("library_root"))
 
 
 def _placeholder_library_root() -> Path:
-    """What the committed example documents the shape with, and therefore the
-    one ``library_root`` that names no library.  It is the example that is wanted
-    whichever overlay this machine has, so both arguments are the example.
-    """
-    return Path(load_content(EXAMPLE_CONTENT, EXAMPLE_CONTENT)["library_root"])
+    return Path(haglio_settings.EXAMPLE["library_root"])
 
 
 def _genau_dir() -> Path:
@@ -79,11 +71,8 @@ def vr_video_dir() -> PureWindowsPath:
 def library_is_configured() -> bool:
     """Whether ``library_root`` names a real library or the example's placeholder.
 
-    The value, not which file it came from.  Setting a machine up means copying
-    ``content.example.json`` to ``content.local.json`` and then editing it, and
-    between those two steps the overlay is local and ``library_root`` is still
-    ``C:/path/to/library-root`` — so "is there a local overlay" answers yes at
-    exactly the moment there is still no library.
+    The value, not whether a settings file exists: one still holding
+    ``C:/path/to/library-root`` names no library either.
     """
     return library_root() != _placeholder_library_root()
 
@@ -92,12 +81,12 @@ def ensure_runtime_dirs() -> None:
     """Create what genaumacher writes into, as far as this machine has somewhere.
 
     The first two are inside the checkout and always made.  The library folders
-    are derived from ``library_root``, which is a placeholder until a local
-    overlay supplies one: on POSIX ``C:/path/to/library-root`` is a *relative*
-    path, so making them put a literal ``C:`` tree inside the repo, and on
-    Windows it put ``C:\\path\\to\\library-root`` on the system drive.  A checkout
-    with no overlay has no library to export into, so it gets no folders
-    pretending otherwise.
+    are derived from ``library_root``, which is a placeholder until the Haglio
+    settings name one: on POSIX ``C:/path/to/library-root`` is a
+    *relative* path, so making them put a literal ``C:`` tree inside the repo,
+    and on Windows it put ``C:\\path\\to\\library-root`` on the system drive.  A
+    machine with no settings has no library to export into, so it gets no
+    folders pretending otherwise.
     """
     for directory in (SESSIONS_DIR, RAW_CLIPS_DIR):
         directory.mkdir(parents=True, exist_ok=True)

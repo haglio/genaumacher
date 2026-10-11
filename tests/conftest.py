@@ -11,11 +11,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pytest
+from app_support import haglio_settings
 from app_support.flick_folder import flat_flicks_in
 from PyQt6.QtCore import QEventLoop, QTimer
 from scratch import scratch_dir
 
-from genaumacher import content
 from genaumacher.clip_range import ClipRange
 from genaumacher.frame_window import FrameWindow
 from genaumacher.loop_cursor import LoopCursor
@@ -23,6 +23,8 @@ from genaumacher.loop_modes import read_loop_mode
 from genaumacher.state import VideoState
 from genaumacher.suggestions import Suggestions
 from genaumacher.wrap_modes import read_wrap_mode
+
+os.environ[haglio_settings.SETTINGS_ENV] = haglio_settings.THE_EXAMPLE
 
 # Render Qt offscreen for the whole suite. Agents run these tests on every commit
 # on the machine genaumacher is used from; without this, every test that builds a
@@ -200,36 +202,31 @@ def ticked_within():
 
 
 @pytest.fixture
-def content_overlay(tmp_path, monkeypatch):
-    """Give the app a fabricated content overlay, chosen the way the real one is.
+def shared_settings(tmp_path, monkeypatch):
+    """Give the app fabricated Haglio settings, found the way the real ones are.
 
-    Called with a dictionary, it writes a ``content.local.json`` and points the
-    app at it; called with nothing, it points the app at a file that does not
-    exist, which is the fresh or public checkout the committed example answers
-    for.  Nothing here reaches past the file: every consumer asks
-    ``load_content`` at the moment it needs a value, so redirecting the file is
-    the whole of the injection.
+    Called with a dictionary, it writes them to a file of the test's own and
+    points the app at it; called with nothing, it points the app at a file that
+    does not exist, which is a machine with no settings yet.
     """
 
     def use(values: dict | None = None) -> Path:
-        local = tmp_path / "content.local.json"
+        settings = tmp_path / "haglio_settings.json"
         if values is not None:
-            local.write_text(json.dumps(values), encoding="utf-8")
-        monkeypatch.setattr(content, "LOCAL_CONTENT", local)
-        content.load_content.cache_clear()
-        return local
+            settings.write_text(json.dumps(values), encoding="utf-8")
+        monkeypatch.setenv(haglio_settings.SETTINGS_ENV, str(settings))
+        return settings
 
-    yield use
-    content.load_content.cache_clear()
+    return use
 
 
 @pytest.fixture
-def library(tmp_path, content_overlay) -> Path:
+def library(tmp_path, shared_settings) -> Path:
     """A media library of the test's own, so nothing a test exports or records
-    lands in the one this machine's overlay names."""
+    lands in the one this machine's settings name."""
     root = tmp_path / "library"
     flat_flicks_in(root / "videos" / "genau" / "flicks").mkdir(parents=True)
-    content_overlay({"library_root": str(root)})
+    shared_settings({"library_root": str(root)})
     return root
 
 
