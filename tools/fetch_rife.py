@@ -6,7 +6,7 @@
 ``tools/rife-ncnn-vulkan-20221029-windows/`` was committed until item 28: 62
 files and 448 MB, of which the code opens one model directory.  Ten of the
 eleven models went in stage 1; the remaining 17 MB is fetched here rather than
-tracked, the way ``player_core/vendor/libmpv-2.dll`` is, so a clone stops paying
+tracked, the way ``funestra/vendor/libmpv-2.dll`` is, so a clone stops paying
 for a Windows binary most machines cannot execute.
 
 It lands where ``genaumacher.interpolator_environment`` already looks, so nothing in
