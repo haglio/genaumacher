@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path, PureWindowsPath
 
+from app_support.flick_folder import audio_in, flat_flicks_in, flicks_folder_in, vr_flicks_in
 from app_support.overlay import overlay_value
 
 from genaumacher.content import EXAMPLE_CONTENT, LOCAL_CONTENT, PROJECT_DIR, load_content
@@ -41,19 +42,22 @@ def _genau_dir() -> Path:
 
 
 def _genau_flicks_dir() -> Path:
-    return _genau_dir() / overlay_value(load_content(), "genau_flicks_folder", path=LOCAL_CONTENT)
+    flicks = flicks_folder_in(_genau_dir())
+    if flicks is None:
+        raise FileNotFoundError(f"No folder in {_genau_dir()} is laid out as Genau's flicks are")
+    return flicks
 
 
 def flicks_dir() -> Path:
-    return _genau_flicks_dir() / "2D" / "non_AI"
+    return flat_flicks_in(_genau_flicks_dir()) / "non_AI"
 
 
 def vr_flicks_dir() -> Path:
-    return _genau_flicks_dir() / "VR"
+    return vr_flicks_in(_genau_flicks_dir())
 
 
 def audio_dir() -> Path:
-    return _genau_dir() / "audio"
+    return audio_in(_genau_dir())
 
 
 def metadata_dir() -> Path:
@@ -97,7 +101,7 @@ def ensure_runtime_dirs() -> None:
     """
     for directory in (SESSIONS_DIR, RAW_CLIPS_DIR):
         directory.mkdir(parents=True, exist_ok=True)
-    if not library_is_configured():
+    if not library_is_configured() or flicks_folder_in(_genau_dir()) is None:
         return
     for directory in (flicks_dir(), vr_flicks_dir(), audio_dir()):
         directory.mkdir(parents=True, exist_ok=True)

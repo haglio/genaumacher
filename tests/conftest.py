@@ -11,6 +11,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pytest
+from app_support.flick_folder import flat_flicks_in
 from PyQt6.QtCore import QEventLoop, QTimer
 from scratch import scratch_dir
 
@@ -227,7 +228,8 @@ def library(tmp_path, content_overlay) -> Path:
     """A media library of the test's own, so nothing a test exports or records
     lands in the one this machine's overlay names."""
     root = tmp_path / "library"
-    content_overlay({"library_root": str(root), "genau_flicks_folder": "flicks"})
+    flat_flicks_in(root / "videos" / "genau" / "flicks").mkdir(parents=True)
+    content_overlay({"library_root": str(root)})
     return root
 
 

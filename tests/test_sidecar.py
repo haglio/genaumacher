@@ -62,7 +62,7 @@ def test_a_sidecar_it_cannot_read_is_left_for_its_owner_and_the_export_goes_on(
 
 
 def test_a_record_it_cannot_write_does_not_stop_the_export(library, caplog):
-    (library / "videos").mkdir(parents=True)
+    (library / "videos").mkdir(parents=True, exist_ok=True)
     (library / "videos" / "metadata").write_text("a file where the folder goes", encoding="utf-8")
 
     with caplog.at_level(logging.WARNING, logger="genaumacher.sidecar"):

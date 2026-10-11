@@ -42,8 +42,9 @@ class _Step:
 
 
 @pytest.fixture
-def steps():
-    """The three export steps, stubbed at the module they are called through."""
+def steps(library):
+    """The three export steps, stubbed at the module they are called through,
+    exporting into a library of the test's own."""
     with patch("genaumacher.export_steps.export_raw_clip",
                _Step(stage="clipping", reports="clip")), \
          patch("genaumacher.export_steps.run_clip_postprocess",
