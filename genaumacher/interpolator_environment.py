@@ -16,7 +16,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from genaumacher.content import PROJECT_DIR
+from genaumacher.paths import PROJECT_DIR
 
 VENDORED_EXE = Path("tools") / "rife-ncnn-vulkan-20221029-windows" / "rife-ncnn-vulkan.exe"
 MODEL_DIR_NAME = "rife-v4.6"

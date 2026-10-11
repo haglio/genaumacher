@@ -7,9 +7,10 @@ import textwrap
 from pathlib import Path, PureWindowsPath
 
 import pytest
+from app_support import haglio_settings
 from app_support.flick_folder import flat_flicks_in
 
-from genaumacher import content, paths
+from genaumacher import paths
 from genaumacher.paths import (
     FORBIDDEN_NAME_CHARS,
     audio_dir,
@@ -24,7 +25,7 @@ from genaumacher.paths import (
 
 # The five directories the app writes into, by the name the function reaches
 # them under -- two module constants inside the checkout, three accessors that
-# ask the overlay where the library is. Named here rather than read out of the
+# ask the shared settings where the library is. Named here rather than read out of the
 # function, so dropping one from the loop is a red test and not a folder that
 # silently stops being made.
 _RUNTIME_DIRS = (
@@ -65,8 +66,8 @@ def runtime_dirs(library, checkout_dirs):
     suite created ``<library-root>/videos/genau/vr_clips`` and ``.../frames`` for
     real -- a literal ``C:`` tree inside the checkout on a developer machine,
     and the live media library on the Windows machines the app runs on.  The
-    library folders now move together, by giving the overlay a library root of its
-    own, so a fourth one added to that loop lands under tmp_path without a line
+    library folders now move together, by giving the settings a library root of
+    their own, so a fourth one added to that loop lands under tmp_path without a line
     here; a third checkout constant would escape, which is what the guard test
     below is for.
     """
@@ -83,12 +84,12 @@ class TestWhereTheLibraryFoldersAre:
     """Read when asked, not when imported.
 
     ``genaumacher.paths`` used to derive them at import, so the folders an export
-    wrote into were whichever overlay happened to be on disk when the package
+    wrote into were whichever library root happened to be on disk when the package
     was first imported, and a test could only move them by patching the
     constants by name.
     """
 
-    def test_the_clip_folder_hangs_off_the_library_root_the_overlay_names(self, library: Path):
+    def test_the_clip_folder_hangs_off_the_library_root_the_settings_name(self, library: Path):
         assert flicks_dir() == library / "videos" / "genau" / "flicks" / "2D" / "non_AI"
 
     def test_a_cut_goes_where_genau_keeps_the_flicks_cut_from_real_videos(self, library: Path):
@@ -108,34 +109,32 @@ class TestWhereTheLibraryFoldersAre:
         assert (flicks_dir(), vr_flicks_dir()) == (flicks / "2D" / "non_AI", flicks / "VR")
 
     def test_with_no_folder_shaped_like_genaus_flicks_a_cut_has_nowhere_to_go(
-        self, tmp_path: Path, content_overlay
+        self, tmp_path: Path, shared_settings
     ):
-        content_overlay({"library_root": str(tmp_path / "empty library")})
+        shared_settings({"library_root": str(tmp_path / "empty library")})
 
         with pytest.raises(FileNotFoundError, match="genau"):
             flicks_dir()
 
-    def test_an_overlay_written_after_the_import_is_the_one_that_answers(
-        self, tmp_path: Path, content_overlay
+    def test_settings_written_after_the_import_are_the_ones_that_answer(
+        self, tmp_path: Path, shared_settings
     ):
-        """The proof that the read is at the call and not at the import: this
-        overlay did not exist when ``genaumacher.paths`` was first imported.
+        """The proof that the read is at the call and not at the import: these
+        settings did not exist when ``genaumacher.paths`` was first imported.
         """
         written = tmp_path / "written just now"
         flat_flicks_in(written / "videos" / "genau" / "flicks").mkdir(parents=True)
-        content_overlay({"library_root": str(written)})
+        shared_settings({"library_root": str(written)})
 
         assert flicks_dir().is_relative_to(written)
 
-    def test_an_overlay_with_no_library_root_says_so_and_names_the_file(
-        self, content_overlay
-    ):
-        local = content_overlay({"main_player_status_file": "D:/example-suite/main_player_status.txt"})
+    def test_settings_with_no_library_root_say_so_and_name_their_file(self, shared_settings):
+        settings = shared_settings({"project_roots": []})
 
         with pytest.raises(LookupError, match="library_root"):
             flicks_dir()
 
-        with pytest.raises(LookupError, match=str(local.name)):
+        with pytest.raises(LookupError, match=settings.name):
             flicks_dir()
 
 
@@ -144,20 +143,20 @@ class TestTheVrVideoFolder:
     reads to decide whether an export lands in ``vr_clips`` or ``clips``.
     """
 
-    def test_it_is_the_vr_folder_under_the_librarys_own_root(self, content_overlay):
+    def test_it_is_the_vr_folder_under_the_librarys_own_root(self, shared_settings):
         """The literal tail is written here, so repointing it reds this."""
-        content_overlay({"library_root": "D:/example-suite"})
+        shared_settings({"library_root": "D:/example-suite"})
 
         assert vr_video_dir() == PureWindowsPath(
             r"D:\example-suite\videos\videos\VR"
         )
 
-    def test_it_matches_a_windows_path_wherever_the_test_is_run(self, content_overlay):
+    def test_it_matches_a_windows_path_wherever_the_test_is_run(self, shared_settings):
         """The paths it is compared against come from a Windows file dialog, so
         the folder is a Windows path too -- on POSIX a native one would make
         every match a no-op, and the tests run there.
         """
-        content_overlay({"library_root": "D:/example-suite"})
+        shared_settings({"library_root": "D:/example-suite"})
 
         typed = PureWindowsPath(r"D:\example-suite\videos\videos\VR\seaside walk.mp4")
 
@@ -189,7 +188,7 @@ class TestEnsureRuntimeDirs:
 
 
 class TestAMachineWithNoLibraryYet:
-    """The committed example's ``library_root`` is a placeholder, not a library.
+    """The example settings' ``library_root`` is a placeholder, not a library.
 
     ``C:/path/to/library-root`` is a *relative* path on POSIX, so deriving the
     library folders from it made a literal ``C:`` tree inside the checkout; on
@@ -200,48 +199,42 @@ class TestAMachineWithNoLibraryYet:
     """
 
     def test_a_library_root_of_its_own_is_what_makes_a_library(
-        self, tmp_path: Path, content_overlay
+        self, tmp_path: Path, shared_settings
     ):
-        content_overlay({"library_root": str(tmp_path / "library")})
+        shared_settings({"library_root": str(tmp_path / "library")})
 
         assert library_is_configured() is True
 
-    def test_a_checkout_with_no_overlay_of_its_own_has_no_library(self, content_overlay):
-        """A fresh or public checkout runs on the committed example."""
-        content_overlay()
+    def test_a_machine_with_no_settings_has_no_library(self, shared_settings):
+        """A fresh machine, and a public checkout's CI, run on the example."""
+        shared_settings()
 
         assert library_is_configured() is False
 
-    def test_an_unedited_copy_of_the_example_is_not_a_library_either(
-        self, tmp_path: Path, content_overlay
+    def test_settings_still_holding_the_example_are_not_a_library_either(
+        self, shared_settings
     ):
-        """Setting a machine up is copy-then-edit, and this is between the two.
-
-        Asking whether a ``content.local.json`` exists answers yes here, which
-        is how the ``C:`` tree came back while a guard was supposedly stopping it.
+        """Asking whether a settings file exists answers yes here, which is how
+        the ``C:`` tree came back while a guard was supposedly stopping it.
         """
-        local = content_overlay()
-        local.write_text(
-            content.EXAMPLE_CONTENT.read_text(encoding="utf-8"), encoding="utf-8"
-        )
-        content.load_content.cache_clear()
+        shared_settings(haglio_settings.EXAMPLE)
 
         assert library_is_configured() is False
 
-    def test_the_repos_own_directories_are_still_made(self, checkout_dirs, content_overlay):
-        content_overlay()
+    def test_the_repos_own_directories_are_still_made(self, checkout_dirs, shared_settings):
+        shared_settings()
 
         ensure_runtime_dirs()
 
         assert checkout_dirs["SESSIONS_DIR"].is_dir()
         assert checkout_dirs["RAW_CLIPS_DIR"].is_dir()
 
-    def test_no_library_directory_is_made(self, checkout_dirs, content_overlay):
+    def test_no_library_directory_is_made(self, checkout_dirs, shared_settings):
         """What changed, not what is there: the placeholder is an absolute path
         on Windows, so a machine that ran the code this guards against still has
         that tree on its system drive and would answer "is there" yes.
         """
-        content_overlay()
+        shared_settings()
         genau = library_root() / "videos" / "genau"
         already = genau.is_dir()
 
