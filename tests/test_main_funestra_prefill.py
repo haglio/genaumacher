@@ -107,11 +107,10 @@ class TestTheContractWithTheMainFunestra:
     @staticmethod
     def _status_sources() -> list[Path]:
         """The two files the Main Funestra's status lines come from, beside the
-        primary checkout: ``funestra_core``'s ``status.py`` (``player_core``'s before
-        that package's rename) for the lines every Funestra publishes, and
-        ``fun_time/main_funestra/status.py`` (``main_player/status.py`` before Fun
-        Time's rename) for the Main Funestra's own on top of them.  Empty where the
-        checkouts are not there.
+        primary checkout: ``funestra``'s ``status.py`` (in a folder still named
+        ``player_core`` on a machine that has not moved it) for the lines every
+        Funestra publishes, and ``fun_time/main_funestra/status.py`` for the Main
+        Funestra's own on top of them.  Empty where the checkouts are not there.
 
         Resolved through the primary rather than from here, because everything
         runs in a worktree and a worktree's neighbors are other worktrees.
@@ -125,10 +124,9 @@ class TestTheContractWithTheMainFunestra:
         except (OSError, subprocess.SubprocessError):
             return []
         siblings = (PROJECT_DIR / common).resolve().parent.parent
-        sources = (siblings / "player_core" / "funestra_core" / "status.py",
-                   siblings / "player_core" / "player_core" / "status.py",
-                   siblings / "fun_time" / "main_funestra" / "status.py",
-                   siblings / "fun_time" / "main_player" / "status.py")
+        sources = (siblings / "funestra" / "funestra" / "status.py",
+                   siblings / "player_core" / "funestra" / "status.py",
+                   siblings / "fun_time" / "main_funestra" / "status.py")
         return [source for source in sources if source.is_file()]
 
     @staticmethod

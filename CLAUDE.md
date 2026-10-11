@@ -33,8 +33,8 @@ puts them where `genaumacher/interpolator_environment.py` looks, and deletes the
 zip. The directory is git-ignored. `--require` additionally exits non-zero
 unless the binary actually *runs*, which is what the merge gate uses.
 
-Same shape as `player_core/vendor/libmpv-2.dll`, with one difference worth
-knowing: player_core deliberately does *not* give CI its DLL, because fun_time's
+Same shape as `funestra/vendor/libmpv-2.dll`, with one difference worth
+knowing: funestra deliberately does *not* give CI its DLL, because fun_time's
 hidden-desktop suite covers the real engine. Genaumacher has no second suite, and
 windows-latest is the only place a Windows PE can execute — so genaumacher's gate
 fetches it and `--require`s it, and that one step is the whole assertion that
