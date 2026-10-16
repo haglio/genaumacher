@@ -22,8 +22,8 @@ requires-python = ">=3.14"
 # other half had not landed turned all of them red at once. Moving to a newer
 # one is this repo's own commit, with its own suite to answer for it.
 dependencies = [
-    "app-support @ git+https://github.com/haglio/app_support@v0.1.195",
-    "shared-ui @ git+https://github.com/haglio/shared_ui@v0.1.189",
+    "app-support @ git+https://github.com/haglio/app_support@v0.1.221",
+    "shared-ui @ git+https://github.com/haglio/shared_ui@v0.1.204",
     "numpy>=2.4,<3",
     "opencv-python>=4.8,<5",
     "PyQt6>=6,<7",
@@ -42,6 +42,11 @@ dev = ["pytest>=9,<10", "pytest-cov>=7,<8", "pytest-timeout>=2.4,<3", "vulture>=
 # tests/test_dependencies.py holds it against the tree.
 [tool.haglio]
 siblings = ["app_support", "shared_ui"]
+
+# Declared, so that every launcher here brings this checkout up to what has
+# shipped, and waits out an update of it already under way, before it starts
+# Genaumacher (app_support.production_update).
+[tool.haglio.production]
 
 # What launch_genaumacher.vbs, the file the pinned shortcut runs, starts. The
 # launcher is rendered from this by `python -m app_support.launcher --write`.
