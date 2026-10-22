@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path, PureWindowsPath
 
 from app_support import haglio_settings
-from app_support.flick_folder import audio_in, flat_flicks_in, flicks_folder_in, vr_flicks_in
+from app_support.flick_folder import flat_flicks_in, flicks_folder_in, vr_flicks_in
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = PACKAGE_DIR.parent
@@ -30,7 +30,7 @@ def _placeholder_library_root() -> Path:
 
 def _genau_dir() -> Path:
     """The output tree genau reads, which is what genaumacher exports into."""
-    return library_root() / "videos" / "genau"
+    return Path(haglio_settings.value("genau_dir"))
 
 
 def _genau_flicks_dir() -> Path:
@@ -49,7 +49,7 @@ def vr_flicks_dir() -> Path:
 
 
 def audio_dir() -> Path:
-    return audio_in(_genau_dir())
+    return Path(haglio_settings.value("genau_audio_dir"))
 
 
 def metadata_dir() -> Path:
@@ -81,8 +81,8 @@ def ensure_runtime_dirs() -> None:
     """Create what genaumacher writes into, as far as this machine has somewhere.
 
     The first two are inside the checkout and always made.  The library folders
-    are derived from ``library_root``, which is a placeholder until the Haglio
-    settings name one: on POSIX ``C:/path/to/library-root`` is a
+    are the ones the Haglio settings name, placeholders under ``library_root``
+    until the settings name a library: on POSIX ``C:/path/to/library-root`` is a
     *relative* path, so making them put a literal ``C:`` tree inside the repo,
     and on Windows it put ``C:\\path\\to\\library-root`` on the system drive.  A
     machine with no settings has no library to export into, so it gets no
