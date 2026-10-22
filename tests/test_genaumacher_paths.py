@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import re
 import textwrap
 from pathlib import Path, PureWindowsPath
 
@@ -66,17 +67,17 @@ def runtime_dirs(library, checkout_dirs):
     suite created ``<library-root>/videos/genau/vr_clips`` and ``.../frames`` for
     real -- a literal ``C:`` tree inside the checkout on a developer machine,
     and the live media library on the Windows machines the app runs on.  The
-    library folders now move together, by giving the settings a library root of
-    their own, so a fourth one added to that loop lands under tmp_path without a line
-    here; a third checkout constant would escape, which is what the guard test
-    below is for.
+    library folders now move together, by giving the settings a library root and
+    Genau folders of their own, so a fourth one added to that loop lands under
+    tmp_path without a line here; a third checkout constant would escape, which is
+    what the guard test below is for.
     """
-    genau = library / "videos" / "genau"
+    genau = Path(haglio_settings.value("genau_dir"))
     return {
         **checkout_dirs,
         "flicks_dir": genau / "flicks" / "2D" / "non_AI",
         "vr_flicks_dir": genau / "flicks" / "VR",
-        "audio_dir": genau / "audio",
+        "audio_dir": Path(haglio_settings.value("genau_audio_dir")),
     }
 
 
@@ -89,20 +90,42 @@ class TestWhereTheLibraryFoldersAre:
     constants by name.
     """
 
-    def test_the_clip_folder_hangs_off_the_library_root_the_settings_name(self, library: Path):
-        assert flicks_dir() == library / "videos" / "genau" / "flicks" / "2D" / "non_AI"
+    def test_the_clip_folders_are_in_the_genau_folder_the_settings_name_wherever_that_is(
+        self, tmp_path: Path, shared_settings
+    ):
+        genau = tmp_path / "somewhere else" / "genau-here"
+        flat_flicks_in(genau / "flicks").mkdir(parents=True)
+        shared_settings({"library_root": str(tmp_path / "library"), "genau_dir": str(genau)})
 
-    def test_a_cut_goes_where_genau_keeps_the_flicks_cut_from_real_videos(self, library: Path):
+        assert (flicks_dir(), vr_flicks_dir()) == (
+            genau / "flicks" / "2D" / "non_AI", genau / "flicks" / "VR")
+
+    def test_the_sounds_go_to_the_audio_folder_the_settings_name_wherever_that_is(
+        self, tmp_path: Path, shared_settings
+    ):
+        sounds = tmp_path / "somewhere else" / "sounds-here"
+        shared_settings({
+            "library_root": str(tmp_path / "library"),
+            "genau_dir": str(tmp_path / "genau-here"),
+            "genau_audio_dir": str(sounds),
+        })
+
+        assert audio_dir() == sounds
+
+    @pytest.mark.usefixtures("library")
+    def test_a_cut_goes_where_genau_keeps_the_flicks_cut_from_real_videos(self):
         """Genau's flicks folder is laid out as the library's videos are: a 2D
         folder split into AI and non_AI, and a VR folder.  What Genaumacher cuts is
-        cut from real videos, and its soundtrack sits beside the flicks folder."""
-        genau = library / "videos" / "genau"
+        cut from real videos, and its soundtrack goes where the settings put Genau's
+        sounds."""
+        genau = Path(haglio_settings.value("genau_dir"))
 
         assert (flicks_dir(), vr_flicks_dir(), audio_dir()) == (
-            genau / "flicks" / "2D" / "non_AI", genau / "flicks" / "VR", genau / "audio")
+            genau / "flicks" / "2D" / "non_AI", genau / "flicks" / "VR",
+            Path(haglio_settings.value("genau_audio_dir")))
 
     def test_genaus_flicks_folder_is_found_by_its_shape_whatever_it_is_called(self, library: Path):
-        genau = library / "videos" / "genau"
+        genau = Path(haglio_settings.value("genau_dir"))
         (genau / "flicks").rename(genau / "example-flicks")
         flicks = genau / "example-flicks"
 
@@ -111,9 +134,10 @@ class TestWhereTheLibraryFoldersAre:
     def test_with_no_folder_shaped_like_genaus_flicks_a_cut_has_nowhere_to_go(
         self, tmp_path: Path, shared_settings
     ):
-        shared_settings({"library_root": str(tmp_path / "empty library")})
+        genau = tmp_path / "empty library" / "genau-here"
+        shared_settings({"library_root": str(tmp_path / "empty library"), "genau_dir": str(genau)})
 
-        with pytest.raises(FileNotFoundError, match="genau"):
+        with pytest.raises(FileNotFoundError, match=re.escape(str(genau))):
             flicks_dir()
 
     def test_settings_written_after_the_import_are_the_ones_that_answer(
@@ -123,8 +147,9 @@ class TestWhereTheLibraryFoldersAre:
         settings did not exist when ``genaumacher.paths`` was first imported.
         """
         written = tmp_path / "written just now"
-        flat_flicks_in(written / "videos" / "genau" / "flicks").mkdir(parents=True)
-        shared_settings({"library_root": str(written)})
+        genau = written / "videos" / "videos" / "genau"
+        flat_flicks_in(genau / "flicks").mkdir(parents=True)
+        shared_settings({"library_root": str(written), "genau_dir": str(genau)})
 
         assert flicks_dir().is_relative_to(written)
 
@@ -132,10 +157,22 @@ class TestWhereTheLibraryFoldersAre:
         settings = shared_settings({"project_roots": []})
 
         with pytest.raises(LookupError, match="library_root"):
-            flicks_dir()
+            library_root()
 
         with pytest.raises(LookupError, match=settings.name):
-            flicks_dir()
+            library_root()
+
+    @pytest.mark.parametrize("missing, asked", [("genau_dir", flicks_dir), ("genau_audio_dir", audio_dir)])
+    def test_settings_with_no_genau_place_say_which_and_name_their_file(
+        self, shared_settings, missing, asked
+    ):
+        settings = shared_settings({"library_root": "D:/example-suite"})
+
+        with pytest.raises(LookupError, match=missing):
+            asked()
+
+        with pytest.raises(LookupError, match=settings.name):
+            asked()
 
 
 class TestTheVrVideoFolder:
@@ -235,7 +272,7 @@ class TestAMachineWithNoLibraryYet:
         that tree on its system drive and would answer "is there" yes.
         """
         shared_settings()
-        genau = library_root() / "videos" / "genau"
+        genau = Path(haglio_settings.value("genau_dir"))
         already = genau.is_dir()
 
         ensure_runtime_dirs()

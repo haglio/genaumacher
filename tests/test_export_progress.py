@@ -19,7 +19,7 @@ class TestTheLineTheSubprocessPrints:
 
     @pytest.mark.parametrize("line", [
         "Input FPS: 24.000000",
-        "Wrote: D:/example-suite/videos/genau/clips/seaside walk.mp4",
+        "Wrote: D:/example-suite/videos/videos/genau/clips/seaside walk.mp4",
         "Traceback (most recent call last):",
         "",
         "progress",

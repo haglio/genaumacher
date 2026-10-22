@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 import logging
 
+import pytest
+from app_support.flick_folder import flat_flicks_in
+
 from genaumacher.paths import flicks_dir
 from genaumacher.sidecar import record_provenance
 
@@ -14,6 +17,26 @@ def test_an_exported_clip_is_recorded_where_evolver_files_that_clips_metadata(re
     assert (recorded["app"], recorded["recipe"], recorded["recipe_version"]) == (
         "genaumacher", "a recipe", "7",
     )
+
+
+@pytest.mark.parametrize(
+    "genau_at", [("videos", "genau"), ("videos", "videos", "genau")],
+    ids=["videos_genau", "videos_videos_genau"],
+)
+def test_an_exported_clip_is_recorded_in_the_same_place_wherever_genaus_folder_is(
+    library, shared_settings, genau_sidecar, genau_at
+):
+    genau = library.joinpath(*genau_at)
+    flat_flicks_in(genau / "flicks").mkdir(parents=True, exist_ok=True)
+    shared_settings({
+        "library_root": str(library),
+        "genau_dir": str(genau),
+        "genau_audio_dir": str(genau / "audio"),
+    })
+
+    record_provenance(flicks_dir() / "scene one.mp4")
+
+    assert genau_sidecar("scene one").is_file()
 
 
 def test_what_other_apps_recorded_about_the_clip_is_kept(genau_sidecar):

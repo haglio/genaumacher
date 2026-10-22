@@ -225,8 +225,13 @@ def library(tmp_path, shared_settings) -> Path:
     """A media library of the test's own, so nothing a test exports or records
     lands in the one this machine's settings name."""
     root = tmp_path / "library"
-    flat_flicks_in(root / "videos" / "genau" / "flicks").mkdir(parents=True)
-    shared_settings({"library_root": str(root)})
+    genau = root / "videos" / "videos" / "genau"
+    flat_flicks_in(genau / "flicks").mkdir(parents=True)
+    shared_settings({
+        "library_root": str(root),
+        "genau_dir": str(genau),
+        "genau_audio_dir": str(root / "videos" / "audio" / "genau"),
+    })
     return root
 
 
