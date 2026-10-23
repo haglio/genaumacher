@@ -15,6 +15,17 @@ from .session_launch import launch_state
 from .window_icons import genaumacher_icon_path
 
 APP_USER_MODEL_ID = "FunTime.Genaumacher"
+STEPS = (("Loading Genaumacher...", 1.0),)
+
+
+def open_the_loading_screen(preview: Preview | None):
+    from shared_ui.loading_process import LoadingProcess  # noqa: PLC0415
+
+    return LoadingProcess.open(
+        caption="Genaumacher Loading", wordmark="Genaumacher", icon=genaumacher_icon_path(), preview=preview,
+        steps=STEPS, cancel_hint="Press Esc to cancel opening Genaumacher",
+        app_id=taskbar_identity(APP_USER_MODEL_ID, preview) if sys.platform == "win32" else None,
+    )
 
 
 def _set_windows_app_user_model_id(preview: Preview | None) -> None:
@@ -77,6 +88,15 @@ def main() -> int:
         _app = QApplication.instance() or QApplication(sys.argv)
         # Set icon early so the launcher dialog inherits it.
         _app.setWindowIcon(app_icon(genaumacher_icon_path(), preview))
+        from shared_ui.loading_window import Loading, LoadingCanceled  # noqa: PLC0415
+
+        loading = Loading.at_the_click(_app, logger, lambda: open_the_loading_screen(preview))
+        try:
+            for step, _weight in STEPS:
+                loading.say(step)
+        except LoadingCanceled:
+            return 0
+        loading.done()
         state = launch_state()
         if state is None:
             return 0

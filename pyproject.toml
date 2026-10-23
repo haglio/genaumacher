@@ -55,12 +55,14 @@ app = "Genaumacher"
 run = "-m genaumacher"
 named-interpreter = "Genaumacher-Genaumacher.exe"
 log = 'state\genaumacher_launcher.log'
+loading-screen = ["Updating Genaumacher..."]
 
 [tool.haglio.launchers."launch_preview_branch.vbs"]
 app = "Genaumacher (branch preview)"
 run = "-m genaumacher"
 venv = "primary"
 log = 'state\genaumacher_launcher.log'
+loading-screen = ["Updating Genaumacher..."]
 copy-from-primary = ["content.local.json"]
 
 # What Genaumacher relies on Windows to keep: the shortcut it is pinned from.
