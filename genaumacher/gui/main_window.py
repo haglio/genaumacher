@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
 from shared_ui.colors import BORDER_DEFAULT
 from shared_ui.fonts import FONT_UI, SIZE_HEADING, make_font
 from shared_ui.preview import Preview, window_title
+from shared_ui.spacing import BUTTON_GAP, GAP_MEDIUM, GAP_SMALL, MARGIN_STANDARD
 
 from genaumacher.frame_store import safe_frame
 from genaumacher.playback import current_loop_frame_index, loop_preview_indices
@@ -164,22 +165,22 @@ class GenaumacherMainWindow(QMainWindow):
         left_header.setFont(make_font(FONT_UI, SIZE_HEADING))
         left_header.setStyleSheet(LABEL_STYLE)
         left_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        left_header.setContentsMargins(0, 6, 0, 6)
+        left_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
 
         right_header = QLabel("loop preview")
         right_header.setFont(make_font(FONT_UI, SIZE_HEADING))
         right_header.setStyleSheet(LABEL_STYLE)
         right_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        right_header.setContentsMargins(0, 6, 0, 6)
+        right_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
 
         # Pane columns
         left_col = QVBoxLayout()
-        left_col.setSpacing(2)
+        left_col.setSpacing(GAP_SMALL)
         left_col.addWidget(left_header)
         left_col.addWidget(self.left_pane, stretch=1)
 
         right_col = QVBoxLayout()
-        right_col.setSpacing(2)
+        right_col.setSpacing(GAP_SMALL)
         right_col.addWidget(right_header)
         right_col.addWidget(self.right_pane, stretch=1)
 
@@ -202,7 +203,7 @@ class GenaumacherMainWindow(QMainWindow):
         right_info.addWidget(self.speed_label)
 
         btn_group = QHBoxLayout()
-        btn_group.setSpacing(4)
+        btn_group.setSpacing(BUTTON_GAP)
         btn_group.addWidget(bb.speed_down_btn)
         btn_group.addWidget(bb.speed_up_btn)
         btn_group.addWidget(bb.play_pause_btn)
@@ -248,8 +249,8 @@ class GenaumacherMainWindow(QMainWindow):
 
         # Assemble
         main_layout = QVBoxLayout(central)
-        main_layout.setContentsMargins(8, 4, 8, 4)
-        main_layout.setSpacing(2)
+        main_layout.setContentsMargins(MARGIN_STANDARD, GAP_SMALL, MARGIN_STANDARD, GAP_SMALL)
+        main_layout.setSpacing(GAP_SMALL)
         main_layout.addWidget(self.session_label)
         main_layout.addWidget(self.file_info_label)
         main_layout.addLayout(panes_row, stretch=1)
