@@ -134,6 +134,9 @@ class _RecordingLog:
     def warning(self, message: str, *args) -> None:
         self.warnings.append(message % args)
 
+    def info(self, message: str, *args) -> None:
+        pass
+
     def exception(self, message: str) -> None:
         raise AssertionError(f"the launch crashed: {message}")
 
