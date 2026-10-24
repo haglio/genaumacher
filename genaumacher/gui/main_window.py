@@ -32,11 +32,10 @@ from .floating_controls import FloatingControlLayout
 from .frame_converter import bgr_to_qimage, scale_to_fit
 from .legend_widget import LegendWidget
 from .main_window_style import (
-    CHROME_STYLE,
     LABEL_STYLE,
     WARNING_STYLE,
+    dress_controls,
     refuse_focus,
-    size_controls,
     small_font,
 )
 from .shortcuts import BY_NAME, legend_rows, shortcut_for
@@ -267,8 +266,7 @@ class GenaumacherMainWindow(QMainWindow):
             self.timeline, tc, self._shift_row, self._mark_row, self._wrap_row
         )
 
-        central.setStyleSheet(CHROME_STYLE)
-        size_controls(bb, tc)
+        dress_controls(central, bb, tc)
         refuse_focus(self)
 
     @property

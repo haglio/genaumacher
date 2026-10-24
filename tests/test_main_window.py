@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 from PyQt6.QtCore import QPoint, QSize, Qt
-from PyQt6.QtGui import QCloseEvent, QKeyEvent
+from PyQt6.QtGui import QCloseEvent, QFont, QFontDatabase, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QPushButton, QWidget
+from shared_ui.fonts import FONT_UI
 from shared_ui.preview import Preview
 from shared_ui.spacing import BUTTON_SIZE
 
+from genaumacher.gui.app import dress
 from genaumacher.gui.exit_dialog import ExitDialog
 from genaumacher.gui.floating_controls import FloatingControlLayout
 from genaumacher.gui.main_window import GenaumacherMainWindow, _WrapRow
@@ -109,6 +113,61 @@ class TestConstruction:
             assert btn.focusPolicy() == Qt.FocusPolicy.NoFocus, (
                 f"Button '{btn.text()}' has focus policy {btn.focusPolicy()}, expected NoFocus"
             )
+
+
+_WINDOWS_MESSAGE_FACE = Path(os.environ["WINDIR"], "Fonts", "segoeui.ttf")
+
+
+@pytest.fixture(params=[12, 18], ids=["windows_own_message_font", "this_computers_message_font"])
+def window_in_windows_message_font(request, qapp, mock_state):
+    face = QFontDatabase.addApplicationFont(str(_WINDOWS_MESSAGE_FACE))
+    assert face != -1, _WINDOWS_MESSAGE_FACE
+    font_before, sheet_before = qapp.font(), qapp.styleSheet()
+    message_font = QFont(FONT_UI)
+    message_font.setPixelSize(request.param)
+    qapp.setFont(message_font)
+    dress(qapp)
+    window = GenaumacherMainWindow(mock_state)
+    window.show()
+    QApplication.processEvents()
+    window.update_button_positions()
+    yield window
+    window.close()
+    qapp.setStyleSheet(sheet_before)
+    qapp.setFont(font_before)
+    QFontDatabase.removeApplicationFont(face)
+
+
+def _label_ink(button: QPushButton) -> QSize:
+    drawn = button.grab().toImage()
+    label = button.text()
+    button.setText("")
+    bare = button.grab().toImage()
+    button.setText(label)
+    xs, ys = zip(*((x, y) for y in range(drawn.height()) for x in range(drawn.width())
+                   if drawn.pixel(x, y) != bare.pixel(x, y)))
+    return QSize(max(xs) - min(xs) + 1, max(ys) - min(ys) + 1)
+
+
+def _label_ink_with_room_to_spare(button: QPushButton) -> QSize:
+    fixed = button.size()
+    button.setFixedSize(fixed * 2)
+    try:
+        return _label_ink(button)
+    finally:
+        button.setFixedSize(fixed)
+
+
+def test_a_fixed_size_button_shows_its_whole_label_in_the_font_windows_gives_it(
+        window_in_windows_message_font):
+    fixed_with_a_label = [button for button in window_in_windows_message_font.findChildren(QPushButton)
+                          if button.text() and button.minimumSize() == button.maximumSize()]
+
+    cut_off = sorted({button.text() for button in fixed_with_a_label
+                      if _label_ink(button) != _label_ink_with_room_to_spare(button)})
+
+    assert {"[", "]"} <= {button.text() for button in fixed_with_a_label}
+    assert cut_off == []
 
 
 class TestCloseEvent:
