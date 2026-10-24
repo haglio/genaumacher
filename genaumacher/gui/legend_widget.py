@@ -9,6 +9,7 @@ from PyQt6.QtGui import QFont, QPainter
 from PyQt6.QtWidgets import QWidget
 from shared_ui.colors import BG_KEYCAP, BG_PRIMARY, BORDER_DEFAULT, TEXT_PRIMARY
 from shared_ui.fonts import FONT_UI, SIZE_SMALL, SIZE_TINY
+from shared_ui.spacing import BUTTON_GAP, BUTTON_PAD_H_TIGHT, GAP_DIALOG, GAP_SMALL
 
 from .timeline_colors import TEXT_LEGEND_JOIN, TEXT_LEGEND_LABEL
 
@@ -18,12 +19,12 @@ if TYPE_CHECKING:
 # Keycap metrics, named once for the pass that measures a row and the pass
 # that draws it: a size written out in both is a size that can change in one
 # and silently mis-center the row.
-KEYCAP_PADDING = 12
+KEYCAP_PADDING = 2 * BUTTON_PAD_H_TIGHT
 KEYCAP_MIN_WIDTH = 24
 KEYCAP_HEIGHT = 22
-KEYCAP_GAP = 2
-JOINER_GAP = 4
-LABEL_GAP = 16
+KEYCAP_GAP = BUTTON_GAP
+JOINER_GAP = GAP_SMALL
+LABEL_GAP = GAP_DIALOG
 
 
 class LegendWidget(QWidget):
