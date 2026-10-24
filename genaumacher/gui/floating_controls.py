@@ -27,6 +27,7 @@ class FloatingControlLayout:
         self._shift_row = shift_row
         self._mark_row = mark_row
         self._wrap_row = wrap_row
+        self._wrap_color: QColor | None = None
 
     def place(self, *, active_start: int, active_end: int, cursor: int,
               wrap_from: int, wrap_to: int, wrap_color: QColor) -> None:
@@ -90,8 +91,10 @@ class FloatingControlLayout:
         x2 = offset + tl.x_for_index(wrap_to)
         y = (self._wrap_row.height() - tc.wrap_btn.height()) // 2
         tc.wrap_btn.move((x1 + x2) // 2 - tc.wrap_btn.width() // 2, y)
-        tc.wrap_btn.setStyleSheet(
-            f"background: {color.name()}; border: 1px solid {BORDER_SUBTLE.name()};"
-        )
+        if color != self._wrap_color:
+            tc.wrap_btn.setStyleSheet(
+                f"background: {color.name()}; border: 1px solid {BORDER_SUBTLE.name()};"
+            )
+            self._wrap_color = QColor(color)
         tc.wrap_btn.show()
         self._wrap_row.set_brace(x1, x2)

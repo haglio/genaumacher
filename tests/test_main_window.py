@@ -506,6 +506,19 @@ class TestDynamicPositioning:
 
         assert blue_style != yellow_style
 
+    def test_a_tick_that_keeps_the_wrap_color_does_not_restyle_the_wrap_button(self, shown_window, mock_state):
+        w = shown_window
+        mock_state.wrap_mode = WrapMode.OVER_LOADED
+        w.update_button_positions()
+        button = w.timeline_controls.wrap_btn
+        restyled = []
+        button.setStyleSheet = restyled.append
+
+        w.update_button_positions()
+        w.update_button_positions()
+
+        assert restyled == []
+
     def test_wrap_brace_spans_loaded_range_in_blue_mode(self, shown_window, mock_state, rendered):
         w = shown_window
         mock_state.wrap_mode = WrapMode.OVER_LOADED
