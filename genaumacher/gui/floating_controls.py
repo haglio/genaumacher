@@ -12,8 +12,9 @@ from PyQt6.QtCore import QPoint
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget
 from shared_ui.colors import BORDER_SUBTLE
+from shared_ui.spacing import BUTTON_GAP
 
-GAP = 4
+GAP = BUTTON_GAP
 
 
 class FloatingControlLayout:
