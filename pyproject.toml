@@ -63,6 +63,7 @@ run = "-m genaumacher"
 venv = "primary"
 log = 'state\genaumacher_launcher.log'
 loading-screen = ["Updating Genaumacher..."]
+preview = true
 copy-from-primary = ["content.local.json"]
 
 # What Genaumacher relies on Windows to keep: the shortcut it is pinned from.
