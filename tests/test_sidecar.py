@@ -8,14 +8,15 @@ from app_support.flick_folder import flat_flicks_in
 
 from genaumacher.paths import flicks_dir
 from genaumacher.sidecar import record_provenance
+from tests.stamps import METHOD, METHOD_VERSION
 
 
 def test_an_exported_clip_is_recorded_where_evolver_files_that_clips_metadata(recorded_cut):
-    record_provenance(flicks_dir() / "scene one.mp4", recipe="a recipe", recipe_version="7")
+    record_provenance(flicks_dir() / "scene one.mp4", method="a method", method_version="7")
 
     recorded = recorded_cut("scene one")
-    assert (recorded["app"], recorded["recipe"], recorded["recipe_version"]) == (
-        "genaumacher", "a recipe", "7",
+    assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
+        "genaumacher", "a method", "7",
     )
 
 

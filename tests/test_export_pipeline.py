@@ -15,6 +15,7 @@ import pytest
 from genaumacher.export_pipeline import run_export
 from genaumacher.paths import RAW_CLIPS_DIR, audio_dir, flicks_dir, vr_flicks_dir
 from genaumacher.sidecar import record_provenance
+from tests.stamps import METHOD, METHOD_VERSION
 
 pytestmark = pytest.mark.usefixtures("library")
 
@@ -215,14 +216,14 @@ class TestALoopedClipsRecord:
         self, state, steps, watcher, recorded_cut
     ):
         def loop_fix(_state, _raw_path, clip_path, _progress):
-            record_provenance(clip_path, recipe="clip_postprocess", recipe_version="3")
+            record_provenance(clip_path, method="clip_postprocess", method_version="3")
             return True, str(clip_path)
 
         with patch("genaumacher.export_steps.run_clip_postprocess", loop_fix):
             run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)
-        assert (recorded["recipe"], recorded["recipe_version"]) == ("clip_postprocess", "3")
+        assert (recorded[METHOD], recorded[METHOD_VERSION]) == ("clip_postprocess", "3")
 
 
 class TestSkipPostprocess:
@@ -256,7 +257,7 @@ class TestSkipPostprocess:
 
         assert steps["audio"].called
 
-    def test_the_clip_says_genaumacher_made_it_and_that_no_recipe_did(
+    def test_the_clip_says_genaumacher_made_it_with_no_loop_fix(
         self, state, steps, watcher, recorded_cut
     ):
         """Nothing but the cut touched it, so a sweep for clips made before a
@@ -264,6 +265,6 @@ class TestSkipPostprocess:
         run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)
-        assert (recorded["app"], recorded["recipe"], recorded["recipe_version"]) == (
+        assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
             "genaumacher", None, None,
         )

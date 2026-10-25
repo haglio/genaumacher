@@ -21,8 +21,8 @@ from .sidecar import record_provenance
 
 logger = logging.getLogger(__name__)
 
-RECIPE = "clip_postprocess"
-RECIPE_VERSION = "1"
+LOOP_FIX = "clip_postprocess"
+LOOP_FIX_VERSION = "1"
 
 # How far along each finished step leaves the run. Coarse, and true at the
 # moment it is said: the step it names has completed. Finer would mean knowing
@@ -217,7 +217,7 @@ def postprocess_clip(
 
         scale *= 0.9
 
-    record_provenance(Path(options.output), recipe=RECIPE, recipe_version=RECIPE_VERSION)
+    record_provenance(Path(options.output), method=LOOP_FIX, method_version=LOOP_FIX_VERSION)
     final_size = os.path.getsize(options.output)
     return {
         "fps": fps,

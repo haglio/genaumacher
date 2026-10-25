@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 from genaumacher.clip_postprocess_pipeline import (
-    RECIPE_VERSION,
+    LOOP_FIX_VERSION,
     build_output_frames,
     compute_bridge_frames,
     compute_seam_frames,
@@ -18,6 +18,7 @@ from genaumacher.clip_postprocess_pipeline import (
 from genaumacher.loop_modes import LoopMode
 from genaumacher.paths import flicks_dir
 from genaumacher.postprocess_options import PostprocessOptions
+from tests.stamps import METHOD, METHOD_VERSION
 
 pytestmark = pytest.mark.usefixtures("library")
 
@@ -352,7 +353,7 @@ def test_postprocess_clip_passes_the_encoder_settings_through(tmp_path, run_pipe
 def test_a_clip_it_writes_into_the_library_says_the_loop_fix_made_it(
     tmp_path, run_pipeline, recorded_cut
 ):
-    """The recipe's name is what a sweep for clips made before a change filters
+    """The loop fix's name is what a sweep for clips made before a change filters
     on, so it is written out here rather than read back off the module."""
     flicks_dir().mkdir(parents=True)
     options = replace(_options(tmp_path), output=str(flicks_dir() / "scene one.mp4"))
@@ -360,8 +361,8 @@ def test_a_clip_it_writes_into_the_library_says_the_loop_fix_made_it(
     run_pipeline(options)
 
     recorded = recorded_cut("scene one")
-    assert (recorded["app"], recorded["recipe"], recorded["recipe_version"]) == (
-        "genaumacher", "clip_postprocess", RECIPE_VERSION,
+    assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
+        "genaumacher", "clip_postprocess", LOOP_FIX_VERSION,
     )
 
 

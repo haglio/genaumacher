@@ -47,9 +47,9 @@ back to its geometric seam — and `genaumacher/interpolator_environment.py` wri
 that into `state/genaumacher.log` on the way up, because the fallback is otherwise
 silent and the clips are just quietly worse.
 
-## Bump the loop fix's recipe version when its output changes
+## Bump the loop fix's version when its output changes
 
-Every clip the loop fix writes is stamped with `RECIPE_VERSION` from
+Every clip the loop fix writes is stamped with `LOOP_FIX_VERSION` from
 `genaumacher/clip_postprocess_pipeline.py`, and that number is what a later sweep
 compares to tell the clips made before a change from the ones made after it.
 **Bump it in the commit that changes what the loop fix writes**: a transform in
