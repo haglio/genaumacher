@@ -55,3 +55,11 @@ def test_a_branch_preview_runs_its_own_checkout_on_the_primary_checkouts_venv():
     assert report.value("arguments") == "-m genaumacher"
     overlay = "content.local.json"
     assert report.value("copy") == f"{primary / overlay} > {REPO_ROOT / overlay}"
+
+
+@on_windows
+def test_a_new_previews_first_click_shows_the_pictures_an_earlier_preview_left():
+    report = dry_run(REPO_ROOT / "launch_preview_branch.vbs")
+
+    primary = REPO_ROOT.parents[2]
+    assert Path(report.value("pictures")) == primary / "state" / "genaumacher_launcher.screen" / "preview"
