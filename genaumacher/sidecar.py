@@ -11,9 +11,8 @@ from .paths import metadata_dir
 
 logger = logging.getLogger(__name__)
 
-
 def record_provenance(
-    clip: Path, *, recipe: str | None = None, recipe_version: str | None = None,
+    clip: Path, *, method: str | None = None, method_version: str | None = None,
 ) -> None:
     root = metadata_dir()
     sidecar = mirrored_path(
@@ -22,7 +21,7 @@ def record_provenance(
     if sidecar is None:
         return
     stamp = provenance.stamp(
-        "genaumacher", anchor=__file__, recipe=recipe, recipe_version=recipe_version,
+        "genaumacher", anchor=__file__, recipe=method, recipe_version=method_version,
     )
     try:
         locked_update(sidecar, lambda payload: {**payload, "provenance": {"cut": stamp}})
