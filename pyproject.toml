@@ -22,8 +22,8 @@ requires-python = ">=3.14"
 # other half had not landed turned all of them red at once. Moving to a newer
 # one is this repo's own commit, with its own suite to answer for it.
 dependencies = [
-    "app-support @ git+https://github.com/haglio/app_support@v0.1.259",
-    "shared-ui @ git+https://github.com/haglio/shared_ui@v0.1.256",
+    "app-support @ git+https://github.com/haglio/app_support@v0.1.284",
+    "shared-ui @ git+https://github.com/haglio/shared_ui@v0.1.264",
     "numpy>=2.4,<3",
     "opencv-python>=4.8,<5",
     "PyQt6>=6,<7",
@@ -91,7 +91,7 @@ include = ["genaumacher*"]
 # longest here is the collection-order probe, which spawns a pytest child, at
 # about a third of a second. --timeout-method=thread is the half that pays for
 # itself: it dumps the stack of the test that stopped, which turns a stalled
-# required check into a one-line diagnosis. tests/test_timeouts.py holds all
+# required check into a one-line diagnosis. app_support.clocks holds all
 # three halves of it.
-addopts = "-p app_support.sanitize.pytest_plugin -p app_support.coverage_gate --cov --cov-report= --timeout=60 --timeout-method=thread"
+addopts = "-p app_support.sanitize.pytest_plugin -p app_support.clocks.pytest_plugin -p app_support.coverage_gate --cov --cov-report= --timeout=60 --timeout-method=thread"
 testpaths = ["tests"]
