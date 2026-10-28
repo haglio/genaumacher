@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from genaumacher.wrap_modes import WrapMode, wrap_bounds
 
 
@@ -25,6 +27,7 @@ class TestWrapBounds:
         assert (WrapMode.OVER_LOADED, WrapMode.OVER_ACTIVE) == ("blue", "yellow")
 
 
+@pytest.mark.repo_check
 def test_nothing_else_spells_the_wrap_mode_out_as_a_color():
     """The two constants are the only place `"blue"` and `"yellow"` are written.
 
