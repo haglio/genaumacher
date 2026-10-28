@@ -14,6 +14,7 @@ import ast
 import re
 from pathlib import Path
 
+import pytest
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
 
@@ -32,6 +33,7 @@ def _sources() -> list[Path]:
     return files
 
 
+@pytest.mark.repo_check
 def test_no_color_is_spelled_out_in_a_stylesheet():
     # Parsed rather than grepped, so a "#" in a comment or a path is not a hit --
     # only text the app actually hands to Qt.
@@ -48,6 +50,7 @@ def test_no_color_is_spelled_out_in_a_stylesheet():
     )
 
 
+@pytest.mark.repo_check
 def test_no_color_is_built_from_raw_channel_numbers():
     # QColor(200, 200, 200) is the same stray wearing a constructor.
     offenders = []
@@ -69,6 +72,7 @@ def test_no_color_is_built_from_raw_channel_numbers():
     )
 
 
+@pytest.mark.repo_check
 def test_the_chrome_reads_the_family_palette():
     # The positive side of it: the GUI does import the tokens, so the two checks
     # above are not passing merely because nothing here draws anything.
