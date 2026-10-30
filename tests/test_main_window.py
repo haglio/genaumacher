@@ -142,7 +142,7 @@ def _label_ink(button: QPushButton) -> QSize:
     bare = button.grab().toImage()
     button.setText(label)
     xs, ys = zip(*((x, y) for y in range(drawn.height()) for x in range(drawn.width())
-                   if drawn.pixel(x, y) != bare.pixel(x, y)))
+                   if drawn.pixel(x, y) != bare.pixel(x, y)), strict=True)
     return QSize(max(xs) - min(xs) + 1, max(ys) - min(ys) + 1)
 
 

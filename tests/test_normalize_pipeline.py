@@ -149,7 +149,7 @@ class TestTheRegisteredSeam:
             out, normalized_n = self._built(frames)
 
         assert len(out) == normalized_n == 10
-        moved = [i for i, (was, now) in enumerate(zip(frames, out))
+        moved = [i for i, (was, now) in enumerate(zip(frames, out, strict=True))
                  if not np.array_equal(was, now)]
         assert moved == list(range(1, 10))
         gap_before = np.mean(np.abs(frames[-1].astype(float) - frames[0].astype(float)))
@@ -394,7 +394,7 @@ def _blend_run(frames_of, values_of, symmetric_blend):
 
 
 def _moved(before, after):
-    return [i for i, (a, b) in enumerate(zip(before, after)) if a != b]
+    return [i for i, (a, b) in enumerate(zip(before, after, strict=True)) if a != b]
 
 
 def test_a_symmetric_blend_pulls_the_two_ends_toward_each_other(frames_of, values_of):

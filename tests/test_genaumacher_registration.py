@@ -50,7 +50,7 @@ def interpolator(tmp_path: Path, monkeypatch) -> None:
 
     def _blend(cmd, **_kwargs):
         args = [str(part) for part in cmd]
-        flags = dict(zip(args[1::2], args[2::2]))
+        flags = dict(zip(args[1::2], args[2::2], strict=True))
         timestep = float(flags["-s"])
         cv2.imwrite(flags["-o"], cv2.addWeighted(
             cv2.imread(flags["-0"], cv2.IMREAD_COLOR), 1.0 - timestep,
@@ -155,7 +155,7 @@ class TestBuildRegisteredSeam:
         result, ok = build_registered_seam(frames, seam_frames=2)
         assert ok is False
         # Frames should be returned unchanged
-        for orig, out in zip(frames, result):
+        for orig, out in zip(frames, result, strict=True):
             np.testing.assert_array_equal(orig, out)
 
     def test_too_few_frames(self):

@@ -40,7 +40,7 @@ def _fetched(root: Path, *, models: tuple[bytes, ...] = (b"weights", b"weights")
     exe.write_bytes(b"MZ")
     model_dir = exe.parent / interpolator_environment.MODEL_DIR_NAME
     model_dir.mkdir(exist_ok=True)
-    for name, contents in zip(interpolator_environment.MODEL_FILES, models):
+    for name, contents in zip(interpolator_environment.MODEL_FILES, models, strict=False):
         (model_dir / name).write_bytes(contents)
     return exe
 

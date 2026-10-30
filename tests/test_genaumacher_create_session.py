@@ -43,7 +43,7 @@ def test_create_session_importable_without_cv2():
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
 
     result = subprocess.run([sys.executable, "-c", probe], cwd=REPO_ROOT,
-                            env=env, capture_output=True, text=True)
+                            env=env, capture_output=True, text=True, check=False)
 
     assert result.returncode == 0, result.stderr
 

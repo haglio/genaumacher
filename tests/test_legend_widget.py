@@ -107,6 +107,6 @@ def test_the_legend_does_not_need_the_video_decoder_to_be_imported():
 
     result = subprocess.run([sys.executable, "-c", probe],
                             cwd=Path(__file__).resolve().parents[1],
-                            env=env, capture_output=True, text=True)
+                            env=env, capture_output=True, text=True, check=False)
 
     assert result.returncode == 0, result.stderr
