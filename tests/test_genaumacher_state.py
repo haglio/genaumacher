@@ -343,7 +343,7 @@ class TestExtendRight:
     def test_the_edge_is_the_last_frame_the_decoder_produced(self, make_state):
         """A file the decoder abandons early used to leave the window claiming
         the whole step -- frames nothing decoded, which the timeline painted,
-        the cursor could be walked onto and `safe_frame` raised for (bug 55).
+        the cursor could be walked onto and `safe_frame` raised for.
         The edge is where the frames end, and a press with nothing more to
         decode moves nothing and saves nothing.
         """

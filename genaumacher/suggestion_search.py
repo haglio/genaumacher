@@ -15,14 +15,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class SimilarityDip:
-    """Where the similarity curve falls away, and what the walk needs after it.
-
-    These six traveled as a positional tuple, unpacked by position at both
-    call sites -- one of which discarded four of them under underscore names.
-    Which end of `candidates` is nearest the reference is the thing backlog
-    bug 14 got wrong, so connascence of position across this boundary is not a
-    theoretical worry.
-    """
+    """Where the similarity curve falls away, and what the walk needs after it."""
 
     candidates: list[int]
     smoothed: np.ndarray

@@ -96,9 +96,9 @@ SHORTCUTS: tuple[Shortcut, ...] = (
 # What the legend says, row by row.  The keycaps are not written here -- they
 # come from the shortcuts named, which is what stops the two disagreeing.
 # Which entry sits in which row is a free choice, and it is made so the rows
-# come out even: the widest has to fit the window's 900 px minimum, and a
-# six-entry bounds row did not (bug 56).  Transport and loop; the bounds
-# with the cursor between them and the wrap; the in-out edits together.
+# come out even: the widest has to fit the window's 900 px minimum.
+# Transport and loop; the bounds with the cursor between them and the wrap;
+# the in-out edits together.
 LEGEND_ROWS: tuple[tuple[LegendEntry, ...], ...] = (
     (
         (("speed_down", "speed_up"), " or ", "speed"),

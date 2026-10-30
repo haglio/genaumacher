@@ -124,13 +124,7 @@ class VideoState:
         self.loop.restart_at(time.monotonic())
 
     def bump_render(self) -> None:
-        """Say the picture changed.
-
-        Nothing reads the count -- the 60 Hz tick repaints regardless -- so it
-        is the edit tables' cheapest observable rather than a repaint gate
-        (`backlog.md` §4.3).  One method, so the five sites that used to reach
-        in and increment the field cannot disagree about what a bump is.
-        """
+        """Say the picture changed."""
         self.render_rev += 1
 
     def save_edit(self) -> None:

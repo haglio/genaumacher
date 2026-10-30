@@ -3,11 +3,9 @@
     python tools/fetch_rife.py            # fetch if absent, report what is there
     python tools/fetch_rife.py --require  # ...and exit non-zero unless it runs
 
-``tools/rife-ncnn-vulkan-20221029-windows/`` was committed until item 28: 62
-files and 448 MB, of which the code opens one model directory.  Ten of the
-eleven models went in stage 1; the remaining 17 MB is fetched here rather than
-tracked, the way ``funestra/vendor/libmpv-2.dll`` is, so a clone stops paying
-for a Windows binary most machines cannot execute.
+The code opens one of the release's eleven model directories, so the 17 MB it
+needs is fetched here rather than tracked, the way ``funestra/vendor/libmpv-2.dll``
+is, and a clone does not carry a Windows binary most machines cannot execute.
 
 It lands where ``genaumacher.interpolator_environment`` already looks, so nothing in
 the app changes: with the files absent it locates nothing, normalizing falls
