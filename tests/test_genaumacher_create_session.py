@@ -199,7 +199,7 @@ def test_create_session_sanitizes_a_supplied_name_too(tmp_path):
     """Only the name derived from the video was sanitized; a `--name` with a
     forbidden character was written as given, to a file the rest of the app
     -- which builds every path from the sanitized form -- could never find
-    again (bug 31)."""
+    again."""
     with _mock_ffprobe():
         result = create_session(
             r"C:\videos\SomeLongFilename_v2.mp4",

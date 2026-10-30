@@ -61,7 +61,7 @@ class TestPainting:
         Measured with the family's font on Windows (Segoe UI) the three rows
         are 598, 736 and 638 px against the 884 px a row has there; before
         the repartition the six-entry bounds row was 959 px and its last entry
-        drew off the right edge (bug 56).  The suite paints with the offscreen
+        drew off the right edge.  The suite paints with the offscreen
         platform's stand-in font, which widens every row alike, so the
         invariant is a share of the whole rather than a pixel count: no row is
         more than two fifths of the three together.  An entry added to the

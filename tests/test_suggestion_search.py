@@ -75,8 +75,7 @@ class TestTheTwoDirectionsAreMirrorImages:
     of that list and take their baseline from it. Forward that head is "the
     frames beside the reference"; backward it was "the frames at the other end of
     the loaded range", which in base-tip-base -- the most common mode -- is where
-    the suggested mark-in point came from. Backlog bug 14 (`all/design/004`),
-    fixed on the owner's approval.
+    the suggested mark-in point came from.
     """
 
     def test_forward_the_window_begins_next_to_the_reference(self, make_state):
@@ -155,7 +154,8 @@ class TestTheDipItself:
     They traveled as a positional tuple, unpacked by position at both sites --
     one of which discarded four of them under underscore names.  Reordering or
     adding a field would have miscomputed both callers silently, which matters
-    here because the order is exactly what backlog bug 14 got wrong.
+    here because which end of the list is nearest the reference is what the
+    backward walk once got wrong.
     """
 
     def test_it_names_what_it_found(self, make_state):

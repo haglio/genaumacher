@@ -149,7 +149,7 @@ class TestWiden:
 
 
 class TestTheEdgeIsOnlyEverWidenedToAFrame:
-    """No move can put the edge past a frame nothing decoded (bug 55): the
+    """No move can put the edge past a frame nothing decoded: the
     only way the right edge moves out is `widen_right_to`, called with the
     last frame the loader produced."""
 

@@ -65,7 +65,7 @@ class _EndsAt:
 
 def test_load_range_gets_past_a_frame_the_decoder_cannot_produce():
     """One damaged frame used to end the whole load, and `extend_right` faked
-    the edge past it to force the next seek beyond (bug 55).  The loader seeks
+    the edge past it to force the next seek beyond.  The loader seeks
     past a failed read itself, so the damaged frame alone is missing."""
     cap = _DamagedAt(62)
 
