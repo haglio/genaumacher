@@ -23,6 +23,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
+from app_support.file_channel import read_key_values
+
 from .content import load_content
 from .paths import sanitize_name
 from .timecode import format_seconds
@@ -46,17 +48,13 @@ def main_player_status_file() -> Path | None:
 def _published_values(status_file: Path) -> dict[str, str]:
     """The ``key=value`` lines the Main Funestra last wrote, or nothing readable.
 
-    The file is replaced whole rather than truncated in place, so a torn read
-    is not expected — but it is one poll of a file another process owns, and
-    every way that can go wrong means the same thing here: no prefill.
+    It is one poll of a file another process owns, and every way that can go
+    wrong means the same thing here: no prefill.
     """
     try:
-        text = status_file.read_text(encoding="utf-8")
+        return read_key_values(status_file)
     except (OSError, UnicodeDecodeError):
         return {}
-    return dict(
-        line.split("=", 1) for line in text.splitlines() if "=" in line
-    )
 
 
 def detect_main_funestra_session_prefill(status_file: Path | None = None) -> SessionPrefill | None:
