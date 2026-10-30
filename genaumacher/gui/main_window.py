@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QKeyEvent, QPainter, QPen
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -79,6 +79,8 @@ class _WrapRow(QWidget):
 
 class GenaumacherMainWindow(QMainWindow):
     """Main Genaumacher window containing all UI widgets."""
+
+    closed = pyqtSignal()
 
     def __init__(self, state: VideoState, parent=None, *, preview: Preview | None = None):
         super().__init__(parent)
@@ -361,6 +363,10 @@ class GenaumacherMainWindow(QMainWindow):
 
         playing = "playing" if not state.loop_paused else "paused"
         self.speed_label.setText(f"speed: {state.speed:.2f}x ({playing})")
+
+    def closeEvent(self, event) -> None:
+        super().closeEvent(event)
+        self.closed.emit()
 
     # -- Key dispatch ----------------------------------------------------------
 

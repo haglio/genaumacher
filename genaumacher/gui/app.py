@@ -45,9 +45,8 @@ class GenaumacherApp:
 
         self.window = GenaumacherMainWindow(state, preview=preview)
         self.playback_timer = PlaybackTimer()
-
-        # Wire playback timer tick to frame update
         self.playback_timer.tick.connect(self._on_tick)
+        self.window.closed.connect(self.playback_timer.stop)
 
     def run(self) -> int:
         """Show the window and enter the event loop."""
