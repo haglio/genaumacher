@@ -95,14 +95,12 @@ class TestLoadingASavedSession:
         assert state.wrap_mode == "yellow"
         assert state.speed == pytest.approx(1.25)
 
-    def test_it_is_guarded_as_existing_save_data_and_remembers_where_it_came_from(self, library):
+    def test_it_remembers_the_file_it_came_from(self, library):
         saved = _write_session(library.sessions, "seaside walk")
 
         state = build_state(LoadSession(session_json=str(saved)))
 
         assert state.session_path == str(saved)
-        assert state.original_session_payload == json.loads(saved.read_text(encoding="utf-8"))
-        assert state.protect_existing_save_data is True
 
     def test_it_becomes_the_session_the_launcher_offers_next_time(self, library):
         saved = _write_session(library.sessions, "seaside walk")
@@ -147,10 +145,9 @@ class TestCreatingANewSession:
         assert written["vr"] is True
         assert state.vr is True
 
-    def test_it_is_guarded_as_existing_save_data_and_becomes_the_last_session(self, library):
-        state = build_state(self._new())
+    def test_it_becomes_the_last_session(self, library):
+        build_state(self._new())
 
-        assert state.protect_existing_save_data is True
         assert library.pointer.read_text(encoding="utf-8") == str(
             library.sessions / "second pass.json"
         )

@@ -25,7 +25,6 @@ def _load_state_from_session_file(session_path: Path) -> VideoState:
     payload = read_json(session_path)
     state = load_video_state(payload, session_path.stem)
     state.session_path = str(session_path)
-    state.protect_existing_save_data = True
     return state
 
 
@@ -52,7 +51,6 @@ def build_clip_whole_state(video_file: str) -> VideoState:
         suggestions=Suggestions(),
         session_name=session_name,
         session_path=str(SESSIONS_DIR / f"{session_name}.json"),
-        original_session_payload={},
         skip_normalize=True,
     )
 

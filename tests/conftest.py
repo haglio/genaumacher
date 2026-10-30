@@ -384,7 +384,6 @@ def make_state():
             ),
             session_name=session_name,
             session_path=session_path,
-            original_session_payload={},
             loop_mode=read_loop_mode(loop_mode),
             wrap_mode=read_wrap_mode(wrap_mode),
             persist_session=_FakeAutosave(),

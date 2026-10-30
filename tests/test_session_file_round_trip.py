@@ -19,9 +19,12 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 import pytest
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QApplication
 
 from genaumacher.create_session import build_session_payload
 from genaumacher.editing import set_mark_in
+from genaumacher.gui.main_window import GenaumacherMainWindow
 from genaumacher.launch_choice import LoadSession
 from genaumacher.session_launch import build_state
 from genaumacher.session_persistence import current_payload
@@ -142,3 +145,30 @@ def test_an_edit_rewrites_the_values_and_nothing_else(session_file, load_session
     assert {k: v for k, v in saved.items() if k != "active_start"} == {
         k: v for k, v in golden.items() if k != "active_start"
     }
+
+
+def test_closing_an_edited_session_asks_nothing_and_loses_nothing(load_session):
+    state = load_session()
+    window = GenaumacherMainWindow(state)
+    window.show()
+    set_mark_in(state)  # current (120) becomes the new active_start (was 90)
+
+    boxes_it_put_up: list[str] = []
+
+    def answer_any_box() -> None:
+        box = QApplication.activeModalWidget()
+        if box is not None:
+            boxes_it_put_up.append(box.windowTitle())
+            box.reject()
+
+    answerer = QTimer()
+    answerer.timeout.connect(answer_any_box)
+    answerer.start(0)
+    try:
+        closed = window.close()
+    finally:
+        answerer.stop()
+
+    assert boxes_it_put_up == []
+    assert closed is True
+    assert load_session().active_start == 120

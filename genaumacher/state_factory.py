@@ -81,7 +81,6 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
         suggestions=Suggestions(initial_start=active_start, initial_end=active_end),
         session_name=session_name,
         session_path=str(SESSIONS_DIR / f"{sanitize_name(session_name)}.json"),
-        original_session_payload=dict(payload),
         loop_mode=loop_mode,
         wrap_mode=wrap_mode,
         vr=vr,

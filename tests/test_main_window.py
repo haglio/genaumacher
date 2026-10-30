@@ -8,14 +8,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from PyQt6.QtCore import QPoint, QSize, Qt
-from PyQt6.QtGui import QCloseEvent, QFont, QFontDatabase, QKeyEvent
+from PyQt6.QtGui import QFont, QFontDatabase, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QPushButton, QWidget
 from shared_ui.fonts import FONT_UI
 from shared_ui.preview import Preview
 from shared_ui.spacing import BUTTON_SIZE
 
 from genaumacher.gui.app import dress
-from genaumacher.gui.exit_dialog import ExitDialog
 from genaumacher.gui.floating_controls import FloatingControlLayout
 from genaumacher.gui.main_window import GenaumacherMainWindow, _WrapRow
 from genaumacher.gui.shortcuts import SHORTCUTS
@@ -44,8 +43,6 @@ def mock_state():
     state.loop_paused = False
     state.suggested_in = None
     state.suggested_out = None
-    state.dirty = False
-    state.should_prompt_on_exit = False
     state.session_warning = ""
     return state
 
@@ -170,65 +167,6 @@ def test_a_fixed_size_button_shows_its_whole_label_in_the_font_windows_gives_it(
     assert cut_off == []
 
 
-class TestCloseEvent:
-    def test_close_accepted_when_no_prompt_needed(self, window, mock_state):
-        mock_state.should_prompt_on_exit = False
-
-        event = QCloseEvent()
-        window.closeEvent(event)
-        assert event.isAccepted()
-
-    def _make_exit_dialog_mock(self, choice):
-
-        mock_cls = MagicMock()
-        mock_cls.SAVE = ExitDialog.SAVE
-        mock_cls.DISCARD = ExitDialog.DISCARD
-        mock_cls.CANCEL = ExitDialog.CANCEL
-        mock_dialog = MagicMock()
-        mock_dialog.choice = choice
-        mock_cls.return_value = mock_dialog
-        return mock_cls
-
-    def test_close_saves_and_accepts_on_save_choice(self, window, mock_state):
-        mock_state.should_prompt_on_exit = True
-
-
-        mock_cls = self._make_exit_dialog_mock(ExitDialog.SAVE)
-
-        with patch("genaumacher.gui.main_window.ExitDialog", mock_cls):
-            event = QCloseEvent()
-            window.closeEvent(event)
-
-        mock_state.autosave_session.assert_called_once()
-        assert event.isAccepted()
-
-    def test_close_ignores_on_cancel_choice(self, window, mock_state):
-        mock_state.should_prompt_on_exit = True
-
-
-        mock_cls = self._make_exit_dialog_mock(ExitDialog.CANCEL)
-
-        with patch("genaumacher.gui.main_window.ExitDialog", mock_cls):
-            event = QCloseEvent()
-            window.closeEvent(event)
-
-        mock_state.autosave_session.assert_not_called()
-        assert not event.isAccepted()
-
-    def test_close_discards_without_saving(self, window, mock_state):
-        mock_state.should_prompt_on_exit = True
-
-
-        mock_cls = self._make_exit_dialog_mock(ExitDialog.DISCARD)
-
-        with patch("genaumacher.gui.main_window.ExitDialog", mock_cls):
-            event = QCloseEvent()
-            window.closeEvent(event)
-
-        mock_state.autosave_session.assert_not_called()
-        assert event.isAccepted()
-
-
 class TestExportWiring:
     def test_export_creates_dialog_and_worker(self, window, mock_state):
         mock_worker = MagicMock()
@@ -338,13 +276,13 @@ class TestKeyDispatch:
         window = GenaumacherMainWindow(state)
         before = (state.current, state.active_start, state.active_end,
                   state.loaded_start, state.loaded_end, state.wrap_mode,
-                  state.loop_mode, state.speed, state.dirty)
+                  state.loop_mode, state.speed, state.persist_session.calls)
 
         _press(window, Qt.Key.Key_Z, "z")
 
         assert (state.current, state.active_start, state.active_end,
                 state.loaded_start, state.loaded_end, state.wrap_mode,
-                state.loop_mode, state.speed, state.dirty) == before
+                state.loop_mode, state.speed, state.persist_session.calls) == before
 
     @pytest.mark.parametrize("key", [Qt.Key.Key_Return, Qt.Key.Key_Enter])
     def test_enter_starts_an_export(self, make_state, key):

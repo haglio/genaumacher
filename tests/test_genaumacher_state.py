@@ -84,19 +84,6 @@ class TestVideoStateProperties:
         s = make_state(loaded_start=5, loaded_end=5)
         assert s.loaded_count == 1
 
-    def test_should_prompt_on_exit_only_for_existing_saved_data(self, make_state):
-        s = make_state()
-        s.dirty = True
-        assert s.should_prompt_on_exit is False
-
-        s.protect_existing_save_data = True
-        assert s.should_prompt_on_exit is True
-
-    def test_should_not_prompt_when_clean_even_for_loaded_sessions(self, make_state):
-        s = make_state()
-        s.protect_existing_save_data = True
-        s.dirty = False
-        assert s.should_prompt_on_exit is False
 
 
 # ---------------------------------------------------------------------------
@@ -314,16 +301,13 @@ class TestExtendLeft:
 
         assert s.loaded_start == 0
 
-    def test_at_the_start_of_the_video_it_leaves_the_session_clean(self, make_state):
-        """There is nowhere to go, so nothing changed and nothing is saved --
-        it used to mark dirty unconditionally and write the session once per
-        keypress at the edge (bug 88)."""
+    def test_at_the_start_of_the_video_it_saves_nothing(self, make_state):
         s = make_state(loaded_start=0, loaded_end=60, base_step=5)
 
         extend_left(s)
 
         assert s.loaded_start == 0
-        assert s.dirty is False
+        assert s.persist_session.calls == 0
 
 
 class TestExtendRight:
@@ -348,14 +332,13 @@ class TestExtendRight:
 
         assert s.loaded_end == 99
 
-    def test_at_the_end_of_the_video_it_leaves_the_session_clean(self, make_state):
-        """The right-hand twin of the extend_left case (bug 88)."""
+    def test_at_the_end_of_the_video_it_saves_nothing(self, make_state):
         s = make_state(total_frames=100, loaded_start=0, loaded_end=99, base_step=5)
 
         extend_right(s)
 
         assert s.loaded_end == 99
-        assert s.dirty is False
+        assert s.persist_session.calls == 0
 
     def test_the_edge_is_the_last_frame_the_decoder_produced(self, make_state):
         """A file the decoder abandons early used to leave the window claiming
@@ -372,11 +355,11 @@ class TestExtendRight:
         assert s.loaded_end == 62
         assert max(s.frames) == 62
 
-        s.dirty = False
+        saves = s.persist_session.calls
         extend_right(s)
 
         assert s.loaded_end == 62
-        assert s.dirty is False
+        assert s.persist_session.calls == saves
 
 
 class TestContractRight:
@@ -436,7 +419,7 @@ def _shift(direction: int):
 
 
 # (label, _make_state kwargs, prepare, act) for every edit that changes the
-# clip the user is cutting.  Each must set the dirty flag and autosave.
+# clip the user is cutting.  Each must redraw and autosave.
 _EDITS_THAT_CHANGE_THE_CLIP = [
     ("set_mark_in", {"active_start": 5, "active_end": 50, "current": 20}, _no_prep, set_mark_in),
     ("set_mark_out", {"active_start": 5, "active_end": 50, "current": 30}, _no_prep, set_mark_out),
@@ -455,7 +438,7 @@ _EDITS_THAT_CHANGE_THE_CLIP = [
 ]
 
 # The same operations asked to do something they refuse: nothing changes, so
-# nothing is saved and the exit prompt stays away.
+# nothing is saved.
 _EDITS_THAT_REFUSE = [
     ("set_mark_in past active_end", {"active_start": 5, "active_end": 50, "current": 55}, _no_prep, set_mark_in),
     ("set_mark_out before active_start", {"active_start": 20, "active_end": 50, "current": 10}, _no_prep, set_mark_out),
@@ -468,25 +451,16 @@ _EDITS_THAT_REFUSE = [
 ]
 
 
-class TestEditingMarksTheSessionDirty:
-    """The flag that drives the exit prompt, and the autosave it triggers.
-
-    Both used to be invisible: every editing test patched ``mark_dirty`` away
-    to keep the session file off disk, so deleting the call from an edit
-    operation left the whole suite green while in the app the user's marks
-    stopped being saved and the exit dialog stopped appearing.
-    """
-
+class TestAnEditIsSaved:
     @pytest.mark.parametrize(
         "kwargs, prepare, act",
         [pytest.param(k, p, a, id=label) for label, k, p, a in _EDITS_THAT_CHANGE_THE_CLIP],
     )
-    def test_an_edit_marks_the_session_dirty_and_saves_it(self, kwargs, prepare, act, make_state):
+    def test_an_edit_redraws_and_saves_the_session(self, kwargs, prepare, act, make_state):
         s = make_state(**kwargs)
         prepare(s)
         before = s.render_rev
         act(s)
-        assert s.dirty is True
         assert s.render_rev > before
         assert s.persist_session.calls == 1
 
@@ -494,11 +468,10 @@ class TestEditingMarksTheSessionDirty:
         "kwargs, prepare, act",
         [pytest.param(k, p, a, id=label) for label, k, p, a in _EDITS_THAT_REFUSE],
     )
-    def test_a_refused_edit_leaves_the_session_clean(self, kwargs, prepare, act, make_state):
+    def test_a_refused_edit_saves_nothing(self, kwargs, prepare, act, make_state):
         s = make_state(**kwargs)
         prepare(s)
         act(s)
-        assert s.dirty is False
         assert s.persist_session.calls == 0
 
 
