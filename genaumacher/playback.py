@@ -33,7 +33,7 @@ def change_speed(state: VideoState, delta: float) -> None:
         delta, loop_preview_indices(state), state.fps, time.monotonic()
     )
     if moved:
-        state.mark_dirty()
+        state.save_edit()
 
 
 def toggle_loop_pause(state: VideoState) -> None:

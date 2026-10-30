@@ -168,11 +168,7 @@ class _FakeCapture:
 
 
 class _FakeAutosave:
-    """Stands in for the session write ``VideoState.mark_dirty`` triggers.
-
-    Counting the calls is what ``patch.object(s, "mark_dirty")`` used to be
-    reached for, minus the part that hid the dirty flag itself.
-    """
+    """Stands in for the session write ``VideoState.save_edit`` triggers, and counts them."""
 
     def __init__(self) -> None:
         self.calls = 0

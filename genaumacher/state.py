@@ -42,10 +42,6 @@ class VideoState:
     last_saved_payload: dict[str, Any] | None = None
     render_rev: int = 0
     frame_signatures: dict[int, np.ndarray] = field(default_factory=dict)
-    # The disk write mark_dirty triggers, held as a collaborator so a caller
-    # that only wants the flag can supply one that writes nothing.  A test
-    # patching mark_dirty instead would patch away the flag and the render bump
-    # the edit operations exist to set, and so stop checking for them.
     persist_session: Callable[[VideoState], None] = field(
         default=persist_session_state, repr=False
     )
@@ -137,7 +133,7 @@ class VideoState:
         """
         self.render_rev += 1
 
-    def mark_dirty(self) -> None:
+    def save_edit(self) -> None:
         self.bump_render()
         self.autosave_session()
 

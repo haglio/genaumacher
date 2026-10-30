@@ -14,14 +14,14 @@ def toggle_wrap_mode(state: VideoState) -> None:
     )
     if state.wrap_mode is WrapMode.OVER_ACTIVE:
         state.window.hold_within(*wrap_bounds(state))
-    state.mark_dirty()
+    state.save_edit()
 
 
 def move_current_left(state: VideoState) -> None:
     state.window.step_cursor_back(*wrap_bounds(state))
-    state.mark_dirty()
+    state.save_edit()
 
 
 def move_current_right(state: VideoState) -> None:
     state.window.step_cursor_forward(*wrap_bounds(state))
-    state.mark_dirty()
+    state.save_edit()

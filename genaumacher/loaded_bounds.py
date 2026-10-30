@@ -13,7 +13,7 @@ def contract_left(state: VideoState) -> None:
     if state.window.contract_left(state.active_start):
         prune_loaded_caches(state)
         update_loop_suggestions(state)
-        state.mark_dirty()
+        state.save_edit()
 
 
 def extend_left(state: VideoState) -> None:
@@ -22,14 +22,14 @@ def extend_left(state: VideoState) -> None:
     if state.loaded_start == before:
         return  # at the start of the video: nothing moved, nothing to save
     update_loop_suggestions(state)
-    state.mark_dirty()
+    state.save_edit()
 
 
 def contract_right(state: VideoState) -> None:
     if state.window.contract_right(state.active_end):
         prune_loaded_caches(state)
         update_loop_suggestions(state)
-        state.mark_dirty()
+        state.save_edit()
 
 
 def extend_right(state: VideoState) -> None:
@@ -40,4 +40,4 @@ def extend_right(state: VideoState) -> None:
     if state.loaded_end == before:
         return  # the end of the video, or of what decodes: nothing to save
     update_loop_suggestions(state)
-    state.mark_dirty()
+    state.save_edit()
