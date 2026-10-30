@@ -53,7 +53,7 @@ def build_clip_whole_state(video_file: str) -> VideoState:
         session_name=session_name,
         session_path=str(SESSIONS_DIR / f"{session_name}.json"),
         original_session_payload={},
-        skip_postprocess=True,
+        skip_normalize=True,
     )
 
 

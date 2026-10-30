@@ -7,11 +7,11 @@ from unittest.mock import patch
 
 import pytest
 
-from genaumacher.clip_postprocess import main, parse_options
-from genaumacher.clip_postprocess_transforms import normalize_loop_mode, shift_frames_halfway
 from genaumacher.export_progress import fraction_in
 from genaumacher.loop_modes import LoopMode
-from genaumacher.postprocess_options import PostprocessOptions
+from genaumacher.normalize import main, parse_options
+from genaumacher.normalize_options import NormalizeOptions
+from genaumacher.normalize_transforms import normalize_loop_mode, shift_frames_halfway
 
 pytestmark = pytest.mark.usefixtures("library")
 
@@ -51,7 +51,7 @@ class TestTheDefaultsHaveOneHome:
     def test_a_command_line_with_no_flags_is_the_records_own_defaults(self):
         parsed = parse_options(["clip in.mp4", "-o", "clip out.mp4"])
 
-        assert parsed == PostprocessOptions(input="clip in.mp4", output="clip out.mp4")
+        assert parsed == NormalizeOptions(input="clip in.mp4", output="clip out.mp4")
 
     def test_every_flag_the_parser_takes_reaches_the_pipeline(self):
         """A flag the record has no field for cannot be constructed at all."""
@@ -63,7 +63,7 @@ class TestTheDefaultsHaveOneHome:
             "--pix-fmt", "yuv444p", "--max-mb", "2.5",
         ])
 
-        assert parsed == PostprocessOptions(
+        assert parsed == NormalizeOptions(
             input="clip in.mp4", output="clip out.mp4", loop_mode="base-tip",
             bridge_ms=120.0, bridge_frames=4, mode="flow", keep_length=False,
             symmetric_blend=3, seam_ms=0.0, copy_audio=True, crf=20,
@@ -76,11 +76,11 @@ class TestTheDefaultsHaveOneHome:
             parse_options(["--help"])
 
         printed = capsys.readouterr().out
-        assert f"default: {PostprocessOptions.seam_ms}" in printed
+        assert f"default: {NormalizeOptions.seam_ms}" in printed
 
 
-def test_clip_postprocess_cli_runs_as_direct_script():
-    script_path = Path(__file__).resolve().parent.parent / "genaumacher" / "clip_postprocess.py"
+def test_the_normalize_command_runs_as_a_script():
+    script_path = Path(__file__).resolve().parent.parent / "genaumacher" / "normalize.py"
     result = subprocess.run(
         [sys.executable, str(script_path), "--help"],
         capture_output=True,
@@ -108,17 +108,17 @@ def cli_run(tmp_path, frames_of, capsys):
 
     def run() -> str:
         argv = [
-            "clip_postprocess", str(tmp_path / "cli_in.mp4"), "-o", str(output),
+            "normalize", str(tmp_path / "cli_in.mp4"), "-o", str(output),
             "--loop-mode", "base-tip", "--mode", "blend", "--bridge-frames", "1",
             "--seam-ms", "0",
         ]
         with patch.object(sys, "argv", argv), \
-             patch("genaumacher.clip_postprocess_pipeline.ffprobe_video",
+             patch("genaumacher.normalize_pipeline.ffprobe_video",
                    return_value={"fps": 24.0, "width": 8, "height": 8,
                                  "nb_frames": 4, "duration": 4 / 24.0}), \
-             patch("genaumacher.clip_postprocess_pipeline.read_frames",
+             patch("genaumacher.normalize_pipeline.read_frames",
                    return_value=frames_of([10, 20, 30, 40], size=8)), \
-             patch("genaumacher.clip_postprocess_pipeline.encode_with_ffmpeg", fake_encode):
+             patch("genaumacher.normalize_pipeline.encode_with_ffmpeg", fake_encode):
             main()
         return capsys.readouterr().out
 

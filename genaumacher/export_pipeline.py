@@ -40,24 +40,21 @@ def run_export(state: VideoState, progress: ExportProgress) -> tuple[bool, str]:
     """
     progress.stage("preparing export")
     progress.clip(0.0)
-    progress.fix(0.0)
+    progress.normalize(0.0)
     progress.audio(0.0)
 
     raw_path, clip_path, audio_path = _output_paths(state)
     try:
-        # A whole-video export is already a loop, so it skips the seam pass --
-        # and with nothing to post-process, the clip is cut straight to where
-        # the post-process would have put it.
-        first_output = clip_path if state.skip_postprocess else raw_path
+        first_output = clip_path if state.skip_normalize else raw_path
         ok, detail = export_steps.export_raw_clip(state, first_output, progress)
         if not ok:
             return False, detail
 
-        if state.skip_postprocess:
+        if state.skip_normalize:
             record_provenance(clip_path)
-            progress.fix(1.0)
+            progress.normalize(1.0)
         else:
-            ok, detail = export_steps.run_clip_postprocess(
+            ok, detail = export_steps.run_normalize(
                 state, raw_path, clip_path, progress
             )
             if not ok:

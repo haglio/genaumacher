@@ -181,8 +181,8 @@ class TestBuildClipWholeState:
     def test_it_loads_no_frames(self, whole):
         assert whole.frames == {}
 
-    def test_it_skips_the_loop_post_process(self, whole):
-        assert whole.skip_postprocess is True
+    def test_it_skips_normalizing(self, whole):
+        assert whole.skip_normalize is True
 
     def test_the_session_takes_its_name_from_the_video(self, whole):
         assert whole.session_name == "seaside walk"

@@ -41,7 +41,7 @@ pytest-cache-files-*/
 /content.local.json
 
 # The RIFE interpolator is fetched, not tracked: tools/fetch_rife.py puts it
-# where clip_postprocess_transforms._find_rife_exe looks. The release zip is
+# where genaumacher/interpolator_environment.py looks. The release zip is
 # 432 MB and the script deletes it once the six files it wants are out.
 /tools/rife-ncnn-vulkan-*/
 /tools/rife-ncnn-vulkan-*.zip

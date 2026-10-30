@@ -7,19 +7,19 @@ from pathlib import Path
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from genaumacher.clip_postprocess_pipeline import postprocess_clip
     from genaumacher.export_progress import progress_line
     from genaumacher.loop_modes import LOOP_MODES, LoopMode
-    from genaumacher.postprocess_options import PostprocessOptions
+    from genaumacher.normalize_options import NormalizeOptions
+    from genaumacher.normalize_pipeline import normalize_clip
 else:
-    from .clip_postprocess_pipeline import postprocess_clip
     from .export_progress import progress_line
     from .loop_modes import LOOP_MODES, LoopMode
-    from .postprocess_options import PostprocessOptions
+    from .normalize_options import NormalizeOptions
+    from .normalize_pipeline import normalize_clip
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """The command line, with every default read off ``PostprocessOptions``.
+    """The command line, with every default read off ``NormalizeOptions``.
 
     Including the ones the help text states: ``%(default)s`` quotes the value
     argparse was handed, so there is no second copy to go stale.
@@ -33,25 +33,25 @@ def build_parser() -> argparse.ArgumentParser:
         "--loop-mode",
         type=LoopMode,
         choices=LOOP_MODES,
-        default=PostprocessOptions.loop_mode,
+        default=NormalizeOptions.loop_mode,
         help="How to normalize the exported clip before smoothing the seam",
     )
     ap.add_argument(
         "--bridge-ms",
         type=float,
-        default=PostprocessOptions.bridge_ms,
+        default=NormalizeOptions.bridge_ms,
         help="Bridge length in milliseconds (default: %(default)s)",
     )
     ap.add_argument(
         "--bridge-frames",
         type=int,
-        default=PostprocessOptions.bridge_frames,
+        default=NormalizeOptions.bridge_frames,
         help="Bridge length in frames (overrides --bridge-ms)",
     )
     ap.add_argument(
         "--mode",
         choices=["flow", "blend", "register"],
-        default=PostprocessOptions.mode,
+        default=NormalizeOptions.mode,
         help="Seam smoothing mode: register (align via keypoints, default), flow (optical flow warp), blend (simple crossfade)",
     )
     length_group = ap.add_mutually_exclusive_group()
@@ -67,57 +67,57 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_false",
         help="Append the bridge to the end instead of replacing the tail",
     )
-    ap.set_defaults(keep_length=PostprocessOptions.keep_length)
+    ap.set_defaults(keep_length=NormalizeOptions.keep_length)
     ap.add_argument(
         "--symmetric-blend",
         type=int,
-        default=PostprocessOptions.symmetric_blend,
+        default=NormalizeOptions.symmetric_blend,
         help="Also softly pull the first/last N frames toward each other before bridge generation",
     )
     ap.add_argument(
         "--seam-ms",
         type=float,
-        default=PostprocessOptions.seam_ms,
+        default=NormalizeOptions.seam_ms,
         help="RIFE seam convergence duration per side in ms, for --mode register only "
              "(default: %(default)s). Set to 0 to disable.",
     )
     ap.add_argument(
         "--copy-audio",
         action="store_true",
-        default=PostprocessOptions.copy_audio,
+        default=NormalizeOptions.copy_audio,
         help="Try to keep input audio (usually not ideal for seamless loops)",
     )
     ap.add_argument(
         "--crf",
         type=int,
-        default=PostprocessOptions.crf,
+        default=NormalizeOptions.crf,
         help="libx264 CRF (default: %(default)s)",
     )
     ap.add_argument(
         "--preset",
-        default=PostprocessOptions.preset,
+        default=NormalizeOptions.preset,
         help="libx264 preset (default: %(default)s)",
     )
     ap.add_argument(
         "--pix-fmt",
-        default=PostprocessOptions.pix_fmt,
+        default=NormalizeOptions.pix_fmt,
         help="Output pixel format (default: %(default)s)",
     )
     ap.add_argument(
         "--max-mb",
         type=float,
-        default=PostprocessOptions.max_mb,
+        default=NormalizeOptions.max_mb,
         help="Maximum output file size in MB (default: %(default)s)",
     )
     return ap
 
 
-def parse_options(argv: Sequence[str] | None = None) -> PostprocessOptions:
+def parse_options(argv: Sequence[str] | None = None) -> NormalizeOptions:
     """The command line as the record the pipeline works from.
 
     Every flag is a field, so a flag added without one cannot be constructed.
     """
-    return PostprocessOptions(**vars(build_parser().parse_args(argv)))
+    return NormalizeOptions(**vars(build_parser().parse_args(argv)))
 
 
 def _say_how_far(fraction: float) -> None:
@@ -129,7 +129,7 @@ def _say_how_far(fraction: float) -> None:
 
 
 def main():
-    summary = postprocess_clip(parse_options(), report=_say_how_far)
+    summary = normalize_clip(parse_options(), report=_say_how_far)
 
     print(f"Input FPS: {summary['fps']:.6f}")
     print(f"Input frames: {summary['input_frames']}")

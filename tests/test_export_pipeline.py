@@ -26,7 +26,7 @@ class _Watcher:
     def __init__(self) -> None:
         self.stages: list[str] = []
         self.clips: list[float] = []
-        self.fixes: list[float] = []
+        self.normalizes: list[float] = []
         self.audios: list[float] = []
 
     def stage(self, text: str) -> None:
@@ -35,8 +35,8 @@ class _Watcher:
     def clip(self, fraction: float) -> None:
         self.clips.append(fraction)
 
-    def fix(self, fraction: float) -> None:
-        self.fixes.append(fraction)
+    def normalize(self, fraction: float) -> None:
+        self.normalizes.append(fraction)
 
     def audio(self, fraction: float) -> None:
         self.audios.append(fraction)
@@ -80,11 +80,11 @@ def steps():
     """The three export steps, stubbed at the module they are called through."""
     stubs = {
         "raw": _Step(stage="clipping", reports="clip", detail="raw.mp4"),
-        "post": _Step(stage="fixing the loop", reports="fix", detail="clip.mp4"),
+        "normalize": _Step(stage="normalizing", reports="normalize", detail="clip.mp4"),
         "audio": _Step(stage="pulling audio", reports="audio", detail="audio.mp3"),
     }
     with patch("genaumacher.export_steps.export_raw_clip", stubs["raw"]), \
-         patch("genaumacher.export_steps.run_clip_postprocess", stubs["post"]), \
+         patch("genaumacher.export_steps.run_normalize", stubs["normalize"]), \
          patch("genaumacher.export_steps.export_full_audio_mp3", stubs["audio"]):
         yield stubs
 
@@ -105,13 +105,13 @@ class TestWhatEachStepIsGiven:
         assert out_path.parent == RAW_CLIPS_DIR
         assert progress is watcher
 
-    def test_the_post_process_step_gets_the_raw_input_and_the_clip_output(
+    def test_the_normalize_step_gets_the_raw_input_and_the_clip_output(
         self, state, steps, watcher
     ):
         run_export(state, watcher)
 
-        post_state, raw_in, clip_out, progress = steps["post"].calls[0]
-        assert post_state is state
+        normalize_state, raw_in, clip_out, progress = steps["normalize"].calls[0]
+        assert normalize_state is state
         assert raw_in == steps["raw"].calls[0][1]
         assert clip_out.parent == flicks_dir()
         assert progress is watcher
@@ -129,7 +129,7 @@ class TestWhatEachStepIsGiven:
         run_export(state, watcher)
 
         assert steps["raw"].calls[0][1].stem == "second pass"
-        assert steps["post"].calls[0][2].stem == "second pass"
+        assert steps["normalize"].calls[0][2].stem == "second pass"
         assert steps["audio"].calls[0][1].stem == "second pass"
 
     def test_a_session_name_that_cannot_be_a_filename_is_sanitized(
@@ -149,10 +149,10 @@ class TestWhatItReports:
         run_export(state, watcher)
 
         assert watcher.stages == [
-            "preparing export", "clipping", "fixing the loop", "pulling audio",
+            "preparing export", "clipping", "normalizing", "pulling audio",
         ]
         assert watcher.clips == [0.0, 1.0]
-        assert watcher.fixes == [0.0, 1.0]
+        assert watcher.normalizes == [0.0, 1.0]
         assert watcher.audios == [0.0, 1.0]
 
     def test_a_finished_run_names_the_clip_it_wrote(self, state, steps, watcher):
@@ -168,12 +168,12 @@ class TestFailures:
         steps["raw"].detail = "ffmpeg not found on PATH"
 
         assert run_export(state, watcher) == (False, "ffmpeg not found on PATH")
-        assert not steps["post"].called
+        assert not steps["normalize"].called
         assert not steps["audio"].called
 
-    def test_a_failed_post_process_stops_before_the_audio(self, state, steps, watcher):
-        steps["post"].ok = False
-        steps["post"].detail = "the bridge is too long"
+    def test_a_failed_normalize_stops_before_the_audio(self, state, steps, watcher):
+        steps["normalize"].ok = False
+        steps["normalize"].detail = "the bridge is too long"
 
         assert run_export(state, watcher) == (False, "the bridge is too long")
         assert not steps["audio"].called
@@ -198,45 +198,45 @@ class TestVrExportPath:
 
         run_export(state, watcher)
 
-        assert steps["post"].calls[0][2].parent == flicks_dir()
+        assert steps["normalize"].calls[0][2].parent == flicks_dir()
 
     def test_a_vr_clip_lands_in_the_vr_clips_folder(self, state, steps, watcher):
         state.vr = True
 
         run_export(state, watcher)
 
-        assert steps["post"].calls[0][2].parent == vr_flicks_dir()
+        assert steps["normalize"].calls[0][2].parent == vr_flicks_dir()
 
 
 class TestALoopedClipsRecord:
-    """The loop fix stamps the clip from inside its own run, whose code is what
+    """Normalizing stamps the clip from inside its own run, whose code is what
     made it -- which is not always the code this window was opened on."""
 
-    def test_the_export_leaves_the_stamp_the_loop_fix_wrote(
+    def test_the_export_leaves_the_stamp_normalizing_wrote(
         self, state, steps, watcher, recorded_cut
     ):
-        def loop_fix(_state, _raw_path, clip_path, _progress):
+        def normalize(_state, _raw_path, clip_path, _progress):
             record_provenance(clip_path, method="clip_postprocess", method_version="3")
             return True, str(clip_path)
 
-        with patch("genaumacher.export_steps.run_clip_postprocess", loop_fix):
+        with patch("genaumacher.export_steps.run_normalize", normalize):
             run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)
         assert (recorded[METHOD], recorded[METHOD_VERSION]) == ("clip_postprocess", "3")
 
 
-class TestSkipPostprocess:
-    """A whole-video export is already a loop; it does not want the seam pass."""
+class TestSkipNormalize:
+    """A whole-video export is already a loop, so it is not normalized."""
 
     @pytest.fixture(autouse=True)
     def _skipping(self, state):
-        state.skip_postprocess = True
+        state.skip_normalize = True
 
-    def test_the_post_process_step_never_runs(self, state, steps, watcher):
+    def test_the_normalize_step_never_runs(self, state, steps, watcher):
         run_export(state, watcher)
 
-        assert not steps["post"].called
+        assert not steps["normalize"].called
 
     def test_the_clip_is_written_straight_into_the_clips_folder(
         self, state, steps, watcher
@@ -250,18 +250,18 @@ class TestSkipPostprocess:
     ):
         run_export(state, watcher)
 
-        assert watcher.fixes == [0.0, 1.0]
+        assert watcher.normalizes == [0.0, 1.0]
 
     def test_the_audio_is_still_pulled(self, state, steps, watcher):
         run_export(state, watcher)
 
         assert steps["audio"].called
 
-    def test_the_clip_says_genaumacher_made_it_with_no_loop_fix(
+    def test_the_clip_says_genaumacher_made_it_without_normalizing(
         self, state, steps, watcher, recorded_cut
     ):
         """Nothing but the cut touched it, so a sweep for clips made before a
-        change to the loop fix finds nothing here to remake."""
+        change to normalizing finds nothing here to remake."""
         run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)

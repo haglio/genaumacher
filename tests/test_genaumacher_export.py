@@ -13,7 +13,7 @@ from genaumacher.export_steps import (
     _parse_ffmpeg_clock,
     _run_ffmpeg_with_progress,
     export_full_audio_mp3,
-    run_clip_postprocess,
+    run_normalize,
     validate_video_file,
 )
 from genaumacher.loop_modes import LoopMode
@@ -25,7 +25,7 @@ class _Recorder:
     def __init__(self) -> None:
         self.stages: list[str] = []
         self.clips: list[float] = []
-        self.fixes: list[float] = []
+        self.normalizes: list[float] = []
         self.audios: list[float] = []
 
     def stage(self, text: str) -> None:
@@ -34,8 +34,8 @@ class _Recorder:
     def clip(self, fraction: float) -> None:
         self.clips.append(fraction)
 
-    def fix(self, fraction: float) -> None:
-        self.fixes.append(fraction)
+    def normalize(self, fraction: float) -> None:
+        self.normalizes.append(fraction)
 
     def audio(self, fraction: float) -> None:
         self.audios.append(fraction)
@@ -232,7 +232,7 @@ class TestRunFfmpegWithProgress:
         assert all(v <= 1.0 for v in recorded)
 
 
-class TestRunClipPostprocess:
+class TestRunNormalize:
     """The script runs as a subprocess and says how far it has got on stdout.
 
     The bar for it used to be invented here -- a hundredth per tenth of a
@@ -247,12 +247,9 @@ class TestRunClipPostprocess:
         proc.stdout = io.StringIO("".join(f"{line}\n" for line in printed))
         proc.wait.return_value = returncode
         proc.poll.return_value = returncode
-        script = tmp_path / "clip_postprocess.py"
-        script.write_text("# test\n", encoding="utf-8")
 
-        with patch("genaumacher.export_steps.CLIP_POSTPROCESS_SCRIPT", script), \
-             patch("subprocess.Popen", return_value=proc) as popen:
-            ok, detail = run_clip_postprocess(
+        with patch("subprocess.Popen", return_value=proc) as popen:
+            ok, detail = run_normalize(
                 state, tmp_path / "raw.mp4", tmp_path / "out.mp4", progress
             )
         return ok, detail, progress, popen
@@ -266,13 +263,18 @@ class TestRunClipPostprocess:
         assert "--loop-mode" in cmd
         assert "tip-base" in cmd
 
+    def test_it_says_it_is_normalizing_while_it_runs(self, tmp_path: Path, make_state):
+        _ok, _detail, progress, _popen = self._run(tmp_path, make_state, ["done"])
+
+        assert progress.stages == ["normalizing"]
+
     def test_the_bar_is_what_the_script_said_it_had_done(self, tmp_path: Path, make_state):
         printed = [progress_line(0.2), "Input frames: 4", progress_line(0.6),
                    "Wrote: out.mp4"]
 
         _ok, _detail, progress, _popen = self._run(tmp_path, make_state, printed)
 
-        assert progress.fixes == [0.2, 0.6, 1.0]
+        assert progress.normalizes == [0.2, 0.6, 1.0]
 
     def test_the_last_of_it_is_the_run_ending_rather_than_a_line(
         self, tmp_path: Path, make_state
@@ -285,7 +287,7 @@ class TestRunClipPostprocess:
             tmp_path, make_state, ["Input frames: 4", "Wrote: out.mp4"]
         )
 
-        assert progress.fixes == [1.0]
+        assert progress.normalizes == [1.0]
 
     def test_a_failure_reports_the_lines_a_person_can_read(self, tmp_path: Path, make_state):
         printed = [progress_line(0.2), "Traceback (most recent call last):",
@@ -296,6 +298,13 @@ class TestRunClipPostprocess:
         assert ok is False
         assert "RuntimeError: Clip is too short." in detail
         assert progress_line(0.2) not in detail
+
+    def test_a_failure_says_normalizing_failed(self, tmp_path: Path, make_state):
+        _ok, detail, _progress, _popen = self._run(
+            tmp_path, make_state, ["RuntimeError: Clip is too short."], returncode=1
+        )
+
+        assert detail.splitlines()[0] == "Normalizing failed:"
 
 
 class TestExportFullAudioMp3:

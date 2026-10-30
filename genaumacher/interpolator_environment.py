@@ -1,7 +1,7 @@
 """What is wrong with this checkout's frame interpolator, if anything.
 
-``clip_postprocess_pipeline`` reaches for RIFE on every clip the loop fix
-touches and, finding none, falls back to its geometric seam without a word -- so
+``normalize_pipeline`` reaches for RIFE on every clip it normalizes
+and, finding none, falls back to its geometric seam without a word -- so
 a checkout that never ran ``tools/fetch_rife.py`` writes visibly worse clips and
 looks fine doing it.  The files are 17 MB this repo deliberately does not track,
 which makes "never fetched" the ordinary state of a fresh clone.
@@ -23,7 +23,7 @@ MODEL_DIR_NAME = "rife-v4.6"
 MODEL_FILES = ("flownet.bin", "flownet.param")
 
 _FETCH = "run `python tools/fetch_rife.py` -- see CLAUDE.md, Fetching RIFE"
-_FALLBACK = "the loop fix falls back to its geometric seam"
+_FALLBACK = "normalizing falls back to its geometric seam"
 
 
 def _find_exe() -> Path | None:
@@ -53,8 +53,8 @@ def _missing_weights(exe: Path) -> list[str]:
 
 
 def locate() -> tuple[Path, Path] | None:
-    """The interpolator and the models beside it, or None when the loop fix has
-    to do without.  Asked before a clip is fixed, and asked again by
+    """The interpolator and the models beside it, or None when normalizing has
+    to do without.  Asked before a clip is normalized, and asked again by
     :func:`complaints` on the way up so the answer is not a surprise."""
     exe = _find_exe()
     if exe is None or _missing_weights(exe):
@@ -63,7 +63,7 @@ def locate() -> tuple[Path, Path] | None:
 
 
 def complaints() -> list[str]:
-    """What this machine's interpolator setup costs the loop fix, if anything."""
+    """What this machine's interpolator setup costs normalizing, if anything."""
     exe = _find_exe()
     if exe is None:
         return [f"there is none in this checkout, so {_FALLBACK}; {_FETCH}"]

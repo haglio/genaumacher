@@ -10,7 +10,7 @@ import cv2
 from app_support.subprocess_utils import hidden_subprocess_kwargs
 
 from .export_progress import ExportProgress, fraction_in
-from .paths import CLIP_POSTPROCESS_SCRIPT
+from .paths import NORMALIZE_SCRIPT
 from .state import VideoState
 
 
@@ -120,11 +120,9 @@ def export_raw_clip(state: VideoState, out_path: Path, progress: ExportProgress)
     return True, str(out_path)
 
 
-def run_clip_postprocess(state: VideoState, raw_path: Path, out_path: Path, progress: ExportProgress) -> tuple[bool, str]:
-    progress.stage(f"running {CLIP_POSTPROCESS_SCRIPT.name}")
-    if not CLIP_POSTPROCESS_SCRIPT.exists():
-        return False, f"{CLIP_POSTPROCESS_SCRIPT.name} not found at {CLIP_POSTPROCESS_SCRIPT}"
-    cmd = [sys.executable, str(CLIP_POSTPROCESS_SCRIPT), str(raw_path), "-o", str(out_path), "--loop-mode", state.loop_mode]
+def run_normalize(state: VideoState, raw_path: Path, out_path: Path, progress: ExportProgress) -> tuple[bool, str]:
+    progress.stage("normalizing")
+    cmd = [sys.executable, str(NORMALIZE_SCRIPT), str(raw_path), "-o", str(out_path), "--loop-mode", state.loop_mode]
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 text=True, bufsize=1, **hidden_subprocess_kwargs())
@@ -142,14 +140,14 @@ def run_clip_postprocess(state: VideoState, raw_path: Path, out_path: Path, prog
                 if line:
                     lines.append(line)
             else:
-                progress.fix(fraction)
+                progress.normalize(fraction)
         rc = proc.wait()
     finally:
         if proc.stdout is not None:
             proc.stdout.close()
     if rc != 0:
-        return False, f"{CLIP_POSTPROCESS_SCRIPT.name} failed:\n" + "\n".join(lines[-20:])
-    progress.fix(1.0)
+        return False, "Normalizing failed:\n" + "\n".join(lines[-20:])
+    progress.normalize(1.0)
     return True, str(out_path)
 
 

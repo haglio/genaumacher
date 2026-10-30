@@ -7,8 +7,8 @@ import cv2
 import numpy as np
 import pytest
 
-from genaumacher import clip_postprocess_transforms, interpolator_environment
-from genaumacher.clip_postprocess_transforms import (
+from genaumacher import interpolator_environment, normalize_transforms
+from genaumacher.normalize_transforms import (
     build_registered_seam,
     build_rife_bridge,
     build_rife_seam,
@@ -57,7 +57,7 @@ def interpolator(tmp_path: Path, monkeypatch) -> None:
             cv2.imread(flags["-1"], cv2.IMREAD_COLOR), timestep, 0.0))
         return subprocess.CompletedProcess(args, 0)
 
-    monkeypatch.setattr(clip_postprocess_transforms.subprocess, "run", _blend)
+    monkeypatch.setattr(normalize_transforms.subprocess, "run", _blend)
 
 
 class TestDecomposeComposeSimilarity:

@@ -1,4 +1,4 @@
-"""The line the post-process prints so the bar for it can be a real one."""
+"""The line normalizing prints so the bar for it can be a real one."""
 from __future__ import annotations
 
 import pytest
@@ -7,7 +7,7 @@ from genaumacher.export_progress import fraction_in, progress_line
 
 
 class TestTheLineTheSubprocessPrints:
-    """The loop post-process runs as a subprocess, so the only way it can say
+    """Normalizing runs as a subprocess, so the only way it can say
     how far it has got is to print it.  One module writes the line and reads
     it, because a parent and a child that each spell the format out is a bar
     that silently stops moving the day one of them is edited.

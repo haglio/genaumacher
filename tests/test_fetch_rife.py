@@ -2,7 +2,7 @@
 
 Two things have to hold or the move is worse than the tracking was. The files
 must land where ``genaumacher.interpolator_environment`` looks, or the fetch is
-green and the loop fix falls back to its geometric seam anyway; and "the binary
+green and normalizing falls back to its geometric seam anyway; and "the binary
 is here" has to mean "the binary runs here", or ``--require`` passes on a
 machine that cannot interpolate -- and that one step is the only place anything
 asks the real binary for a frame.
@@ -130,7 +130,7 @@ class TestRuns:
     def extracted(self, tmp_path: Path, monkeypatch) -> Path:
         monkeypatch.setattr(fetch_rife, "DEST", tmp_path)
         monkeypatch.setattr(fetch_rife, "RIFE_EXE", tmp_path / "rife-ncnn-vulkan.exe")
-        # runs() interpolates through clip_postprocess_transforms, which resolves
+        # runs() interpolates through normalize_transforms, which resolves
         # the binary with interpolator_environment -- not fetch_rife.RIFE_EXE.
         # Point that seam at the extracted fake too, or the Windows runner finds
         # the real fetched exe, produces a frame, and runs() answers True where
@@ -155,7 +155,7 @@ class TestRuns:
         self, extracted: Path, monkeypatch
     ):
         monkeypatch.setattr(
-            "genaumacher.clip_postprocess_transforms.build_rife_bridge",
+            "genaumacher.normalize_transforms.build_rife_bridge",
             _bridge_returning([object()]),
         )
 
@@ -166,7 +166,7 @@ class TestRuns:
     ):
         """The Vulkan-less case: the process runs, the bridge comes back empty."""
         monkeypatch.setattr(
-            "genaumacher.clip_postprocess_transforms.build_rife_bridge",
+            "genaumacher.normalize_transforms.build_rife_bridge",
             _bridge_returning(None),
         )
 
@@ -174,7 +174,7 @@ class TestRuns:
 
     def test_a_bridge_that_raises_does_not_run(self, extracted: Path, monkeypatch):
         monkeypatch.setattr(
-            "genaumacher.clip_postprocess_transforms.build_rife_bridge",
+            "genaumacher.normalize_transforms.build_rife_bridge",
             _bridge_returning(subprocess.TimeoutExpired(cmd="rife", timeout=1)),
         )
 

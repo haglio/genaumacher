@@ -21,22 +21,22 @@ class ExportProgress(Protocol):
     def clip(self, fraction: float) -> None:
         """How far the raw clip export has got, 0.0 to 1.0."""
 
-    def fix(self, fraction: float) -> None:
-        """How far the loop post-process has got, 0.0 to 1.0."""
+    def normalize(self, fraction: float) -> None:
+        """How far normalizing has got, 0.0 to 1.0."""
 
     def audio(self, fraction: float) -> None:
         """How far the audio extraction has got, 0.0 to 1.0."""
 
 
-# The loop post-process is a subprocess, so the only way it can say how far it
+# Normalizing runs as a subprocess, so the only way it can say how far it
 # has got is to print it.  Written and read here, both: a parent and a child
 # that each spell the format out is a bar that stops moving the day one of them
 # is edited, and silently, because the line just stops matching.
-_PROGRESS_PREFIX = "postprocess-progress"
+_PROGRESS_PREFIX = "normalize-progress"
 
 
 def progress_line(fraction: float) -> str:
-    """How the post-process says it has finished *fraction* of its work."""
+    """How normalizing says it has finished *fraction* of its work."""
     return f"{_PROGRESS_PREFIX} {fraction:.4f}"
 
 
