@@ -34,14 +34,11 @@ class VideoState:
     suggestions: Suggestions
     session_name: str
     session_path: str
-    original_session_payload: dict[str, Any]
     loop_mode: LoopMode = LoopMode.BASE_TIP_BASE
     wrap_mode: WrapMode = WrapMode.OVER_LOADED
     skip_normalize: bool = False
     vr: bool = False
     session_warning: str = ""
-    dirty: bool = False
-    protect_existing_save_data: bool = False
     last_saved_payload: dict[str, Any] | None = None
     render_rev: int = 0
     frame_signatures: dict[int, np.ndarray] = field(default_factory=dict)
@@ -124,10 +121,6 @@ class VideoState:
     def paused_loop_pos(self) -> int | None:
         return self.loop.paused_pos
 
-    @property
-    def should_prompt_on_exit(self) -> bool:
-        return self.dirty and self.protect_existing_save_data
-
     def clamp_current(self) -> None:
         self.window.hold_within(*wrap_bounds(self))
 
@@ -145,7 +138,6 @@ class VideoState:
         self.render_rev += 1
 
     def mark_dirty(self) -> None:
-        self.dirty = True
         self.bump_render()
         self.autosave_session()
 

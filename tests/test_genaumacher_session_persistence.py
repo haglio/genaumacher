@@ -32,7 +32,6 @@ def _state(**overrides):
         session_path="C:\\demo.json",
         session_warning="",
         last_saved_payload=None,
-        original_session_payload={"version": 1},
     )
     defaults.update(overrides)
     return SimpleNamespace(**defaults)

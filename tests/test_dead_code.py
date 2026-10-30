@@ -51,10 +51,7 @@ def test_no_constructor_parameter_is_stored_and_never_read():
 
 
 def test_no_dataclass_field_goes_unread():
-    # Written on every launch and read only by the tests that prove it was: the discard-on-exit
-    # it was kept for has no production reader. Item 28's remainder judges it; not deleted here.
-    unread.assert_no_dataclass_field_goes_unread(
-        ROOT, SCANNED, allowing=("VideoState.original_session_payload",))
+    unread.assert_no_dataclass_field_goes_unread(ROOT, SCANNED)
 
 
 def test_every_declared_command_line_option_is_read():

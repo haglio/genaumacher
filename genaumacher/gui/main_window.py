@@ -25,7 +25,6 @@ from genaumacher.timecode import format_seconds
 from genaumacher.wrap_modes import WrapMode, wrap_bounds
 
 from .button_bar import ButtonBar
-from .exit_dialog import ExitDialog
 from .export_dialog import ExportDialog
 from .export_worker import connect_export
 from .floating_controls import FloatingControlLayout
@@ -362,19 +361,6 @@ class GenaumacherMainWindow(QMainWindow):
 
         playing = "playing" if not state.loop_paused else "paused"
         self.speed_label.setText(f"speed: {state.speed:.2f}x ({playing})")
-
-    # -- Window events ---------------------------------------------------------
-
-    def closeEvent(self, event) -> None:
-        if self._state.should_prompt_on_exit:
-            dialog = ExitDialog(self)
-            dialog.exec()
-            if dialog.choice == ExitDialog.SAVE:
-                self._state.autosave_session()
-            elif dialog.choice == ExitDialog.CANCEL:
-                event.ignore()
-                return
-        event.accept()
 
     # -- Key dispatch ----------------------------------------------------------
 
