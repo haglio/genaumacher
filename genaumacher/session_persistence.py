@@ -38,6 +38,13 @@ def safe_atomic_write_json(path: Path, payload: dict[str, Any]) -> tuple[bool, s
         return False, str(exc)
 
 
+def remember_last_session(session_path: Path | str) -> None:
+    try:
+        LAST_SESSION_FILE.write_text(str(session_path), encoding="utf-8")
+    except OSError:
+        logger.warning("Could not update %s", LAST_SESSION_FILE, exc_info=True)
+
+
 def read_json(path: Path) -> dict[str, Any]:
     with open(path, encoding="utf-8") as f:
         return json.load(f)
@@ -125,12 +132,6 @@ def autosave_session(state) -> None:
     if ok:
         state.session_warning = ""
         state.last_saved_payload = payload
-        try:
-            LAST_SESSION_FILE.write_text(state.session_path, encoding="utf-8")
-        except OSError:
-            # The session itself reached disk, which is what the warning label
-            # exists to report; losing the pointer only costs the launcher its
-            # offer next time -- which is worth a log line rather than silence.
-            logger.warning("Could not update %s", LAST_SESSION_FILE, exc_info=True)
+        remember_last_session(state.session_path)
     else:
         state.session_warning = f"Autosave failed: {detail}"

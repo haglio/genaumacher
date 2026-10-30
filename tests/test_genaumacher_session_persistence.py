@@ -9,6 +9,7 @@ from genaumacher.session_persistence import (
     SESSION_FORMAT_VERSION,
     autosave_session,
     current_payload,
+    remember_last_session,
     safe_atomic_write_json,
 )
 
@@ -135,6 +136,24 @@ def test_a_write_that_succeeds_clears_an_earlier_warning(tmp_path: Path):
     assert state.session_warning == ""
     assert state.last_saved_payload == current_payload(state)
     assert (tmp_path / "demo.json").exists()
+
+
+def test_remembering_a_session_points_the_launcher_at_it(tmp_path: Path):
+    pointer = tmp_path / ".last_session.txt"
+
+    with patch("genaumacher.session_persistence.LAST_SESSION_FILE", pointer):
+        remember_last_session(tmp_path / "demo.json")
+
+    assert pointer.read_text(encoding="utf-8") == str(tmp_path / "demo.json")
+
+
+def test_a_pointer_that_cannot_be_written_is_said_in_the_log_and_never_raised(tmp_path: Path, caplog):
+    pointer = tmp_path / "no-such-folder" / ".last_session.txt"
+
+    with patch("genaumacher.session_persistence.LAST_SESSION_FILE", pointer):
+        remember_last_session(tmp_path / "demo.json")
+
+    assert f"Could not update {pointer}" in caplog.text
 
 
 class TestSafeAtomicWriteJson:

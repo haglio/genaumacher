@@ -107,8 +107,7 @@ def _the_last_session_pointer_is_never_the_real_one(tmp_path_factory):
 
     scratch = tmp_path_factory.mktemp("pointer") / ".last_session.txt"
     with pytest.MonkeyPatch.context() as patcher:
-        for name in ("genaumacher.paths", "genaumacher.create_session",
-                     "genaumacher.session_launch", "genaumacher.session_persistence"):
+        for name in ("genaumacher.paths", "genaumacher.session_launch", "genaumacher.session_persistence"):
             patcher.setattr(importlib.import_module(name),
                             "LAST_SESSION_FILE", scratch)
         yield
