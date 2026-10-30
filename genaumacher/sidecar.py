@@ -21,7 +21,7 @@ def record_provenance(
     if sidecar is None:
         return
     stamp = provenance.stamp(
-        "genaumacher", anchor=__file__, recipe=method, recipe_version=method_version,
+        "genaumacher", anchor=__file__, method=method, method_version=method_version,
     )
     try:
         locked_update(sidecar, lambda payload: {**payload, "provenance": {"cut": stamp}})
