@@ -14,7 +14,7 @@ def _mark_moved(state: VideoState) -> None:
     """What every accepted mark does after the clip range has taken it."""
     state.reset_loop_anchor()
     update_loop_suggestions(state)
-    state.mark_dirty()
+    state.save_edit()
 
 
 def set_mark_in(state: VideoState) -> None:
@@ -67,4 +67,4 @@ def shift_active_range(state: VideoState, direction: int) -> None:
 
 def cycle_loop_mode(state: VideoState, step: int = 1) -> None:
     state.loop_mode = LOOP_MODES[(LOOP_MODES.index(state.loop_mode) + step) % len(LOOP_MODES)]
-    state.mark_dirty()
+    state.save_edit()
