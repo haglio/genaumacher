@@ -96,3 +96,4 @@ include = ["genaumacher*"]
 # three halves of it.
 addopts = "-p app_support.sanitize.pytest_plugin -p app_support.clocks.pytest_plugin -p app_support.coverage_gate --cov --cov-report= --timeout=60 --timeout-method=thread"
 testpaths = ["tests"]
+tmp_path_retention_policy = "failed"

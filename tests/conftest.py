@@ -14,7 +14,6 @@ import pytest
 from app_support import haglio_settings
 from app_support.flick_folder import flat_flicks_in
 from PyQt6.QtCore import QEventLoop, QTimer
-from scratch import scratch_dir
 
 from genaumacher.clip_range import ClipRange
 from genaumacher.frame_window import FrameWindow
@@ -92,33 +91,8 @@ if _spec is None or _spec.origin is None:
                 _new_spec.loader.exec_module(_mod)
 
 
-TMP_ROOT = Path(
-    os.environ.get(
-        "GENAUMACHER_PYTEST_TMP_ROOT",
-        str(Path(__file__).resolve().parent.parent / ".tmp-pytest-local"),
-    )
-).resolve()
-
-
-@pytest.fixture
-def tmp_path() -> Path:
-    with scratch_dir(TMP_ROOT) as path:
-        yield path
-
-
 @pytest.fixture(autouse=True, scope="session")
-def _cleanup_tmp_root():
-    """Remove TMP_ROOT after the session if it exists and is empty."""
-    yield
-    try:
-        if TMP_ROOT.is_dir() and not any(TMP_ROOT.iterdir()):
-            TMP_ROOT.rmdir()
-    except OSError:
-        pass
-
-
-@pytest.fixture(autouse=True, scope="session")
-def _the_last_session_pointer_is_never_the_real_one():
+def _the_last_session_pointer_is_never_the_real_one(tmp_path_factory):
     """Point every module that binds LAST_SESSION_FILE at a scratch file.
 
     Five tests reached the user's own `.last_session.txt` by omission: they call
@@ -131,15 +105,13 @@ def _the_last_session_pointer_is_never_the_real_one():
     file by forgetting; the tests that assert on the pointer patch their own.
     """
 
-    scratch = TMP_ROOT / ".last_session.txt"
-    TMP_ROOT.mkdir(parents=True, exist_ok=True)
+    scratch = tmp_path_factory.mktemp("pointer") / ".last_session.txt"
     with pytest.MonkeyPatch.context() as patcher:
         for name in ("genaumacher.paths", "genaumacher.create_session",
                      "genaumacher.session_launch", "genaumacher.session_persistence"):
             patcher.setattr(importlib.import_module(name),
                             "LAST_SESSION_FILE", scratch)
         yield
-    scratch.unlink(missing_ok=True)
 
 
 class _FakeCapture:
