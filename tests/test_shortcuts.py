@@ -55,6 +55,12 @@ class TestTheLegendComesFromTheTable:
 
         assert speed == (("-", "+"), " or ", "speed")
 
+    def test_the_loop_mode_entry_says_loop_mode_as_the_launcher_does(self):
+        entry = next(label for row in LEGEND_ROWS for names, _, label in row
+                     if names == ("cycle_loop_mode",))
+
+        assert entry == "cycle loop mode"
+
     def test_the_rendered_legend_has_the_shape_the_widget_paints(self):
         for row in legend_rows():
             for keys, joiner, label in row:
