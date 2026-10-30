@@ -83,7 +83,6 @@ def live_app(make_state):
     app = GenaumacherApp(state)
     app.window.resize(1520, 960)
     yield app
-    app.playback_timer.stop()
     app.window.close()
 
 
@@ -210,6 +209,16 @@ class TestRun:
 
         assert ticked_within(live_app.playback_timer.tick, 2000) is True
         assert live_app.window.timeline.cursor_pos == 33
+
+    def test_closing_the_window_stops_the_animation(self, live_app, ticked_within):
+        with patch.object(QApplication, "exec", return_value=0):
+            live_app.run()
+        assert ticked_within(live_app.playback_timer.tick, 2000) is True
+
+        live_app.window.close()
+        QApplication.processEvents()  # drain a tick already on its way
+
+        assert ticked_within(live_app.playback_timer.tick, 200) is False
 
 
 def test_a_frame_the_decoder_will_not_give_up_does_not_take_the_window_with_it(live_app, rendered):
