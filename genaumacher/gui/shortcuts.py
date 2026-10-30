@@ -105,7 +105,7 @@ LEGEND_ROWS: tuple[tuple[LegendEntry, ...], ...] = (
         (("play_pause",), "", "play or pause preview"),
         (("export",), "", "export"),
         (("quit",), "", "quit"),
-        (("cycle_loop_mode",), "", "cycle loop type"),
+        (("cycle_loop_mode",), "", "cycle loop mode"),
     ),
     (
         (("extend_left", "contract_left"), " or ", "adjust left bound"),
