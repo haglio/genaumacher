@@ -46,6 +46,7 @@ def ffprobe_video_metadata(video_path: str) -> tuple[float, int]:
             ],
             capture_output=True,
             text=True,
+            check=False,
             **kwargs,
         )
         return result.stdout.strip()
