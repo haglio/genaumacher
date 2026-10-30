@@ -1,7 +1,7 @@
-"""The loop fix needs an interpolator this checkout does not carry, and only
+"""Normalizing needs an interpolator this checkout does not carry, and only
 prose said so.
 
-``clip_postprocess_pipeline`` reaches for RIFE on every clip it fixes and, when
+``normalize_pipeline`` reaches for RIFE on every clip it normalizes and, when
 there is none, falls back to its geometric seam and says nothing -- so a
 checkout that never ran ``tools/fetch_rife.py``, or one whose fetch landed half
 the files, writes visibly worse clips and looks fine doing it.

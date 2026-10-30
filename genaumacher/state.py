@@ -37,7 +37,7 @@ class VideoState:
     original_session_payload: dict[str, Any]
     loop_mode: LoopMode = LoopMode.BASE_TIP_BASE
     wrap_mode: WrapMode = WrapMode.OVER_LOADED
-    skip_postprocess: bool = False
+    skip_normalize: bool = False
     vr: bool = False
     session_warning: str = ""
     dirty: bool = False

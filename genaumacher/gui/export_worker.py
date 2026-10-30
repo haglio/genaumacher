@@ -27,7 +27,7 @@ def connect_export(state: VideoState, dialog) -> ExportWorker:
     worker = ExportWorker(state)
     worker.stage_changed.connect(dialog.set_stage)
     worker.clip_progress.connect(dialog.set_clip_progress)
-    worker.fix_progress.connect(dialog.set_fix_progress)
+    worker.normalize_progress.connect(dialog.set_normalize_progress)
     worker.audio_progress.connect(dialog.set_audio_progress)
     worker.export_finished.connect(
         lambda ok, msg: (dialog.set_done(ok), dialog.set_error("" if ok else msg))
@@ -40,7 +40,7 @@ class ExportWorker(QThread):
 
     stage_changed = pyqtSignal(str)
     clip_progress = pyqtSignal(float)
-    fix_progress = pyqtSignal(float)
+    normalize_progress = pyqtSignal(float)
     audio_progress = pyqtSignal(float)
     export_finished = pyqtSignal(bool, str)  # (success, message)
 
@@ -56,8 +56,8 @@ class ExportWorker(QThread):
     def clip(self, fraction: float) -> None:
         self.clip_progress.emit(fraction)
 
-    def fix(self, fraction: float) -> None:
-        self.fix_progress.emit(fraction)
+    def normalize(self, fraction: float) -> None:
+        self.normalize_progress.emit(fraction)
 
     def audio(self, fraction: float) -> None:
         self.audio_progress.emit(fraction)

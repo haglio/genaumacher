@@ -21,7 +21,7 @@ Genaumacher is a standalone PyQt6/OpenCV video clip editor, extracted from the f
 
 ## Fetching RIFE
 
-The frame interpolator the loop-fix pipeline defaults to is **not in the repo**.
+The frame interpolator the normalize step defaults to is **not in the repo**.
 A fresh checkout has no `tools/rife-ncnn-vulkan-20221029-windows/`; fetch it once:
 
 ```powershell
@@ -42,26 +42,30 @@ the real binary turns these flags into a frame.
 
 **The suite itself never needs it.** The seam-bridge tests drive the pipeline
 through a stand-in for the process, so they run on a checkout that never
-fetched. A checkout that never fetched still exports clips — the loop fix falls
+fetched. A checkout that never fetched still exports clips — normalizing falls
 back to its geometric seam — and `genaumacher/interpolator_environment.py` writes
 that into `state/genaumacher.log` on the way up, because the fallback is otherwise
 silent and the clips are just quietly worse.
 
-## Bump the loop fix's version when its output changes
+## Bump normalize's version when its output changes
 
-Every clip the loop fix writes is stamped with `LOOP_FIX_VERSION` from
-`genaumacher/clip_postprocess_pipeline.py`, and that number is what a later sweep
+Every clip the normalize step writes is stamped with `NORMALIZE_VERSION` from
+`genaumacher/normalize_pipeline.py`, and that number is what a later sweep
 compares to tell the clips made before a change from the ones made after it.
-**Bump it in the commit that changes what the loop fix writes**: a transform in
-`clip_postprocess_transforms.py`, how `clip_postprocess_pipeline.py` builds the
-frames or shrinks the file, the encode in `clip_postprocess_media.py`, a default
-in `postprocess_options.py`, or the RIFE build `tools/fetch_rife.py` fetches.
+**Bump it in the commit that changes what the normalize step writes**: a
+transform in `normalize_transforms.py`, how `normalize_pipeline.py` builds the
+frames or shrinks the file, the encode in `normalize_media.py`, a default in
+`normalize_options.py`, or the RIFE build `tools/fetch_rife.py` fetches.
+
+The stamp names the step `clip_postprocess`, its name when the first of those
+clips was made, and `NORMALIZE_METHOD` keeps it: a sweep finds the clips by that
+name, so renaming it would hide every clip stamped before the rename.
 
 Nothing checks it, and a missed bump fails silently: clips from before and after
 the change carry the same number, so the only way left to tell them apart is by
 commit. A change that leaves the output as it was (a rename, a refactor) does
 not bump it. The near miss that still counts: a default tuned in
-`postprocess_options.py` alone, which touches no transform and changes every clip.
+`normalize_options.py` alone, which touches no transform and changes every clip.
 
 ## Communication rules
 
@@ -72,13 +76,13 @@ not bump it. The near miss that still counts: a default tuned in
 
 - **Test through realistic inputs, not mocked internals.** Feed the real thing through the real function, with only the outside world stubbed. `tests/test_main_funestra_prefill.py` builds its status payload from the key set it reads out of the Main Funestra's own `status_fields`, rather than from a fixture in the shape genaumacher happens to want — so the test fails when the producer's format moves, which is the whole reason to have it.
 - **Test each resolution path independently.** If a function has a primary path and a fallback, write separate tests proving each works — and that the fallback is not reached when the primary succeeds. `tests/test_fetch_rife.py` does this for the archive: an intact copy already on disk is reused, and `mock.assert_not_called()`-style stubs prove nothing was downloaded.
-- **Mock at the boundary, not in the middle.** Patch the I/O (`clip_postprocess_media`'s `ffprobe_video`, `read_frames`, `encode_with_ffmpeg`) and let everything above it run for real, as `tests/test_genaumacher_postprocess_pipeline.py` does. Stubbing the intermediate logic tests the stubs.
+- **Mock at the boundary, not in the middle.** Patch the I/O (`normalize_media`'s `ffprobe_video`, `read_frames`, `encode_with_ffmpeg`) and let everything above it run for real, as `tests/test_normalize_pipeline.py` does. Stubbing the intermediate logic tests the stubs.
 
 ## Repo-specific gotchas
 
 - The test environment is the project `.venv`, not system Python or Conda.
 - `sessions/` and `raw_clips/` are at the project root (not inside `genaumacher/`). They are gitignored runtime data.
-- A test that runs an export or the loop fix into `flicks_dir()` writes that flick's metadata sidecar for real. Ask for the `library` fixture, which gives the test a library under tmp; without it the sidecar lands in the library this machine's Haglio settings name.
+- A test that runs an export or the normalize step into `flicks_dir()` writes that flick's metadata sidecar for real. Ask for the `library` fixture, which gives the test a library under tmp; without it the sidecar lands in the library this machine's Haglio settings name.
 
 ## Test fixtures must be fabricated, never copied from the real library
 

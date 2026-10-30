@@ -10,7 +10,7 @@ tracked, the way ``funestra/vendor/libmpv-2.dll`` is, so a clone stops paying
 for a Windows binary most machines cannot execute.
 
 It lands where ``genaumacher.interpolator_environment`` already looks, so nothing in
-the app changes: with the files absent it locates nothing, the postprocess falls
+the app changes: with the files absent it locates nothing, normalizing falls
 back to its geometric seam, and the app writes that into ``state/genaumacher.log``
 on the way up rather than letting the worse clips go unremarked.
 
@@ -92,7 +92,7 @@ def runs() -> bool:
 
     import numpy as np  # noqa: PLC0415
 
-    from genaumacher.clip_postprocess_transforms import build_rife_bridge  # noqa: PLC0415
+    from genaumacher.normalize_transforms import build_rife_bridge  # noqa: PLC0415
 
     y, x = (a.astype(np.uint8) for a in np.mgrid[0:64, 0:64])
     try:

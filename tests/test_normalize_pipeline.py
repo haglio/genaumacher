@@ -8,16 +8,16 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from genaumacher.clip_postprocess_pipeline import (
-    LOOP_FIX_VERSION,
+from genaumacher.loop_modes import LoopMode
+from genaumacher.normalize_options import NormalizeOptions
+from genaumacher.normalize_pipeline import (
+    NORMALIZE_VERSION,
     build_output_frames,
     compute_bridge_frames,
     compute_seam_frames,
-    postprocess_clip,
+    normalize_clip,
 )
-from genaumacher.loop_modes import LoopMode
 from genaumacher.paths import flicks_dir
-from genaumacher.postprocess_options import PostprocessOptions
 from tests.stamps import METHOD, METHOD_VERSION
 
 pytestmark = pytest.mark.usefixtures("library")
@@ -97,7 +97,7 @@ class TestTheRegisteredSeam:
         """Nudging the frames either side of the seam together needs no bridge."""
         converged = frames_of([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
-        with patch("genaumacher.clip_postprocess_pipeline.build_rife_seam",
+        with patch("genaumacher.normalize_pipeline.build_rife_seam",
                    return_value=converged) as seam:
             out, normalized_n = self._built(textured_frames())
 
@@ -111,8 +111,8 @@ class TestTheRegisteredSeam:
     ):
         bridge = frames_of([1, 2])
 
-        with patch("genaumacher.clip_postprocess_pipeline.build_rife_seam", return_value=None), \
-             patch("genaumacher.clip_postprocess_pipeline.build_rife_bridge", return_value=bridge):
+        with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
+             patch("genaumacher.normalize_pipeline.build_rife_bridge", return_value=bridge):
             out, normalized_n = self._built(textured_frames())
 
         assert len(out) == normalized_n == 10
@@ -123,8 +123,8 @@ class TestTheRegisteredSeam:
     ):
         bridge = frames_of([1, 2])
 
-        with patch("genaumacher.clip_postprocess_pipeline.build_rife_seam", return_value=None), \
-             patch("genaumacher.clip_postprocess_pipeline.build_rife_bridge", return_value=bridge):
+        with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
+             patch("genaumacher.normalize_pipeline.build_rife_bridge", return_value=bridge):
             out, normalized_n = self._built(textured_frames(), keep_length=False)
 
         assert normalized_n == 10
@@ -144,8 +144,8 @@ class TestTheRegisteredSeam:
         """
         frames = textured_frames()
 
-        with patch("genaumacher.clip_postprocess_pipeline.build_rife_seam", return_value=None), \
-             patch("genaumacher.clip_postprocess_pipeline.build_rife_bridge", return_value=None):
+        with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
+             patch("genaumacher.normalize_pipeline.build_rife_bridge", return_value=None):
             out, normalized_n = self._built(frames)
 
         assert len(out) == normalized_n == 10
@@ -157,8 +157,8 @@ class TestTheRegisteredSeam:
         assert gap_after < gap_before
 
     def test_a_bridge_longer_than_the_clip_is_refused(self, textured_frames, frames_of):
-        with patch("genaumacher.clip_postprocess_pipeline.build_rife_seam", return_value=None), \
-             patch("genaumacher.clip_postprocess_pipeline.build_rife_bridge",
+        with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
+             patch("genaumacher.normalize_pipeline.build_rife_bridge",
                    return_value=frames_of([1] * 10)), \
              pytest.raises(RuntimeError, match="--keep-length bridge is too long"):
             self._built(textured_frames(), bridge_frames=10)
@@ -189,14 +189,14 @@ def test_compute_seam_frames_never_takes_more_than_a_third_of_the_clip():
 
 
 # ---------------------------------------------------------------------------
-# postprocess_clip, end to end with ffmpeg stubbed at the media boundary
+# normalize_clip, end to end with ffmpeg stubbed at the media boundary
 # ---------------------------------------------------------------------------
 
 class _RecordingEncoder:
     """Stands in for the ffmpeg pipe: writes a file of a chosen size, remembers
     everything it was handed.
 
-    Only ``clip_postprocess_media``'s three I/O functions are stubbed; every
+    Only ``normalize_media``'s three I/O functions are stubbed; every
     frame the pipeline produces is produced for real.
     """
 
@@ -218,12 +218,12 @@ class _RecordingEncoder:
         Path(out_path).write_bytes(b"\0" * size)
 
 
-def _options(tmp_path: Path, **overrides) -> PostprocessOptions:
+def _options(tmp_path: Path, **overrides) -> NormalizeOptions:
     """What one run was asked for: the record's own defaults but for the three
     a case here needs pinned -- a bridge in frames, the mode that does not need
     a keypoint match, and no RIFE seam.
     """
-    return PostprocessOptions(
+    return NormalizeOptions(
         input=str(tmp_path / "clip_in.mp4"),
         output=str(tmp_path / "clip_out.mp4"),
         **{"bridge_frames": 1, "mode": "blend", "seam_ms": 0.0, **overrides},
@@ -232,23 +232,23 @@ def _options(tmp_path: Path, **overrides) -> PostprocessOptions:
 
 @pytest.fixture
 def run_pipeline(frames_of):
-    """Drive postprocess_clip with the decode/probe/encode boundary stubbed."""
+    """Drive normalize_clip with the decode/probe/encode boundary stubbed."""
     def run(options, *, values=(10, 20, 30, 40), size=8, fps=24.0, encoder=None, report=None):
         encoder = encoder or _RecordingEncoder()
-        with patch("genaumacher.clip_postprocess_pipeline.ffprobe_video",
+        with patch("genaumacher.normalize_pipeline.ffprobe_video",
                    return_value={"fps": fps, "width": size, "height": size,
                                  "nb_frames": len(values), "duration": len(values) / fps}) as probe, \
-             patch("genaumacher.clip_postprocess_pipeline.read_frames",
+             patch("genaumacher.normalize_pipeline.read_frames",
                    return_value=frames_of(list(values), size=size)) as decode, \
-             patch("genaumacher.clip_postprocess_pipeline.encode_with_ffmpeg", encoder):
-            summary = postprocess_clip(options, report=report)
+             patch("genaumacher.normalize_pipeline.encode_with_ffmpeg", encoder):
+            summary = normalize_clip(options, report=report)
         probe.assert_called_once_with(options.input)
         decode.assert_called_once_with(options.input)
         return summary, encoder
     return run
 
 
-def test_postprocess_clip_reports_the_clip_it_actually_encoded(tmp_path, run_pipeline):
+def test_normalize_clip_reports_the_clip_it_actually_encoded(tmp_path, run_pipeline):
     options = _options(tmp_path)
 
     summary, encoder = run_pipeline(options)
@@ -272,7 +272,7 @@ def test_postprocess_clip_reports_the_clip_it_actually_encoded(tmp_path, run_pip
     assert Path(options.output).exists()
 
 
-def test_postprocess_clip_normalizes_the_loop_before_bridging(tmp_path, run_pipeline):
+def test_normalize_clip_normalizes_the_loop_before_bridging(tmp_path, run_pipeline):
     """base-tip mirrors the four frames back to seven before the bridge lands."""
     summary, encoder = run_pipeline(_options(tmp_path, loop_mode=LoopMode.BASE_TIP))
 
@@ -281,7 +281,7 @@ def test_postprocess_clip_normalizes_the_loop_before_bridging(tmp_path, run_pipe
     assert encoder.calls[0]["frame_count"] == 7
 
 
-def test_postprocess_clip_appends_the_bridge_when_the_length_is_not_kept(tmp_path, run_pipeline):
+def test_normalize_clip_appends_the_bridge_when_the_length_is_not_kept(tmp_path, run_pipeline):
     summary, encoder = run_pipeline(
         _options(tmp_path, keep_length=False, bridge_frames=2),
         values=(10, 20, 30, 40, 50, 60),
@@ -293,13 +293,13 @@ def test_postprocess_clip_appends_the_bridge_when_the_length_is_not_kept(tmp_pat
     assert encoder.calls[0]["frame_count"] == 8
 
 
-def test_postprocess_clip_caps_the_bridge_at_a_third_of_the_normalized_clip(tmp_path, run_pipeline):
+def test_normalize_clip_caps_the_bridge_at_a_third_of_the_normalized_clip(tmp_path, run_pipeline):
     summary, _encoder = run_pipeline(_options(tmp_path, bridge_frames=3))
 
     assert summary["bridge_frames"] == 1
 
 
-def test_postprocess_clip_shrinks_and_re_encodes_until_the_output_fits(tmp_path, run_pipeline):
+def test_normalize_clip_shrinks_and_re_encodes_until_the_output_fits(tmp_path, run_pipeline):
     over = 2 * 1024 * 1024
     encoder = _RecordingEncoder(over, 4096)
 
@@ -312,7 +312,7 @@ def test_postprocess_clip_shrinks_and_re_encodes_until_the_output_fits(tmp_path,
     assert encoder.calls[1]["shape"] == (72, 72)
 
 
-def test_postprocess_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path, run_pipeline, caplog):
+def test_normalize_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path, run_pipeline, caplog):
     """It must give up rather than loop forever on a clip that will not fit.
 
     It says so through the logger rather than `print`.  This module runs as a
@@ -321,7 +321,7 @@ def test_postprocess_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path
     """
     encoder = _RecordingEncoder(2 * 1024 * 1024)
 
-    with caplog.at_level(logging.WARNING, logger="genaumacher.clip_postprocess_pipeline"):
+    with caplog.at_level(logging.WARNING, logger="genaumacher.normalize_pipeline"):
         summary, encoder = run_pipeline(_options(tmp_path), size=64, encoder=encoder)
 
     assert summary["encode_attempts"] == 1
@@ -331,7 +331,7 @@ def test_postprocess_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path
 
 
 @pytest.mark.parametrize("copy_audio, expected_audio", [(True, "input"), (False, None)])
-def test_postprocess_clip_keeps_the_input_audio_only_when_asked(
+def test_normalize_clip_keeps_the_input_audio_only_when_asked(
     tmp_path, run_pipeline, copy_audio, expected_audio
 ):
     options = _options(tmp_path, copy_audio=copy_audio)
@@ -342,7 +342,7 @@ def test_postprocess_clip_keeps_the_input_audio_only_when_asked(
     assert encoder.calls[0]["input_audio_path"] == want
 
 
-def test_postprocess_clip_passes_the_encoder_settings_through(tmp_path, run_pipeline):
+def test_normalize_clip_passes_the_encoder_settings_through(tmp_path, run_pipeline):
     _summary, encoder = run_pipeline(_options(tmp_path, crf=30, preset="veryfast", pix_fmt="yuv444p"))
 
     assert encoder.calls[0]["crf"] == 30
@@ -350,10 +350,10 @@ def test_postprocess_clip_passes_the_encoder_settings_through(tmp_path, run_pipe
     assert encoder.calls[0]["pix_fmt"] == "yuv444p"
 
 
-def test_a_clip_it_writes_into_the_library_says_the_loop_fix_made_it(
+def test_a_clip_it_writes_into_the_library_is_recorded_under_the_name_every_clip_it_made_carries(
     tmp_path, run_pipeline, recorded_cut
 ):
-    """The loop fix's name is what a sweep for clips made before a change filters
+    """That name is what a sweep for clips made before a change filters
     on, so it is written out here rather than read back off the module."""
     flicks_dir().mkdir(parents=True)
     options = replace(_options(tmp_path), output=str(flicks_dir() / "scene one.mp4"))
@@ -362,16 +362,16 @@ def test_a_clip_it_writes_into_the_library_says_the_loop_fix_made_it(
 
     recorded = recorded_cut("scene one")
     assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
-        "genaumacher", "clip_postprocess", LOOP_FIX_VERSION,
+        "genaumacher", "clip_postprocess", NORMALIZE_VERSION,
     )
 
 
-def test_postprocess_clip_refuses_a_size_budget_of_zero(tmp_path, run_pipeline):
+def test_normalize_clip_refuses_a_size_budget_of_zero(tmp_path, run_pipeline):
     with pytest.raises(RuntimeError, match="--max-mb must be greater than 0"):
         run_pipeline(_options(tmp_path, max_mb=0.0))
 
 
-def test_postprocess_clip_refuses_a_clip_too_short_to_bridge(tmp_path, run_pipeline):
+def test_normalize_clip_refuses_a_clip_too_short_to_bridge(tmp_path, run_pipeline):
     with pytest.raises(RuntimeError, match="Clip is too short"):
         run_pipeline(_options(tmp_path), values=(10, 20))
 
@@ -455,12 +455,12 @@ class TestSayingHowFarItHasGot:
             trace.append("encoded")
             Path(out_path).write_bytes(b"\0" * 16)
 
-        with patch("genaumacher.clip_postprocess_pipeline.ffprobe_video",
+        with patch("genaumacher.normalize_pipeline.ffprobe_video",
                    return_value={"fps": 24.0, "width": 8, "height": 8,
                                  "nb_frames": 4, "duration": 4 / 24.0}), \
-             patch("genaumacher.clip_postprocess_pipeline.read_frames", decode), \
-             patch("genaumacher.clip_postprocess_pipeline.encode_with_ffmpeg", encode):
-            postprocess_clip(_options(tmp_path), report=trace.append)
+             patch("genaumacher.normalize_pipeline.read_frames", decode), \
+             patch("genaumacher.normalize_pipeline.encode_with_ffmpeg", encode):
+            normalize_clip(_options(tmp_path), report=trace.append)
 
         assert trace == ["decoded", 0.2, 0.6, "encoded"]
 

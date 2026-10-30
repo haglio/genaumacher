@@ -5,8 +5,10 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 
-from .clip_postprocess_media import encode_with_ffmpeg, ffprobe_video, read_frames
-from .clip_postprocess_transforms import (
+from .loop_modes import LoopMode
+from .normalize_media import encode_with_ffmpeg, ffprobe_video, read_frames
+from .normalize_options import NormalizeOptions
+from .normalize_transforms import (
     build_bridge,
     build_registered_seam,
     build_rife_bridge,
@@ -15,14 +17,12 @@ from .clip_postprocess_transforms import (
     normalize_loop_mode,
     resize_frames,
 )
-from .loop_modes import LoopMode
-from .postprocess_options import PostprocessOptions
 from .sidecar import record_provenance
 
 logger = logging.getLogger(__name__)
 
-LOOP_FIX = "clip_postprocess"
-LOOP_FIX_VERSION = "1"
+NORMALIZE_METHOD = "clip_postprocess"
+NORMALIZE_VERSION = "1"
 
 # How far along each finished step leaves the run. Coarse, and true at the
 # moment it is said: the step it names has completed. Finer would mean knowing
@@ -146,8 +146,8 @@ def build_output_frames(
     return _with_bridge(work_frames, bridge, bridge_frames, keep_length), normalized_n
 
 
-def postprocess_clip(
-    options: PostprocessOptions,
+def normalize_clip(
+    options: NormalizeOptions,
     report: Callable[[float], None] | None = None,
 ) -> dict[str, int | float | str]:
     say = report or _nobody_listening
@@ -217,7 +217,7 @@ def postprocess_clip(
 
         scale *= 0.9
 
-    record_provenance(Path(options.output), method=LOOP_FIX, method_version=LOOP_FIX_VERSION)
+    record_provenance(Path(options.output), method=NORMALIZE_METHOD, method_version=NORMALIZE_VERSION)
     final_size = os.path.getsize(options.output)
     return {
         "fps": fps,

@@ -69,9 +69,9 @@ def _pattern_frame(seed: int) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 class TestVideoStateDefaults:
-    def test_skip_postprocess_defaults_false(self, make_state):
+    def test_skip_normalize_defaults_false(self, make_state):
         s = make_state()
-        assert s.skip_postprocess is False
+        assert s.skip_normalize is False
 
 
 

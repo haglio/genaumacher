@@ -13,8 +13,6 @@ from PyQt6.QtWidgets import (
 
 
 class ExportDialog(QDialog):
-    """Modal dialog showing export progress for clip, fix, and audio stages."""
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Exporting")
@@ -25,10 +23,10 @@ class ExportDialog(QDialog):
         self.error_label = QLabel("")
 
         self.clip_bar = QProgressBar()
-        self.fix_bar = QProgressBar()
+        self.normalize_bar = QProgressBar()
         self.audio_bar = QProgressBar()
 
-        for bar in (self.clip_bar, self.fix_bar, self.audio_bar):
+        for bar in (self.clip_bar, self.normalize_bar, self.audio_bar):
             bar.setRange(0, 100)
             bar.setValue(0)
 
@@ -40,8 +38,8 @@ class ExportDialog(QDialog):
         layout.addWidget(self.stage_label)
         layout.addWidget(QLabel("Raw clip:"))
         layout.addWidget(self.clip_bar)
-        layout.addWidget(QLabel("Normalize / fix:"))
-        layout.addWidget(self.fix_bar)
+        layout.addWidget(QLabel("Normalize:"))
+        layout.addWidget(self.normalize_bar)
         layout.addWidget(QLabel("Audio extract:"))
         layout.addWidget(self.audio_bar)
         layout.addWidget(self.error_label)
@@ -50,8 +48,8 @@ class ExportDialog(QDialog):
     def set_clip_progress(self, frac: float) -> None:
         self.clip_bar.setValue(int(frac * 100))
 
-    def set_fix_progress(self, frac: float) -> None:
-        self.fix_bar.setValue(int(frac * 100))
+    def set_normalize_progress(self, frac: float) -> None:
+        self.normalize_bar.setValue(int(frac * 100))
 
     def set_audio_progress(self, frac: float) -> None:
         self.audio_bar.setValue(int(frac * 100))

@@ -47,8 +47,8 @@ def steps(library):
     exporting into a library of the test's own."""
     with patch("genaumacher.export_steps.export_raw_clip",
                _Step(stage="clipping", reports="clip")), \
-         patch("genaumacher.export_steps.run_clip_postprocess",
-               _Step(stage="fixing the loop", reports="fix")), \
+         patch("genaumacher.export_steps.run_normalize",
+               _Step(stage="normalizing", reports="normalize")), \
          patch("genaumacher.export_steps.export_full_audio_mp3",
                _Step(stage="pulling audio", reports="audio")):
         yield
@@ -57,7 +57,7 @@ def steps(library):
 def _recorded(worker: ExportWorker) -> dict[str, list]:
     """Connect every signal the worker declares and collect what arrives."""
     seen: dict[str, list] = {}
-    for name in ("stage_changed", "clip_progress", "fix_progress",
+    for name in ("stage_changed", "clip_progress", "normalize_progress",
                  "audio_progress", "export_finished"):
         seen[name] = []
         getattr(worker, name).connect(
@@ -82,10 +82,10 @@ class TestSignals:
         # A run starts every bar from zero, so each progress signal carries
         # 0.0 and then the 1.0 its step reports.
         assert seen["stage_changed"] == [
-            "preparing export", "clipping", "fixing the loop", "pulling audio",
+            "preparing export", "clipping", "normalizing", "pulling audio",
         ]
         assert seen["clip_progress"] == [0.0, 1.0]
-        assert seen["fix_progress"] == [0.0, 1.0]
+        assert seen["normalize_progress"] == [0.0, 1.0]
         assert seen["audio_progress"] == [0.0, 1.0]
         assert len(seen["export_finished"]) == 1
 

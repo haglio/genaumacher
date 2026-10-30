@@ -10,7 +10,7 @@ PROJECT_DIR = PACKAGE_DIR.parent
 SESSIONS_DIR = PROJECT_DIR / "sessions"
 RAW_CLIPS_DIR = PROJECT_DIR / "raw_clips"
 LAST_SESSION_FILE = SESSIONS_DIR / ".last_session.txt"
-CLIP_POSTPROCESS_SCRIPT = PACKAGE_DIR / "clip_postprocess.py"
+NORMALIZE_SCRIPT = PACKAGE_DIR / "normalize.py"
 
 
 def library_root() -> Path:
