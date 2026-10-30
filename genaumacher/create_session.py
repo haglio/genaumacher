@@ -15,8 +15,8 @@ from pathlib import Path
 from app_support.subprocess_utils import hidden_subprocess_kwargs
 
 from .loop_modes import LoopMode
-from .paths import LAST_SESSION_FILE, SESSIONS_DIR, sanitize_name
-from .session_persistence import safe_atomic_write_json, session_payload
+from .paths import SESSIONS_DIR, sanitize_name
+from .session_persistence import remember_last_session, safe_atomic_write_json, session_payload
 from .wrap_modes import WrapMode
 
 logger = logging.getLogger(__name__)
@@ -144,7 +144,7 @@ def create_session(
     session_path = sessions_dir / f"{session_name}.json"
     if session_path.exists():
         logger.info("Session already exists: %s", session_path)
-        _update_last_session(session_path)
+        remember_last_session(session_path)
         return session_path
 
     payload = build_session_payload(
@@ -163,21 +163,8 @@ def create_session(
         raise RuntimeError(f"Could not write {session_path}: {detail}")
 
     logger.info("Created session: %s", session_path)
-    _update_last_session(session_path)
+    remember_last_session(session_path)
     return session_path
-
-
-def _update_last_session(session_path: Path) -> None:
-    """Point the launcher at the session just made.  Never fatal, never silent.
-
-    A read-only `sessions/` stops the launcher remembering anything, and that
-    has to be said.  The session itself is written either way, so this is a log
-    line rather than a raised error.
-    """
-    try:
-        LAST_SESSION_FILE.write_text(str(session_path), encoding="utf-8")
-    except OSError:
-        logger.warning("Could not update %s", LAST_SESSION_FILE, exc_info=True)
 
 
 def main(argv: list[str] | None = None) -> int:

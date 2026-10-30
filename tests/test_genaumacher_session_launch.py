@@ -21,7 +21,7 @@ import pytest
 from shared_ui.preview import Preview
 
 from genaumacher import create_session as create_session_module
-from genaumacher import session_launch, state_factory
+from genaumacher import session_launch, session_persistence, state_factory
 from genaumacher.app import main as app_main
 from genaumacher.launch_choice import ClipWholeVideo, LoadSession, NewSession
 from genaumacher.paths import PROJECT_DIR
@@ -36,7 +36,7 @@ def library(tmp_path: Path, monkeypatch):
     pointer = tmp_path / ".last_session.txt"
 
     monkeypatch.setattr(create_session_module, "SESSIONS_DIR", sessions)
-    monkeypatch.setattr(create_session_module, "LAST_SESSION_FILE", pointer)
+    monkeypatch.setattr(session_persistence, "LAST_SESSION_FILE", pointer)
     monkeypatch.setattr(session_launch, "LAST_SESSION_FILE", pointer)
     monkeypatch.setattr(
         create_session_module, "ffprobe_video_metadata", lambda path: (30.0, 900)

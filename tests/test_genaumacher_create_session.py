@@ -216,7 +216,7 @@ def test_create_session_sanitizes_a_supplied_name_too(tmp_path):
 def test_create_session_updates_last_session_file(tmp_path):
     last_session = tmp_path / ".last_session.txt"
     with _mock_ffprobe(), \
-         patch("genaumacher.create_session.LAST_SESSION_FILE", last_session):
+         patch("genaumacher.session_persistence.LAST_SESSION_FILE", last_session):
         result = create_session(
             r"C:\videos\TestVideo.mp4",
             10.0,
@@ -233,7 +233,7 @@ def test_create_session_updates_last_session_even_when_existing(tmp_path):
     last_session = tmp_path / ".last_session.txt"
 
     with _mock_ffprobe(), \
-         patch("genaumacher.create_session.LAST_SESSION_FILE", last_session):
+         patch("genaumacher.session_persistence.LAST_SESSION_FILE", last_session):
         result = create_session(
             r"C:\videos\TestVideo.mp4",
             10.0,
@@ -262,7 +262,7 @@ def test_cli_success(tmp_path, capsys):
 
     with _mock_ffprobe(), \
          patch("genaumacher.create_session.SESSIONS_DIR", tmp_path), \
-         patch("genaumacher.create_session.LAST_SESSION_FILE", last_session):
+         patch("genaumacher.session_persistence.LAST_SESSION_FILE", last_session):
         code = main(["--video", r"C:\videos\CliTest.mp4", "--time", "5.0", "--seconds", "3.0"])
 
     assert code == 0
