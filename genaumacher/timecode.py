@@ -4,13 +4,10 @@ from __future__ import annotations
 
 
 def parse_timestamp(ts: str) -> float:
-    parts = ts.strip().split(":")
-    if len(parts) != 3:
-        raise ValueError("Timestamp must be hh:mm:ss or hh:mm:ss.sss")
-    hours = int(parts[0])
-    minutes = int(parts[1])
-    seconds = float(parts[2])
-    return hours * 3600 + minutes * 60 + seconds
+    match ts.strip().split(":"):
+        case [hours, minutes, seconds]:
+            return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+    raise ValueError("Timestamp must be hh:mm:ss or hh:mm:ss.sss")
 
 
 def format_seconds(seconds: float) -> str:

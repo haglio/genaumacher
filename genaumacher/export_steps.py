@@ -12,6 +12,9 @@ from app_support.subprocess_utils import hidden_subprocess_kwargs
 from .export_progress import ExportProgress, fraction_in
 from .paths import NORMALIZE_SCRIPT
 from .state import VideoState
+from .timecode import parse_timestamp
+
+_SMALLEST_VIDEO_BYTES = 2048
 
 
 def find_tool(name: str) -> str | None:
@@ -21,9 +24,8 @@ def find_tool(name: str) -> str | None:
 
 def _parse_ffmpeg_clock(s: str) -> float:
     try:
-        hh, mm, ss = s.split(":")
-        return int(hh) * 3600 + int(mm) * 60 + float(ss)
-    except Exception:
+        return parse_timestamp(s)
+    except ValueError:
         return 0.0
 
 
@@ -78,7 +80,7 @@ def _run_ffmpeg_with_progress(
 def validate_video_file(path: Path) -> tuple[bool, str]:
     if not path.exists():
         return False, "Output file was not created"
-    if path.stat().st_size < 2048:
+    if path.stat().st_size < _SMALLEST_VIDEO_BYTES:
         return False, "Output file is suspiciously tiny. Another program may have the source video locked. Close that program and retry."
     cap = cv2.VideoCapture(str(path))
     try:
