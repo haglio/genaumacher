@@ -172,10 +172,10 @@ class TestTheContractWithTheMainFunestra:
         sources = self._status_sources()
         published = set().union(*map(self._keys_the_main_funestra_publishes, sources)) if sources else wanted
 
-        assert wanted and wanted <= published, (
-            f"the Main Funestra publishes {sorted(published)}, which no longer covers "
-            f"{sorted(wanted)} -- the launcher would prefill nothing"
-        )
+        uncovered = (f"the Main Funestra publishes {sorted(published)}, which no longer covers "
+                     f"{sorted(wanted)} -- the launcher would prefill nothing")
+        assert wanted, uncovered
+        assert wanted <= published, uncovered
 
     def test_the_prefill_reads_a_payload_the_main_funestra_itself_produced(self, tmp_path: Path):
         """Not a fixture in our own shape: the writer's key set, whatever it holds."""
