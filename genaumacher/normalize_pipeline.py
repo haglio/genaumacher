@@ -32,6 +32,7 @@ NORMALIZE_VERSION = "1"
 # exports. Nothing says 1.0: returning is what says the run is over.
 _DECODED = 0.2
 _FRAMES_BUILT = 0.6
+_SHORTEST_CLIP = 3
 
 
 def _nobody_listening(_fraction: float) -> None:
@@ -160,7 +161,7 @@ def normalize_clip(
 
     frames = read_frames(options.input)
     input_count = len(frames)
-    if input_count < 3:
+    if input_count < _SHORTEST_CLIP:
         raise RuntimeError("Clip is too short.")
     say(_DECODED)
 

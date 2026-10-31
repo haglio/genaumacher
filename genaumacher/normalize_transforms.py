@@ -13,6 +13,14 @@ import numpy as np
 from .interpolator_environment import locate
 from .loop_modes import LoopMode
 
+_SMALLEST_ALIGNABLE = 16
+_FEWEST_POINTS = 8
+_NEIGHBORS = 2
+_INLIER_SHARE = 0.3
+_SHORTEST_SEAMED = 4
+_SMALLEST_STEP = 0.02
+_UNSCALED = 0.999
+
 
 def smoothstep01(x: float) -> float:
     x = max(0.0, min(1.0, x))
@@ -131,7 +139,7 @@ def warp_affine(frame: np.ndarray, M: np.ndarray) -> np.ndarray:
 
 def estimate_alignment(frame_a: np.ndarray, frame_b: np.ndarray) -> np.ndarray | None:
     h, w = frame_a.shape[:2]
-    if h < 16 or w < 16:
+    if h < _SMALLEST_ALIGNABLE or w < _SMALLEST_ALIGNABLE:
         return None
     gray_a = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
     gray_b = cv2.cvtColor(frame_b, cv2.COLOR_BGR2GRAY)
@@ -141,22 +149,22 @@ def estimate_alignment(frame_a: np.ndarray, frame_b: np.ndarray) -> np.ndarray |
         kp_b, desc_b = orb.detectAndCompute(gray_b, None)
     except cv2.error:
         return None
-    if desc_a is None or desc_b is None or len(kp_a) < 8 or len(kp_b) < 8:
+    if desc_a is None or desc_b is None or len(kp_a) < _FEWEST_POINTS or len(kp_b) < _FEWEST_POINTS:
         return None
     bf = cv2.BFMatcher(cv2.NORM_HAMMING)
-    raw_matches = bf.knnMatch(desc_a, desc_b, k=2)
+    raw_matches = bf.knnMatch(desc_a, desc_b, k=_NEIGHBORS)
     good = []
     for m_pair in raw_matches:
-        if len(m_pair) == 2 and m_pair[0].distance < 0.75 * m_pair[1].distance:
+        if len(m_pair) == _NEIGHBORS and m_pair[0].distance < 0.75 * m_pair[1].distance:
             good.append(m_pair[0])
-    if len(good) < 8:
+    if len(good) < _FEWEST_POINTS:
         return None
     pts_a = np.array([kp_a[m.queryIdx].pt for m in good], dtype=np.float32)
     pts_b = np.array([kp_b[m.trainIdx].pt for m in good], dtype=np.float32)
     M, inliers = cv2.estimateAffinePartial2D(pts_a, pts_b, method=cv2.RANSAC, ransacReprojThreshold=3.0)
     if M is None or inliers is None:
         return None
-    if float(inliers.sum()) / len(good) < 0.3:
+    if float(inliers.sum()) / len(good) < _INLIER_SHARE:
         return None
     return M
 
@@ -165,7 +173,7 @@ def build_registered_seam(
     frames: list[np.ndarray], seam_frames: int
 ) -> tuple[list[np.ndarray], bool]:
     n = len(frames)
-    if n < 2 or seam_frames < 1:
+    if n <= 1 or seam_frames < 1:
         return frames, False
 
     M = estimate_alignment(frames[-1], frames[0])
@@ -260,7 +268,7 @@ def build_rife_seam(
     Returns the modified frame list, or None if RIFE is unavailable.
     """
     n = len(frames)
-    if seam_frames <= 0 or n < 4:
+    if seam_frames <= 0 or n < _SHORTEST_SEAMED:
         return None
     # Ensure we don't overlap the two sides (each pair uses one from each side)
     seam_frames = min(seam_frames, n // 2)
@@ -278,7 +286,7 @@ def build_rife_seam(
             # Influence: 1.0 nearest the seam, fading toward 0.0 at the edge
             influence = smoothstep01((seam_frames - i + 1) / seam_frames)
             timestep = influence * 0.5  # max halfway toward partner
-            if timestep < 0.02:
+            if timestep < _SMALLEST_STEP:
                 continue
 
             new_tail = _rife_interpolate_frame(
@@ -305,7 +313,7 @@ def build_rife_seam(
 
 
 def resize_frames(frames: list[np.ndarray], scale: float) -> list[np.ndarray]:
-    if scale >= 0.999:
+    if scale >= _UNSCALED:
         return frames
 
     h, w = frames[0].shape[:2]
@@ -321,7 +329,7 @@ def resize_frames(frames: list[np.ndarray], scale: float) -> list[np.ndarray]:
 
 
 def shift_frames_halfway(frames: list[np.ndarray]) -> list[np.ndarray]:
-    if len(frames) < 2:
+    if len(frames) <= 1:
         return list(frames)
     shift = max(1, len(frames) // 2)
     return list(frames[shift:]) + list(frames[:shift])
