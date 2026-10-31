@@ -1,7 +1,7 @@
 """Vulture whitelist -- false positives that are not dead code.
 
 Each entry tells vulture the name is used, suppressing the report. vulture
-matches by bare name, so tests/test_dead_code.py asserts every entry here still
+matches by bare name, so the family's dead-code gate asserts every entry here still
 answers a report, and an entry may only be added with the reason it answers one.
 """
 from __future__ import annotations
