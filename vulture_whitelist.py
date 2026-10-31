@@ -6,7 +6,6 @@ answers a report, and an entry may only be added with the reason it answers one.
 """
 from __future__ import annotations
 
-# ruff: noqa: F821, B018 -- a whitelist is names, not statements
 # --- Qt method overrides, called by the event loop, not by us ---
 _.paintEvent  # legend_widget, main_window, timeline_widget, video_pane
 _.mousePressEvent  # timeline_widget
