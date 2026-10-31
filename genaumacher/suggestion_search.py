@@ -12,6 +12,11 @@ from .frame_store import signature_for_index, structural_similarity_score
 if TYPE_CHECKING:
     from .state import VideoState
 
+_FEWEST_SCORES = 5
+_SMALLEST_DIP = 0.02
+_DIP_SLOPE = 0.0005
+_PEAK_SLOPE = 0.0002
+
 
 @dataclass(frozen=True)
 class SimilarityDip:
@@ -57,7 +62,7 @@ def candidate_similarity_curve(
         [structural_similarity_score(ref_signature, signature_for_index(state, idx)) for idx in candidates],
         dtype=np.float64,
     )
-    if len(scores) < 5:
+    if len(scores) < _FEWEST_SCORES:
         return None
 
     smooth_radius = max(1, int(round(state.fps * 0.03)))
@@ -83,11 +88,11 @@ def find_similarity_dip(
     dip_idx: int | None = None
 
     for i in range(max(skip + run, run), len(smoothed) - run - 1):
-        if baseline - smoothed[i] < 0.02:
+        if baseline - smoothed[i] < _SMALLEST_DIP:
             continue
         pre = float(np.mean(slope[i - run:i]))
         post = float(np.mean(slope[i:i + run]))
-        if pre < -0.0005 and post > 0.0005:
+        if pre < -_DIP_SLOPE and post > _DIP_SLOPE:
             dip_idx = i
             break
 
@@ -115,7 +120,7 @@ def best_duplicate_match_index(
             continue
         pre = float(np.mean(dip.slope[i - run:i]))
         post = float(np.mean(dip.slope[i:i + run]))
-        if pre > 0.0002 and post < -0.0002:
+        if pre > _PEAK_SLOPE and post < -_PEAK_SLOPE:
             peak_idx = i
             break
 
