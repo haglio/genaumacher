@@ -7,8 +7,8 @@ from PyQt6.QtCore import QPoint, QRect, QSize
 from PyQt6.QtGui import QIcon
 from shared_ui.chrome import family_stylesheet
 from shared_ui.colors import TEXT_PRIMARY
-from shared_ui.icon_geometry import GLYPHS, Polygon
-from shared_ui.icons import glyph_pixmap
+from shared_ui.icon_geometry import ICONS, Polygon
+from shared_ui.icons import icon_pixmap
 from shared_ui.spacing import BUTTON_SIZE
 
 from genaumacher.gui.button_bar import ButtonBar
@@ -56,14 +56,14 @@ def test_the_transport_wears_the_familys_marks(bar):
                        (bar.speed_down_btn.icon(), "minus"),
                        (bar.speed_up_btn.icon(), "plus")):
         drawn = icon.pixmap(size, QIcon.Mode.Normal).toImage()
-        assert drawn == glyph_pixmap(name, 48, TEXT_PRIMARY).toImage(), name
+        assert drawn == icon_pixmap(name, 48, TEXT_PRIMARY).toImage(), name
 
 
 def test_the_play_triangle_has_rounded_corners():
     """Which is what the icon font gave it, and what the family's own drawing
     lacked until filled shapes took a corner radius."""
 
-    triangle = next(s for s in GLYPHS["play"] if isinstance(s, Polygon))
+    triangle = next(s for s in ICONS["play"] if isinstance(s, Polygon))
     assert triangle.round_radius > 0
 
 

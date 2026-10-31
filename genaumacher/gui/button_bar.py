@@ -5,8 +5,8 @@ from __future__ import annotations
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 from shared_ui.colors import TEXT_PRIMARY
-from shared_ui.icons import glyph_icon
-from shared_ui.mark_button import fill_square_with_mark
+from shared_ui.icon_button import fill_square_with_icon
+from shared_ui.icons import qt_icon
 
 # The chrome's own text color, so a glyph on a button matches the label beside it.
 _ICON_COLOR = TEXT_PRIMARY
@@ -25,16 +25,16 @@ class ButtonBar(QWidget):
 
         # The family's own transport marks: Fun Time's bar and Evolver's Run Now
         # draw these same two, and all three apps are open together.
-        self._icon_play = glyph_icon("play", color=_ICON_COLOR)
-        self._icon_pause = glyph_icon("pause", color=_ICON_COLOR)
+        self._icon_play = qt_icon("play", color=_ICON_COLOR)
+        self._icon_pause = qt_icon("pause", color=_ICON_COLOR)
 
-        self.speed_down_btn = QPushButton(glyph_icon("minus", color=_ICON_COLOR), "")
-        self.speed_up_btn = QPushButton(glyph_icon("plus", color=_ICON_COLOR), "")
+        self.speed_down_btn = QPushButton(qt_icon("minus", color=_ICON_COLOR), "")
+        self.speed_up_btn = QPushButton(qt_icon("plus", color=_ICON_COLOR), "")
         self.play_pause_btn = QPushButton(self._icon_play, "")
         self.export_btn = QPushButton("export")
 
         for btn in (self.speed_down_btn, self.speed_up_btn, self.play_pause_btn):
-            fill_square_with_mark(btn)
+            fill_square_with_icon(btn)
 
         self.speed_down_btn.clicked.connect(self.speed_down_clicked)
         self.speed_up_btn.clicked.connect(self.speed_up_clicked)
