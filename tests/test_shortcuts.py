@@ -64,9 +64,11 @@ class TestTheLegendComesFromTheTable:
     def test_the_rendered_legend_has_the_shape_the_widget_paints(self):
         for row in legend_rows():
             for keys, joiner, label in row:
-                assert isinstance(keys, tuple) and keys
+                assert isinstance(keys, tuple)
+                assert keys
                 assert isinstance(joiner, str)
-                assert isinstance(label, str) and label
+                assert isinstance(label, str)
+                assert label
 
 
 class TestLookup:
@@ -81,13 +83,15 @@ class TestLookup:
     def test_a_typed_key_finds_its_shortcut(self, text, name):
         found = shortcut_for(0, text)
 
-        assert found is not None and found.name == name
+        assert found is not None
+        assert found.name == name
 
     def test_a_key_code_finds_its_shortcut(self):
 
         found = shortcut_for(Qt.Key.Key_Left, "")
 
-        assert found is not None and found.name == "cursor_left"
+        assert found is not None
+        assert found.name == "cursor_left"
 
     def test_an_unbound_key_finds_nothing(self):
         assert shortcut_for(0, "z") is None
