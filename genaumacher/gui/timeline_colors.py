@@ -11,7 +11,6 @@ on the family's colors and nothing here can drift a shade away from them.
 from __future__ import annotations
 
 from shared_ui.colors import (
-    AMBER,
     BLUE,
     BLUE_LIGHT,
     BORDER_DEFAULT,
@@ -20,6 +19,7 @@ from shared_ui.colors import (
     TEXT_MUTED,
     TEXT_SECONDARY,
     WHITE,
+    YELLOW,
 )
 
 # The legend's two tiers are the body tiers: a label reads as body text and the
@@ -39,5 +39,5 @@ TIMELINE_CURSOR = WHITE
 TIMELINE_LOOP = RED
 # The two suggested points are marks that can land on either range, so each is
 # a hue neither range wears.
-TIMELINE_SUGGESTED_IN = AMBER
+TIMELINE_SUGGESTED_IN = YELLOW
 TIMELINE_SUGGESTED_OUT = GREEN
