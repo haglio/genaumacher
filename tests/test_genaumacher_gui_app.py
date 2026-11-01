@@ -6,8 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import QApplication
-from shared_ui.colors import BG_SECONDARY
+from shared_ui.colors import BG_SECONDARY, family_palette
 from shared_ui.palette import PREVIEW_INK
 from shared_ui.preview import Preview
 
@@ -52,6 +53,17 @@ class TestConstruction:
     def test_the_window_is_built_around_the_state_it_was_given(self, mock_state):
         app = GenaumacherApp(mock_state)
         assert app.window.session_label.text() == mock_state.session_name
+
+    def test_the_application_wears_the_familys_palette_under_its_sheet(self, mock_state):
+        # What the sheet does not paint -- a selection's highlight first --
+        # comes from the palette, which was Windows' own until this.
+        palette_before = QApplication.instance().palette()
+        try:
+            GenaumacherApp(mock_state)
+
+            assert QApplication.instance().palette().highlight().color() ==                 family_palette(QPalette()).highlight().color()
+        finally:
+            QApplication.instance().setPalette(palette_before)
 
     def test_sets_application_icon(self, mock_state):
         GenaumacherApp(mock_state)

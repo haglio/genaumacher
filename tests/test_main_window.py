@@ -10,11 +10,11 @@ import pytest
 from PyQt6.QtCore import QPoint, QSize, Qt
 from PyQt6.QtGui import QFont, QFontDatabase, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QPushButton, QWidget
+from shared_ui.colors import dress_application
 from shared_ui.fonts import FONT_UI
 from shared_ui.preview import Preview
 from shared_ui.spacing import BUTTON_SIZE
 
-from genaumacher.gui.app import dress
 from genaumacher.gui.floating_controls import FloatingControlLayout
 from genaumacher.gui.main_window import GenaumacherMainWindow, _WrapRow
 from genaumacher.gui.shortcuts import SHORTCUTS
@@ -123,7 +123,7 @@ def window_in_windows_message_font(request, qapp, mock_state):
     message_font = QFont(FONT_UI)
     message_font.setPixelSize(request.param)
     qapp.setFont(message_font)
-    dress(qapp)
+    dress_application(qapp)
     window = GenaumacherMainWindow(mock_state)
     window.show()
     QApplication.processEvents()
