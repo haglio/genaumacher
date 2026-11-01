@@ -17,8 +17,7 @@ from pathlib import Path
 import pytest
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
-
-from genaumacher.gui.app import dress
+from shared_ui.colors import dress_application
 
 _GUI = Path(__file__).resolve().parent.parent / "genaumacher" / "gui"
 
@@ -111,7 +110,7 @@ def test_a_control_that_is_on_sits_on_a_lighter_ground():
     still fails an inversion.
     """
     app = QApplication.instance()
-    dress(app)
+    dress_application(app)
 
     backgrounds = _button_backgrounds(app.styleSheet())
 

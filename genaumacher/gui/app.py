@@ -6,7 +6,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import QApplication
-from shared_ui.chrome import family_stylesheet
+from shared_ui.colors import dress_application
 from shared_ui.preview import Preview
 from shared_ui.preview_icon import app_icon
 
@@ -17,12 +17,6 @@ from .playback_timer import PlaybackTimer
 
 if TYPE_CHECKING:
     from genaumacher.state import VideoState
-
-
-def dress(app: QApplication) -> None:
-    """The family's chrome, on the application rather than the window: a
-    tooltip is a top-level popup, and a sheet on a window never reaches it."""
-    app.setStyleSheet(family_stylesheet())
 
 
 class GenaumacherApp:
@@ -39,7 +33,7 @@ class GenaumacherApp:
         if self._app is None:
             self._app = QApplication(sys.argv)
         self._app.setApplicationName("Genaumacher")
-        dress(self._app)
+        dress_application(self._app)
 
         self._app.setWindowIcon(app_icon(genaumacher_icon_path(), preview))
 
