@@ -36,7 +36,7 @@ def mock_state():
     state.right_bound = 100
     state.in_point = 20
     state.out_point = 80
-    state.current = 50
+    state.cursor = 50
     state.loop_mode = LoopMode.BASE_TIP_BASE
     state.wrap_mode = WrapMode.OVER_BOUNDS
     state.speed = 1.0
@@ -186,7 +186,7 @@ class TestExportWiring:
 # range to contract into, and room outside it to extend into.
 _DISPATCH_STATE = {
     "total_frames": 100, "left_bound": 10, "right_bound": 60,
-    "in_point": 20, "out_point": 40, "current": 30, "base_step": 5,
+    "in_point": 20, "out_point": 40, "cursor": 30, "base_step": 5,
 }
 
 
@@ -210,8 +210,8 @@ def _with_suggestions(state):
 # import name rather than the edit: swapping the handlers under s/d and w/l,
 # and flipping the sign of both change_speed steps, shipped green.
 _KEY_BINDINGS = [
-    ("left", Qt.Key.Key_Left, "", _no_prep, lambda s: s.current, 29),
-    ("right", Qt.Key.Key_Right, "", _no_prep, lambda s: s.current, 31),
+    ("left", Qt.Key.Key_Left, "", _no_prep, lambda s: s.cursor, 29),
+    ("right", Qt.Key.Key_Right, "", _no_prep, lambda s: s.cursor, 31),
     ("space", Qt.Key.Key_Space, "", _no_prep, lambda s: s.loop_paused, True),
     ("a extends left", Qt.Key.Key_A, "a", _no_prep, lambda s: s.left_bound, 5),
     ("s contracts left", Qt.Key.Key_S, "s", _no_prep, lambda s: s.left_bound, 15),
@@ -274,13 +274,13 @@ class TestKeyDispatch:
     def test_an_unbound_key_changes_nothing(self, make_state):
         state = make_state(**_DISPATCH_STATE)
         window = GenaumacherMainWindow(state)
-        before = (state.current, state.in_point, state.out_point,
+        before = (state.cursor, state.in_point, state.out_point,
                   state.left_bound, state.right_bound, state.wrap_mode,
                   state.loop_mode, state.speed, state.persist_session.calls)
 
         _press(window, Qt.Key.Key_Z, "z")
 
-        assert (state.current, state.in_point, state.out_point,
+        assert (state.cursor, state.in_point, state.out_point,
                 state.left_bound, state.right_bound, state.wrap_mode,
                 state.loop_mode, state.speed, state.persist_session.calls) == before
 
@@ -384,7 +384,7 @@ class TestDynamicPositioning:
         w = shown_window
         mock_state.in_point = 20
         mock_state.out_point = 80
-        mock_state.current = 50
+        mock_state.cursor = 50
         w.scrubber.set_bounds(0, 100)
         w.scrubber.set_in_out(20, 80)
         QApplication.processEvents()
@@ -404,7 +404,7 @@ class TestDynamicPositioning:
         w = shown_window
         mock_state.in_point = 40
         mock_state.out_point = 60
-        mock_state.current = 10  # left of in-out
+        mock_state.cursor = 10  # left of in-out
         w.scrubber.set_bounds(0, 100)
         w.scrubber.set_in_out(40, 60)
         QApplication.processEvents()
@@ -420,7 +420,7 @@ class TestDynamicPositioning:
         w = shown_window
         mock_state.in_point = 20
         mock_state.out_point = 80
-        mock_state.current = 80  # at out_point
+        mock_state.cursor = 80  # at out_point
         w.scrubber.set_bounds(0, 100)
         QApplication.processEvents()
         w.update_button_positions()

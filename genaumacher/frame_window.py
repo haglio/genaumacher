@@ -12,7 +12,7 @@ class FrameWindow:
     total_frames: int
     left_bound: int
     right_bound: int
-    current: int
+    cursor: int
     base_step: int
 
     @property
@@ -21,7 +21,7 @@ class FrameWindow:
 
     def hold_within(self, low: int, high: int) -> None:
         """Pull the cursor back inside `[low, high]`."""
-        self.current = max(low, min(high, self.current))
+        self.cursor = max(low, min(high, self.cursor))
 
     def contract_left(self, in_point: int) -> bool:
         """Drop one step off the left, unless that would eat the in-out.
@@ -32,7 +32,7 @@ class FrameWindow:
         if in_point - self.left_bound < self.base_step:
             return False
         self.left_bound += self.base_step
-        self.current = max(self.current, self.left_bound)
+        self.cursor = max(self.cursor, self.left_bound)
         return True
 
     def contract_right(self, out_point: int) -> bool:
@@ -40,7 +40,7 @@ class FrameWindow:
         if self.right_bound - out_point < self.base_step:
             return False
         self.right_bound -= self.base_step
-        self.current = min(self.current, self.right_bound)
+        self.cursor = min(self.cursor, self.right_bound)
         return True
 
     def step_out_left(self) -> int:
@@ -61,16 +61,16 @@ class FrameWindow:
 
     def step_cursor_back(self, low: int, high: int) -> None:
         """One frame back, wrapping to `high` at `low`."""
-        self.current = high if self.current <= low else self.current - 1
+        self.cursor = high if self.cursor <= low else self.cursor - 1
 
     def step_cursor_forward(self, low: int, high: int) -> None:
         """One frame on, wrapping to `low` at `high`."""
-        self.current = low if self.current >= high else self.current + 1
+        self.cursor = low if self.cursor >= high else self.cursor + 1
 
     def carry_cursor(self, shift: int) -> None:
         """Move the cursor by the same amount the in-out just moved."""
-        self.current += shift
+        self.cursor += shift
 
     def jump_to(self, idx: int) -> None:
         """Put the cursor on `idx` -- what a click on the scrubber asks for."""
-        self.current = idx
+        self.cursor = idx

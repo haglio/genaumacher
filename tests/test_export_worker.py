@@ -21,7 +21,7 @@ def state(make_state):
     return make_state(
         path="C:/fake/video.mp4", session_path="C:/fake/session.json",
         total_frames=300, right_bound=299, in_point=10, out_point=50,
-        current=10, base_step=1,
+        cursor=10, base_step=1,
     )
 
 

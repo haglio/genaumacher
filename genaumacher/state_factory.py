@@ -49,7 +49,7 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
     right_bound = int(payload["loaded_end"])
     in_point = int(payload["active_start"])
     out_point = int(payload["active_end"])
-    current = int(payload.get("current", in_point))
+    cursor = int(payload.get("current", in_point))
     loop_mode = read_loop_mode(payload.get("loop_mode"))
     wrap_mode = read_wrap_mode(payload.get("wrap_mode"))
     speed = _normalized_speed(float(payload.get("speed", 1.0)))
@@ -67,7 +67,7 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
             total_frames=total_frames,
             left_bound=left_bound,
             right_bound=max(frames.keys()),
-            current=current,
+            cursor=cursor,
             base_step=max(1, int(round(fps))),
         ),
         clip=ClipRange(
@@ -85,7 +85,7 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
         wrap_mode=wrap_mode,
         vr=vr,
     )
-    state.clamp_current()
+    state.clamp_cursor()
     state.last_saved_payload = state.current_payload()
     update_loop_suggestions(state)
     return state

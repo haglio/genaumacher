@@ -293,7 +293,7 @@ def make_state():
         right_bound: int | None = None,
         in_point: int = 10,
         out_point: int | None = None,
-        current: int = 20,
+        cursor: int = 20,
         base_step: int = 5,
         fps: float = 30.0,
         speed: float = 1.0,
@@ -321,7 +321,7 @@ def make_state():
                 total_frames=total_frames,
                 left_bound=left_bound,
                 right_bound=right_bound,
-                current=current,
+                cursor=cursor,
                 base_step=base_step,
             ),
             clip=ClipRange(

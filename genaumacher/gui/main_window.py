@@ -284,7 +284,7 @@ class GenaumacherMainWindow(QMainWindow):
         self._floating.place(
             in_point=state.in_point,
             out_point=state.out_point,
-            cursor=state.current,
+            cursor=state.cursor,
             wrap_from=wrap_from,
             wrap_to=wrap_to,
             wrap_color=(
@@ -327,7 +327,7 @@ class GenaumacherMainWindow(QMainWindow):
         except _UNDECODABLE:
             pass
         try:
-            self._fill(self.left_pane, safe_frame(state, state.current))
+            self._fill(self.left_pane, safe_frame(state, state.cursor))
         except _UNDECODABLE:
             pass
         return loop_idx
@@ -339,7 +339,7 @@ class GenaumacherMainWindow(QMainWindow):
     def _draw_scrubber(self, state: VideoState, loop_idx: int) -> None:
         self.scrubber.set_bounds(state.left_bound, state.right_bound)
         self.scrubber.set_in_out(state.in_point, state.out_point)
-        self.scrubber.set_cursor_position(state.current)
+        self.scrubber.set_cursor_position(state.cursor)
         self.scrubber.set_loop_position(loop_idx)
         self.scrubber.set_suggestions(state.suggested_in, state.suggested_out)
 
@@ -347,8 +347,8 @@ class GenaumacherMainWindow(QMainWindow):
         cursor_max = state.loaded_count - 1
         width = max(2, len(str(max(0, cursor_max))))
         self.cursor_label.setText(
-            f"cursor: {state.current - state.left_bound:0{width}d}/{cursor_max}"
-            f" @ {format_seconds(state.current / state.fps)}"
+            f"cursor: {state.cursor - state.left_bound:0{width}d}/{cursor_max}"
+            f" @ {format_seconds(state.cursor / state.fps)}"
         )
 
         # `_draw_frames` has just asked the loop cursor for its frame, and the

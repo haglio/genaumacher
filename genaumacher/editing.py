@@ -18,12 +18,12 @@ def _mark_moved(state: VideoState) -> None:
 
 
 def set_mark_in(state: VideoState) -> None:
-    if state.clip.mark_in(state.current):
+    if state.clip.mark_in(state.cursor):
         _mark_moved(state)
 
 
 def set_mark_out(state: VideoState) -> None:
-    if state.clip.mark_out(state.current):
+    if state.clip.mark_out(state.cursor):
         _mark_moved(state)
 
 
@@ -61,7 +61,7 @@ def shift_in_out(state: VideoState, direction: int) -> None:
     ensure_loaded(state, want_start, want_end)
     state.clip.shift(shift)
     state.window.carry_cursor(shift)
-    state.clamp_current()
+    state.clamp_cursor()
     _mark_moved(state)
 
 

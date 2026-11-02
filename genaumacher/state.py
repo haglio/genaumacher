@@ -65,8 +65,8 @@ class VideoState:
         return self.window.right_bound
 
     @property
-    def current(self) -> int:
-        return self.window.current
+    def cursor(self) -> int:
+        return self.window.cursor
 
     @property
     def base_step(self) -> int:
@@ -117,7 +117,7 @@ class VideoState:
     def paused_loop_pos(self) -> int | None:
         return self.loop.paused_pos
 
-    def clamp_current(self) -> None:
+    def clamp_cursor(self) -> None:
         self.window.hold_within(*wrap_bounds(self))
 
     def reset_loop_anchor(self) -> None:

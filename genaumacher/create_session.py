@@ -104,7 +104,7 @@ def build_session_payload(
         right_bound=end_idx,
         in_point=start_idx,
         out_point=end_idx,
-        current=start_idx,
+        cursor=start_idx,
         seconds_per_step=base_step / fps,
         loop_mode=loop_mode,
         wrap_mode=WrapMode.OVER_BOUNDS,

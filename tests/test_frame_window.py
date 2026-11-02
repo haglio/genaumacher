@@ -6,7 +6,7 @@ from genaumacher.frame_window import FrameWindow
 
 def _window(**overrides) -> FrameWindow:
     kwargs = dict(total_frames=100, left_bound=10, right_bound=60,
-                  current=30, base_step=5)
+                  cursor=30, base_step=5)
     kwargs.update(overrides)
     return FrameWindow(**kwargs)
 
@@ -23,25 +23,25 @@ class TestHoldWithin:
     """The cursor is pulled back into whatever range it is told to stay in."""
 
     def test_a_cursor_below_the_range_is_pulled_up_to_the_floor(self):
-        window = _window(current=5)
+        window = _window(cursor=5)
 
         window.hold_within(10, 60)
 
-        assert window.current == 10
+        assert window.cursor == 10
 
     def test_a_cursor_above_the_range_is_pulled_down_to_the_ceiling(self):
-        window = _window(current=99)
+        window = _window(cursor=99)
 
         window.hold_within(10, 60)
 
-        assert window.current == 60
+        assert window.cursor == 60
 
     def test_a_cursor_already_inside_it_does_not_move(self):
-        window = _window(current=30)
+        window = _window(cursor=30)
 
         window.hold_within(10, 60)
 
-        assert window.current == 30
+        assert window.cursor == 30
 
 
 class TestContractLeft:
@@ -66,11 +66,11 @@ class TestContractLeft:
         assert window.left_bound == 15
 
     def test_it_drags_a_stranded_cursor_along(self):
-        window = _window(left_bound=10, current=12, base_step=5)
+        window = _window(left_bound=10, cursor=12, base_step=5)
 
         window.contract_left(in_point=20)
 
-        assert window.current == 15
+        assert window.cursor == 15
 
 
 class TestContractRight:
@@ -89,11 +89,11 @@ class TestContractRight:
         assert window.right_bound == 99
 
     def test_it_drags_a_stranded_cursor_along(self):
-        window = _window(right_bound=99, current=98, base_step=5)
+        window = _window(right_bound=99, cursor=98, base_step=5)
 
         window.contract_right(out_point=70)
 
-        assert window.current == 94
+        assert window.cursor == 94
 
 
 class TestStepOut:
@@ -165,45 +165,45 @@ class TestStepCursor:
     """
 
     def test_stepping_back_moves_one_frame(self):
-        window = _window(current=30)
+        window = _window(cursor=30)
 
         window.step_cursor_back(10, 60)
 
-        assert window.current == 29
+        assert window.cursor == 29
 
     def test_stepping_back_off_the_floor_wraps_to_the_ceiling(self):
-        window = _window(current=10)
+        window = _window(cursor=10)
 
         window.step_cursor_back(10, 60)
 
-        assert window.current == 60
+        assert window.cursor == 60
 
     def test_stepping_forward_moves_one_frame(self):
-        window = _window(current=30)
+        window = _window(cursor=30)
 
         window.step_cursor_forward(10, 60)
 
-        assert window.current == 31
+        assert window.cursor == 31
 
     def test_stepping_forward_off_the_ceiling_wraps_to_the_floor(self):
-        window = _window(current=60)
+        window = _window(cursor=60)
 
         window.step_cursor_forward(10, 60)
 
-        assert window.current == 10
+        assert window.cursor == 10
 
 
 class TestCarryAndJump:
     def test_carrying_moves_the_cursor_with_the_range_it_sits_in(self):
-        window = _window(current=30)
+        window = _window(cursor=30)
 
         window.carry_cursor(10)
 
-        assert window.current == 40
+        assert window.cursor == 40
 
     def test_jumping_puts_the_cursor_where_it_was_asked(self):
-        window = _window(current=30)
+        window = _window(cursor=30)
 
         window.jump_to(47)
 
-        assert window.current == 47
+        assert window.cursor == 47

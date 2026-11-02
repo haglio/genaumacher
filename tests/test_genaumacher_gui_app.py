@@ -29,7 +29,7 @@ def mock_state():
     state.right_bound = 100
     state.in_point = 20
     state.out_point = 80
-    state.current = 50
+    state.cursor = 50
     state.loop_mode = LoopMode.BASE_TIP_BASE
     state.wrap_mode = WrapMode.OVER_BOUNDS
     state.speed = 1.0
@@ -81,7 +81,7 @@ class TestConstruction:
 # The state _on_tick is driven against: a real one, with frames it can decode.
 _TICK_STATE = {
     "total_frames": 100, "left_bound": 10, "right_bound": 60,
-    "in_point": 20, "out_point": 40, "current": 33, "base_step": 5,
+    "in_point": 20, "out_point": 40, "cursor": 33, "base_step": 5,
     "fps": 25.0,
 }
 

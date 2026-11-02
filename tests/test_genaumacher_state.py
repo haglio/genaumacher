@@ -22,8 +22,8 @@ from genaumacher.editing import (
 )
 from genaumacher.loop_suggestions import update_loop_suggestions
 from genaumacher.navigation import (
-    move_current_left,
-    move_current_right,
+    move_cursor_left,
+    move_cursor_right,
     toggle_wrap_mode,
 )
 from genaumacher.playback import (
@@ -87,24 +87,24 @@ class TestVideoStateProperties:
 
 
 # ---------------------------------------------------------------------------
-# clamp_current
+# clamp_cursor
 # ---------------------------------------------------------------------------
 
 class TestClampCurrent:
     def test_clamped_up_to_loaded_start_in_blue_mode(self, make_state):
-        s = make_state(left_bound=10, current=5, wrap_mode="blue")
-        s.clamp_current()
-        assert s.current == s.left_bound
+        s = make_state(left_bound=10, cursor=5, wrap_mode="blue")
+        s.clamp_cursor()
+        assert s.cursor == s.left_bound
 
     def test_clamped_down_to_loaded_end_in_blue_mode(self, make_state):
-        s = make_state(right_bound=50, current=99, wrap_mode="blue")
-        s.clamp_current()
-        assert s.current == s.right_bound
+        s = make_state(right_bound=50, cursor=99, wrap_mode="blue")
+        s.clamp_cursor()
+        assert s.cursor == s.right_bound
 
     def test_within_range_unchanged(self, make_state):
-        s = make_state(left_bound=0, right_bound=99, current=50, wrap_mode="blue")
-        s.clamp_current()
-        assert s.current == 50
+        s = make_state(left_bound=0, right_bound=99, cursor=50, wrap_mode="blue")
+        s.clamp_cursor()
+        assert s.cursor == 50
 
 
 # ---------------------------------------------------------------------------
@@ -146,41 +146,41 @@ class TestCycleLoopMode:
 
 class TestToggleWrapMode:
     def test_switching_to_yellow_clamps_current_into_in_out(self, make_state):
-        s = make_state(wrap_mode="blue", in_point=10, out_point=20, current=25)
+        s = make_state(wrap_mode="blue", in_point=10, out_point=20, cursor=25)
         toggle_wrap_mode(s)
         assert s.wrap_mode == "yellow"
-        assert s.current == 20
+        assert s.cursor == 20
 
     def test_switching_back_to_blue_preserves_current(self, make_state):
-        s = make_state(wrap_mode="yellow", in_point=10, out_point=20, current=15)
+        s = make_state(wrap_mode="yellow", in_point=10, out_point=20, cursor=15)
         toggle_wrap_mode(s)
         assert s.wrap_mode == "blue"
-        assert s.current == 15
+        assert s.cursor == 15
 
 
 class TestMoveCurrent:
     def test_move_left_wraps_within_loaded_range_in_blue_mode(self, make_state):
-        s = make_state(left_bound=10, right_bound=20, current=10, wrap_mode="blue")
-        move_current_left(s)
-        assert s.current == 20
+        s = make_state(left_bound=10, right_bound=20, cursor=10, wrap_mode="blue")
+        move_cursor_left(s)
+        assert s.cursor == 20
         assert s.render_rev == 1
 
     def test_move_left_wraps_within_in_out_in_yellow_mode(self, make_state):
-        s = make_state(left_bound=0, right_bound=30, in_point=10, out_point=20, current=10, wrap_mode="yellow")
-        move_current_left(s)
-        assert s.current == 20
+        s = make_state(left_bound=0, right_bound=30, in_point=10, out_point=20, cursor=10, wrap_mode="yellow")
+        move_cursor_left(s)
+        assert s.cursor == 20
         assert s.render_rev == 1
 
     def test_move_right_wraps_within_loaded_range_in_blue_mode(self, make_state):
-        s = make_state(left_bound=10, right_bound=20, current=20, wrap_mode="blue")
-        move_current_right(s)
-        assert s.current == 10
+        s = make_state(left_bound=10, right_bound=20, cursor=20, wrap_mode="blue")
+        move_cursor_right(s)
+        assert s.cursor == 10
         assert s.render_rev == 1
 
     def test_move_right_wraps_within_in_out_in_yellow_mode(self, make_state):
-        s = make_state(left_bound=0, right_bound=30, in_point=10, out_point=20, current=20, wrap_mode="yellow")
-        move_current_right(s)
-        assert s.current == 10
+        s = make_state(left_bound=0, right_bound=30, in_point=10, out_point=20, cursor=20, wrap_mode="yellow")
+        move_cursor_right(s)
+        assert s.cursor == 10
         assert s.render_rev == 1
 
 
@@ -267,9 +267,9 @@ class TestContractLeft:
         assert s.left_bound == original
 
     def test_current_clamped_upward(self, make_state):
-        s = make_state(left_bound=0, in_point=20, base_step=5, current=3)
+        s = make_state(left_bound=0, in_point=20, base_step=5, cursor=3)
         contract_left(s)
-        assert s.current >= s.left_bound
+        assert s.cursor >= s.left_bound
 
 
 class TestExtendLeft:
@@ -421,30 +421,30 @@ def _shift(direction: int):
 # (label, _make_state kwargs, prepare, act) for every edit that changes the
 # clip the user is cutting.  Each must redraw and autosave.
 _EDITS_THAT_CHANGE_THE_CLIP = [
-    ("set_mark_in", {"in_point": 5, "out_point": 50, "current": 20}, _no_prep, set_mark_in),
-    ("set_mark_out", {"in_point": 5, "out_point": 50, "current": 30}, _no_prep, set_mark_out),
+    ("set_mark_in", {"in_point": 5, "out_point": 50, "cursor": 20}, _no_prep, set_mark_in),
+    ("set_mark_out", {"in_point": 5, "out_point": 50, "cursor": 30}, _no_prep, set_mark_out),
     ("accept_suggested_in", {"in_point": 10, "out_point": 30}, _suggest_in(12), accept_suggested_in),
     ("accept_suggested_out", {"in_point": 10, "out_point": 30}, _suggest_out(28), accept_suggested_out),
-    ("shift_in_out", {"in_point": 10, "out_point": 20, "current": 14}, _no_prep, _shift(1)),
+    ("shift_in_out", {"in_point": 10, "out_point": 20, "cursor": 14}, _no_prep, _shift(1)),
     ("cycle_loop_mode", {"loop_mode": "base-tip-base"}, _no_prep, cycle_loop_mode),
-    ("toggle_wrap_mode", {"wrap_mode": "blue", "in_point": 10, "out_point": 20, "current": 25}, _no_prep, toggle_wrap_mode),
+    ("toggle_wrap_mode", {"wrap_mode": "blue", "in_point": 10, "out_point": 20, "cursor": 25}, _no_prep, toggle_wrap_mode),
     ("contract_left", {"left_bound": 10, "in_point": 20, "base_step": 5}, _no_prep, contract_left),
     ("contract_right", {"right_bound": 99, "out_point": 70, "base_step": 5}, _no_prep, contract_right),
     ("extend_left", {"left_bound": 20, "right_bound": 60, "base_step": 5}, _no_prep, extend_left),
     ("extend_right", {"total_frames": 100, "right_bound": 60, "base_step": 5}, _no_prep, extend_right),
     ("change_speed", {"speed": 1.0}, _no_prep, _speed(0.25)),
-    ("move_current_left", {"left_bound": 0, "right_bound": 99, "current": 20}, _no_prep, move_current_left),
-    ("move_current_right", {"left_bound": 0, "right_bound": 99, "current": 20}, _no_prep, move_current_right),
+    ("move_cursor_left", {"left_bound": 0, "right_bound": 99, "cursor": 20}, _no_prep, move_cursor_left),
+    ("move_cursor_right", {"left_bound": 0, "right_bound": 99, "cursor": 20}, _no_prep, move_cursor_right),
 ]
 
 # The same operations asked to do something they refuse: nothing changes, so
 # nothing is saved.
 _EDITS_THAT_REFUSE = [
-    ("set_mark_in past active_end", {"in_point": 5, "out_point": 50, "current": 55}, _no_prep, set_mark_in),
-    ("set_mark_out before active_start", {"in_point": 20, "out_point": 50, "current": 10}, _no_prep, set_mark_out),
+    ("set_mark_in past active_end", {"in_point": 5, "out_point": 50, "cursor": 55}, _no_prep, set_mark_in),
+    ("set_mark_out before active_start", {"in_point": 20, "out_point": 50, "cursor": 10}, _no_prep, set_mark_out),
     ("accept_suggested_in at active_end", {"in_point": 10, "out_point": 30}, _suggest_in(30), accept_suggested_in),
     ("accept_suggested_out at in_point", {"in_point": 10, "out_point": 30}, _suggest_out(10), accept_suggested_out),
-    ("shift_in_out out of bounds", {"in_point": 2, "out_point": 12, "current": 5}, _no_prep, _shift(-1)),
+    ("shift_in_out out of bounds", {"in_point": 2, "out_point": 12, "cursor": 5}, _no_prep, _shift(-1)),
     ("contract_left with no room", {"left_bound": 0, "in_point": 3, "base_step": 5}, _no_prep, contract_left),
     ("contract_right with no room", {"right_bound": 99, "out_point": 97, "base_step": 5}, _no_prep, contract_right),
     ("change_speed already at the floor", {"speed": 0.25}, _no_prep, _speed(-0.25)),
@@ -477,12 +477,12 @@ class TestAnEditIsSaved:
 
 class TestSetMarkIn:
     def test_advances_active_start_to_current(self, make_state):
-        s = make_state(in_point=5, out_point=50, current=20)
+        s = make_state(in_point=5, out_point=50, cursor=20)
         set_mark_in(s)
         assert s.in_point == 20
 
     def test_does_not_advance_past_active_end(self, make_state):
-        s = make_state(in_point=5, out_point=50, current=55)
+        s = make_state(in_point=5, out_point=50, cursor=55)
         original = s.in_point
         set_mark_in(s)
         # current > out_point, condition `current < out_point` is false → no change
@@ -491,12 +491,12 @@ class TestSetMarkIn:
 
 class TestSetMarkOut:
     def test_retreats_active_end_to_current(self, make_state):
-        s = make_state(in_point=5, out_point=50, current=30)
+        s = make_state(in_point=5, out_point=50, cursor=30)
         set_mark_out(s)
         assert s.out_point == 30
 
     def test_does_not_retreat_before_active_start(self, make_state):
-        s = make_state(in_point=20, out_point=50, current=10)
+        s = make_state(in_point=20, out_point=50, cursor=10)
         original = s.out_point
         set_mark_out(s)
         assert s.out_point == original
@@ -544,21 +544,21 @@ class TestAcceptSuggestedMarks:
 
 class TestShiftActiveRange:
     def test_shift_right_reuses_old_out_as_new_in(self, make_state):
-        s = make_state(in_point=10, out_point=20, current=14)
+        s = make_state(in_point=10, out_point=20, cursor=14)
         shift_in_out(s, 1)
         assert s.in_point == 20
         assert s.out_point == 30
-        assert s.current == 24
+        assert s.cursor == 24
 
     def test_shift_left_reuses_old_in_as_new_out(self, make_state):
-        s = make_state(in_point=20, out_point=30, current=26)
+        s = make_state(in_point=20, out_point=30, cursor=26)
         shift_in_out(s, -1)
         assert s.in_point == 10
         assert s.out_point == 20
-        assert s.current == 16
+        assert s.cursor == 16
 
     def test_shift_right_expands_loaded_bounds_when_needed(self, make_state):
-        s = make_state(left_bound=0, right_bound=24, in_point=10, out_point=20, current=12, total_frames=40)
+        s = make_state(left_bound=0, right_bound=24, in_point=10, out_point=20, cursor=12, total_frames=40)
 
         def fake_ensure_loaded(state: VideoState, want_start: int, want_end: int) -> None:
             state.window.widen_left_to(want_start)
@@ -572,7 +572,7 @@ class TestShiftActiveRange:
         assert s.out_point == 30
 
     def test_shift_left_expands_loaded_bounds_when_needed(self, make_state):
-        s = make_state(left_bound=12, right_bound=40, in_point=20, out_point=30, current=25, total_frames=60)
+        s = make_state(left_bound=12, right_bound=40, in_point=20, out_point=30, cursor=25, total_frames=60)
 
         def fake_ensure_loaded(state: VideoState, want_start: int, want_end: int) -> None:
             state.window.widen_left_to(want_start)
@@ -586,14 +586,14 @@ class TestShiftActiveRange:
         assert s.out_point == 20
 
     def test_shift_right_preserves_existing_loaded_end_when_buffer_already_exists(self, make_state):
-        s = make_state(left_bound=0, right_bound=40, in_point=10, out_point=20, current=14, base_step=5)
+        s = make_state(left_bound=0, right_bound=40, in_point=10, out_point=20, cursor=14, base_step=5)
         with patch("genaumacher.editing.update_loop_suggestions"):
             shift_in_out(s, 1)
         assert s.right_bound == 40
         assert s.out_point == 30
 
     def test_shift_left_preserves_existing_loaded_start_when_buffer_already_exists(self, make_state):
-        s = make_state(left_bound=0, right_bound=40, in_point=20, out_point=30, current=24, base_step=5)
+        s = make_state(left_bound=0, right_bound=40, in_point=20, out_point=30, cursor=24, base_step=5)
         with patch("genaumacher.editing.update_loop_suggestions"):
             shift_in_out(s, -1)
         assert s.left_bound == 0
@@ -602,16 +602,16 @@ class TestShiftActiveRange:
     def test_shift_pulls_the_cursor_back_inside_the_loaded_range(self, make_state):
         """The cursor moves with the range and can overshoot what is loaded."""
         s = make_state(total_frames=41, left_bound=0, right_bound=40,
-                        in_point=0, out_point=20, current=39)
+                        in_point=0, out_point=20, cursor=39)
         shift_in_out(s, 1)
         assert (s.in_point, s.out_point) == (20, 40)
-        assert s.current == 40
+        assert s.cursor == 40
 
     def test_shift_does_nothing_if_it_would_leave_video_bounds(self, make_state):
-        s = make_state(in_point=2, out_point=12, current=5, loop_anchor=0.0)
-        original = (s.in_point, s.out_point, s.current)
+        s = make_state(in_point=2, out_point=12, cursor=5, loop_anchor=0.0)
+        original = (s.in_point, s.out_point, s.cursor)
         shift_in_out(s, -1)
-        assert (s.in_point, s.out_point, s.current) == original
+        assert (s.in_point, s.out_point, s.cursor) == original
         assert s.loop.anchor == 0.0
 
 
@@ -629,7 +629,7 @@ class TestLoopSuggestions:
             right_bound=79,
             in_point=10,
             out_point=60,
-            current=10,
+            cursor=10,
             initial_in_point=0,
             initial_out_point=60,
         )
@@ -651,7 +651,7 @@ class TestLoopSuggestions:
             right_bound=79,
             in_point=10,
             out_point=20,
-            current=10,
+            cursor=10,
             initial_in_point=0,
             initial_out_point=79,
         )
@@ -674,7 +674,7 @@ class TestLoopSuggestions:
             right_bound=79,
             in_point=10,
             out_point=20,
-            current=10,
+            cursor=10,
             initial_in_point=0,
             initial_out_point=79,
         )
