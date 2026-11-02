@@ -14,7 +14,7 @@ from .launch_choice import ClipWholeVideo, LaunchChoice, LoadSession, NewSession
 from .loop_cursor import LoopCursor
 from .main_funestra_prefill import detect_main_funestra_session_prefill
 from .paths import LAST_SESSION_FILE, SESSIONS_DIR, ensure_runtime_dirs, sanitize_name
-from .session_persistence import read_json
+from .session_persistence import read_json, remember_last_session
 from .state import VideoState
 from .state_factory import load_video_state
 from .suggestions import Suggestions
@@ -69,7 +69,7 @@ def build_state(choice: LoadSession | NewSession) -> VideoState:
             vr=choice.vr,
         )
     state = _load_state_from_session_file(session_path)
-    LAST_SESSION_FILE.write_text(state.session_path, encoding="utf-8")
+    remember_last_session(state.session_path)
     return state
 
 
