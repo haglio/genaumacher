@@ -1,0 +1,141 @@
+{
+  "app": "Genaumacher",
+  "drafted": "2026-11-02",
+  "columns": {
+    "thing": "where it is on the screen and what it looks like",
+    "screen": "the words on the screen that name it (a label, a button, a tooltip), quoted; null when no label names it",
+    "his_word": "the word the user says for it, from his own messages and the spoken commands, with the date he said it; null when he has none yet",
+    "code_today": "the words the code says for it now; each has to be in the code, or the row is stale",
+    "code_word": "the one word the code is to say for it; null while unruled",
+    "status": "ruled: his word, given where `ruled` says | his_word: a word he has used, not yet the code's everywhere | agreed: screen, user and code already say one word | unruled: no word of his yet, the row waits for him | kept: a name from outside this app, or a thing he has no word for, so the code keeps its own",
+    "retired": "code words for it that are gone and stay gone; `keep` lists the tokens that may still carry the letters (another thing's name, or something stored on disk)"
+  },
+  "things": [
+    {
+      "id": "scrubber",
+      "thing": "the long bar under the two videos, where a click moves the cursor",
+      "screen": null,
+      "his_word": "scrubber (2026-11-02: 'scrubber is good, for consistency')",
+      "code_today": ["scrubber"],
+      "code_word": "scrubber",
+      "status": "ruled",
+      "ruled": "2026-11-02, his words",
+      "retired": ["timeline"]
+    },
+    {
+      "id": "in_out",
+      "thing": "the stretch of the scrubber between the in and out marks",
+      "screen": ["shift in-out", "mark in", "mark out", "accept in or out suggestion"],
+      "his_word": null,
+      "code_today": ["in point", "out point", "in out", "mark in", "mark out"],
+      "code_word": "in-out",
+      "status": "agreed",
+      "retired": ["active range"],
+      "keep": ["\"active_start\"", "\"active_end\""]
+    },
+    {
+      "id": "bound",
+      "thing": "the outer limits of the stretch of video Genaumacher has loaded",
+      "screen": ["adjust left bound", "adjust right bound"],
+      "his_word": null,
+      "code_today": ["left bound", "right bound", "bounds"],
+      "code_word": "bound",
+      "status": "agreed",
+      "retired": ["loaded start", "loaded end", "loaded bounds"],
+      "keep": ["\"loaded_start\"", "\"loaded_end\""]
+    },
+    {
+      "id": "cursor",
+      "thing": "the place on the scrubber the frame at cursor shows",
+      "screen": ["cursor: ", "move cursor", "toggle cursor wrap mode"],
+      "his_word": null,
+      "code_today": ["cursor"],
+      "code_word": "cursor",
+      "status": "agreed"
+    },
+    {
+      "id": "hotkey_reference",
+      "thing": "the rows of keys at the bottom of the window, each with what it does",
+      "screen": null,
+      "his_word": "hotkey reference (2026-09-25, of Fun Time's)",
+      "code_today": ["hotkey reference", "hotkey"],
+      "code_word": "hotkey reference",
+      "status": "his_word",
+      "retired": ["legend"]
+    },
+    {
+      "id": "frame_at_cursor_pane",
+      "thing": "the left video, under its label",
+      "screen": ["frame at cursor"],
+      "his_word": null,
+      "code_today": ["frame at cursor pane"],
+      "code_word": "frame at cursor pane",
+      "status": "agreed"
+    },
+    {
+      "id": "loop_preview_pane",
+      "thing": "the right video, under its label",
+      "screen": ["loop preview"],
+      "his_word": null,
+      "code_today": ["loop preview pane"],
+      "code_word": "loop preview pane",
+      "status": "agreed"
+    },
+    {
+      "id": "pane",
+      "thing": "a video area of the window",
+      "screen": null,
+      "his_word": "pane (2026-09-13, Origenerator)",
+      "code_today": ["pane"],
+      "code_word": "pane",
+      "status": "ruled",
+      "ruled": "Origenerator's glossary"
+    },
+    {
+      "id": "clip",
+      "thing": "the stretch of a video cut out by the in and out marks, exported first as the raw clip",
+      "screen": ["Raw clip:", "Clip whole vid..."],
+      "his_word": "clip",
+      "code_today": ["clip"],
+      "code_word": "clip",
+      "status": "agreed"
+    },
+    {
+      "id": "normalize",
+      "thing": "the export step after the raw clip",
+      "screen": ["Normalize:"],
+      "his_word": null,
+      "code_today": ["normalize"],
+      "code_word": "normalize",
+      "status": "agreed",
+      "keep": ["clip_postprocess"]
+    },
+    {
+      "id": "flick",
+      "thing": "the finished file Genau plays; the word on Genau's buttons cannot go in a public repo, so it stays in the overlay",
+      "screen": null,
+      "his_word": null,
+      "code_today": ["flick"],
+      "code_word": "flick",
+      "status": "kept"
+    },
+    {
+      "id": "session",
+      "thing": "one saved piece of work, opened from the launcher",
+      "screen": ["Load existing session", "Create new session", "Session name:"],
+      "his_word": null,
+      "code_today": ["session"],
+      "code_word": "session",
+      "status": "agreed"
+    },
+    {
+      "id": "other_words",
+      "thing": "words the code uses for things no screen shows or names, each its own meaning",
+      "screen": null,
+      "his_word": null,
+      "code_today": ["sheet", "map", "strip", "slot", "banner", "console"],
+      "code_word": null,
+      "status": "kept"
+    }
+  ]
+}
