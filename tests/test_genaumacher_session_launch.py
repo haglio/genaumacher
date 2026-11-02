@@ -90,7 +90,7 @@ class TestLoadingASavedSession:
         assert state.session_name == "seaside walk"
         assert (state.in_point, state.out_point) == (110, 150)
         assert (state.left_bound, state.right_bound) == (100, 160)
-        assert state.current == 120
+        assert state.cursor == 120
         assert state.loop_mode == "tip-base"
         assert state.wrap_mode == "yellow"
         assert state.speed == pytest.approx(1.25)

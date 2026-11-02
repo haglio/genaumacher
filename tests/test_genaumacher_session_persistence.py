@@ -24,7 +24,7 @@ def _state(**overrides):
         right_bound=40,
         in_point=12,
         out_point=30,
-        current=18,
+        cursor=18,
         base_step=30,
         loop_mode="base-tip-base",
         wrap_mode="blue",

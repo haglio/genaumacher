@@ -28,7 +28,7 @@ from genaumacher.editing import (
     set_mark_out,
     shift_in_out,
 )
-from genaumacher.navigation import move_current_left, move_current_right, toggle_wrap_mode
+from genaumacher.navigation import move_cursor_left, move_cursor_right, toggle_wrap_mode
 from genaumacher.playback import change_speed, toggle_loop_pause
 
 if TYPE_CHECKING:
@@ -78,9 +78,9 @@ SHORTCUTS: tuple[Shortcut, ...] = (
     Shortcut("contract_left", _edits(contract_left), ("s",), keys=("s",)),
     Shortcut("shift_left", _edits(shift_in_out, -1), ("<",), keys=(",", "<")),
     Shortcut("shift_right", _edits(shift_in_out, 1), (">",), keys=(".", ">")),
-    Shortcut("cursor_left", _edits(move_current_left), ("left",),
+    Shortcut("cursor_left", _edits(move_cursor_left), ("left",),
              qt_keys=(Qt.Key.Key_Left,)),
-    Shortcut("cursor_right", _edits(move_current_right), ("right",),
+    Shortcut("cursor_right", _edits(move_cursor_right), ("right",),
              qt_keys=(Qt.Key.Key_Right,)),
     Shortcut("mark_in", _edits(set_mark_in), ("i", "["), keys=("i", "[")),
     Shortcut("mark_out", _edits(set_mark_out), ("o", "]"), keys=("o", "]")),
