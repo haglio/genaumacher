@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import ast
 import inspect
-import subprocess
 import textwrap
 from pathlib import Path
+
+from app_support.siblings import primary_checkout_of
 
 from genaumacher import main_funestra_prefill
 from genaumacher.create_session import build_session_payload
@@ -116,14 +117,7 @@ class TestTheContractWithTheMainFunestra:
         runs in a worktree and a worktree's neighbors are other worktrees.
         """
 
-        try:
-            common = subprocess.run(
-                ["git", "-C", str(PROJECT_DIR), "rev-parse", "--git-common-dir"],
-                capture_output=True, text=True, check=True,
-            ).stdout.strip()
-        except (OSError, subprocess.SubprocessError):
-            return []
-        siblings = (PROJECT_DIR / common).resolve().parent.parent
+        siblings = primary_checkout_of(PROJECT_DIR).parent
         sources = (siblings / "funestra" / "funestra" / "status.py",
                    siblings / "player_core" / "funestra" / "status.py",
                    siblings / "fun_time" / "main_funestra" / "status.py")
