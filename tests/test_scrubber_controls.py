@@ -1,15 +1,15 @@
-"""Tests for genaumacher.gui.timeline_controls — timeline manipulation buttons."""
+"""Tests for genaumacher.gui.scrubber_controls — scrubber manipulation buttons."""
 
 from __future__ import annotations
 
 import pytest
 
-from genaumacher.gui.timeline_controls import TimelineControls
+from genaumacher.gui.scrubber_controls import ScrubberControls
 
 
 @pytest.fixture
 def ctl():
-    return TimelineControls()
+    return ScrubberControls()
 
 
 # Every button on the row and the signal it must emit. Ten copies of the same

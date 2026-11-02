@@ -37,10 +37,10 @@ from .main_window_style import (
     refuse_focus,
     small_font,
 )
+from .scrubber_colors import SCRUBBER_ACTIVE, SCRUBBER_LOADED
+from .scrubber_controls import ScrubberControls
+from .scrubber_widget import ScrubberWidget
 from .shortcuts import BY_NAME, legend_rows, shortcut_for
-from .timeline_colors import TIMELINE_ACTIVE, TIMELINE_LOADED
-from .timeline_controls import TimelineControls
-from .timeline_widget import TimelineWidget
 from .video_pane import VideoPane
 
 if TYPE_CHECKING:
@@ -93,12 +93,12 @@ class GenaumacherMainWindow(QMainWindow):
         self.left_pane = VideoPane()
         self.right_pane = VideoPane()
 
-        # Timeline
-        self.timeline = TimelineWidget()
+        # Scrubber
+        self.scrubber = ScrubberWidget()
 
         # Controls (created for signal management; buttons placed individually)
         self.button_bar = ButtonBar()
-        self.timeline_controls = TimelineControls()
+        self.scrubber_controls = ScrubberControls()
         self.legend = LegendWidget(legend_rows())
 
         # -- Labels ---------------------------------------------------------------
@@ -140,20 +140,20 @@ class GenaumacherMainWindow(QMainWindow):
             (self.button_bar.speed_up_clicked, "speed_up"),
             (self.button_bar.play_pause_clicked, "play_pause"),
             (self.button_bar.export_clicked, "export"),
-            (self.timeline_controls.extend_left_clicked, "extend_left"),
-            (self.timeline_controls.contract_left_clicked, "contract_left"),
-            (self.timeline_controls.extend_right_clicked, "extend_right"),
-            (self.timeline_controls.contract_right_clicked, "contract_right"),
-            (self.timeline_controls.shift_left_clicked, "shift_left"),
-            (self.timeline_controls.shift_right_clicked, "shift_right"),
-            (self.timeline_controls.mark_in_clicked, "mark_in"),
-            (self.timeline_controls.mark_out_clicked, "mark_out"),
-            (self.timeline_controls.wrap_clicked, "toggle_wrap"),
-            (self.timeline_controls.loop_mode_clicked, "cycle_loop_mode"),
+            (self.scrubber_controls.extend_left_clicked, "extend_left"),
+            (self.scrubber_controls.contract_left_clicked, "contract_left"),
+            (self.scrubber_controls.extend_right_clicked, "extend_right"),
+            (self.scrubber_controls.contract_right_clicked, "contract_right"),
+            (self.scrubber_controls.shift_left_clicked, "shift_left"),
+            (self.scrubber_controls.shift_right_clicked, "shift_right"),
+            (self.scrubber_controls.mark_in_clicked, "mark_in"),
+            (self.scrubber_controls.mark_out_clicked, "mark_out"),
+            (self.scrubber_controls.wrap_clicked, "toggle_wrap"),
+            (self.scrubber_controls.loop_mode_clicked, "cycle_loop_mode"),
         ):
             signal.connect(self._runs(name))
 
-        self.timeline.cursor_jumped.connect(self._on_timeline_click)
+        self.scrubber.cursor_jumped.connect(self._on_scrubber_click)
 
         # -- Layout ---------------------------------------------------------------
 
@@ -190,7 +190,7 @@ class GenaumacherMainWindow(QMainWindow):
 
         # Info row: cursor (left, stretch=1) | loop+speed+buttons (right, stretch=1)
         bb = self.button_bar
-        tc = self.timeline_controls
+        tc = self.scrubber_controls
 
         left_info = QVBoxLayout()
         left_info.setSpacing(0)
@@ -224,13 +224,13 @@ class GenaumacherMainWindow(QMainWindow):
         tc.shift_left_btn.setParent(self._shift_row)
         tc.shift_right_btn.setParent(self._shift_row)
 
-        # Timeline row (extend/contract on sides, static layout)
-        timeline_row = QHBoxLayout()
-        timeline_row.addWidget(tc.extend_left_btn)
-        timeline_row.addWidget(tc.contract_left_btn)
-        timeline_row.addWidget(self.timeline, stretch=1)
-        timeline_row.addWidget(tc.contract_right_btn)
-        timeline_row.addWidget(tc.extend_right_btn)
+        # Scrubber row (extend/contract on sides, static layout)
+        scrubber_row = QHBoxLayout()
+        scrubber_row.addWidget(tc.extend_left_btn)
+        scrubber_row.addWidget(tc.contract_left_btn)
+        scrubber_row.addWidget(self.scrubber, stretch=1)
+        scrubber_row.addWidget(tc.contract_right_btn)
+        scrubber_row.addWidget(tc.extend_right_btn)
 
         self._mark_row = QWidget()
         self._mark_row.setFixedHeight(32)
@@ -256,7 +256,7 @@ class GenaumacherMainWindow(QMainWindow):
         main_layout.addLayout(panes_row, stretch=1)
         main_layout.addLayout(info_row)
         main_layout.addWidget(self._shift_row)
-        main_layout.addLayout(timeline_row)
+        main_layout.addLayout(scrubber_row)
         main_layout.addWidget(self._mark_row)
         main_layout.addWidget(self._wrap_row)
         main_layout.addLayout(mode_row)
@@ -264,7 +264,7 @@ class GenaumacherMainWindow(QMainWindow):
         main_layout.addWidget(self.legend)
 
         self._floating = FloatingControlLayout(
-            self.timeline, tc, self._shift_row, self._mark_row, self._wrap_row
+            self.scrubber, tc, self._shift_row, self._mark_row, self._wrap_row
         )
 
         dress_controls(central, bb, tc)
@@ -278,7 +278,7 @@ class GenaumacherMainWindow(QMainWindow):
     # -- Dynamic button positioning -------------------------------------------
 
     def update_button_positions(self) -> None:
-        """Reposition shift/mark/wrap buttons relative to the timeline."""
+        """Reposition shift/mark/wrap buttons relative to the scrubber."""
         state = self._state
         wrap_from, wrap_to = wrap_bounds(state)
         self._floating.place(
@@ -288,9 +288,9 @@ class GenaumacherMainWindow(QMainWindow):
             wrap_from=wrap_from,
             wrap_to=wrap_to,
             wrap_color=(
-                TIMELINE_LOADED
+                SCRUBBER_LOADED
                 if state.wrap_mode is WrapMode.OVER_LOADED
-                else TIMELINE_ACTIVE
+                else SCRUBBER_ACTIVE
             ),
         )
 
@@ -304,17 +304,17 @@ class GenaumacherMainWindow(QMainWindow):
         has a state to push.
         """
         loop_idx = self._draw_frames(state)
-        self._draw_timeline(state, loop_idx)
+        self._draw_scrubber(state, loop_idx)
         self._write_labels(state, loop_idx)
         self.button_bar.set_playing(not state.loop_paused)
-        self.timeline_controls.set_loop_mode(state.loop_mode)
+        self.scrubber_controls.set_loop_mode(state.loop_mode)
         self.warning_label.setText(state.session_warning)
         self.update_button_positions()
 
     def _draw_frames(self, state: VideoState) -> int:
         """Put the loop frame and the cursor frame in their panes.
 
-        Returns the loop frame's index, which the timeline and the loop label
+        Returns the loop frame's index, which the scrubber and the loop label
         both want.  A frame that will not decode costs its pane and nothing
         else -- including the RuntimeError `safe_frame` raises when the window
         spans a frame the decoder never produced, which out of a Qt slot would
@@ -336,12 +336,12 @@ class GenaumacherMainWindow(QMainWindow):
         image = bgr_to_qimage(frame)
         pane.set_frame(scale_to_fit(image, pane.width(), pane.height()))
 
-    def _draw_timeline(self, state: VideoState, loop_idx: int) -> None:
-        self.timeline.set_loaded_range(state.loaded_start, state.loaded_end)
-        self.timeline.set_active_range(state.active_start, state.active_end)
-        self.timeline.set_cursor_position(state.current)
-        self.timeline.set_loop_position(loop_idx)
-        self.timeline.set_suggestions(state.suggested_in, state.suggested_out)
+    def _draw_scrubber(self, state: VideoState, loop_idx: int) -> None:
+        self.scrubber.set_loaded_range(state.loaded_start, state.loaded_end)
+        self.scrubber.set_active_range(state.active_start, state.active_end)
+        self.scrubber.set_cursor_position(state.current)
+        self.scrubber.set_loop_position(loop_idx)
+        self.scrubber.set_suggestions(state.suggested_in, state.suggested_out)
 
     def _write_labels(self, state: VideoState, loop_idx: int) -> None:
         cursor_max = state.loaded_count - 1
@@ -393,6 +393,6 @@ class GenaumacherMainWindow(QMainWindow):
         shortcut = BY_NAME[name]
         return lambda: shortcut.action(self)
 
-    def _on_timeline_click(self, idx: int) -> None:
+    def _on_scrubber_click(self, idx: int) -> None:
         self._state.window.jump_to(idx)
         self._state.bump_render()

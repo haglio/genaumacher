@@ -1,4 +1,4 @@
-"""Timeline manipulation buttons — extend, contract, shift, mark, wrap, loop mode."""
+"""Scrubber manipulation buttons — extend, contract, shift, mark, wrap, loop mode."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 from genaumacher.loop_modes import LoopMode
 
 
-class TimelineControls(QWidget):
-    """Collection of buttons for manipulating timeline bounds and marks."""
+class ScrubberControls(QWidget):
+    """Collection of buttons for manipulating scrubber bounds and marks."""
 
     extend_left_clicked = pyqtSignal()
     contract_left_clicked = pyqtSignal()

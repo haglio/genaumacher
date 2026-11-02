@@ -32,7 +32,7 @@ def wrap_bounds(state: VideoState) -> tuple[int, int]:
     """The range the cursor may not leave, given the mode the state is in.
 
     Written out by hand at four sites before this, plus a fifth copy of the
-    literal in the timeline widget.  A typo in any of them read as the active
+    literal in the scrubber widget.  A typo in any of them read as the active
     range and said nothing.
     """
     if state.wrap_mode is WrapMode.OVER_LOADED:

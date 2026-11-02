@@ -42,8 +42,8 @@ def small_font() -> QFont:
     return make_font(FONT_UI, SIZE_SMALL)
 
 
-def dress_controls(central: QWidget, button_bar, timeline_controls) -> None:
-    tc, bb = timeline_controls, button_bar
+def dress_controls(central: QWidget, button_bar, scrubber_controls) -> None:
+    tc, bb = scrubber_controls, button_bar
     for button in (tc.shift_left_btn, tc.shift_right_btn,
                    tc.extend_left_btn, tc.contract_left_btn,
                    tc.contract_right_btn, tc.extend_right_btn,

@@ -1,4 +1,4 @@
-"""Custom-painted timeline bar showing loaded/active ranges, cursor, and suggestions."""
+"""Custom-painted scrubber bar showing loaded/active ranges, cursor, and suggestions."""
 
 from __future__ import annotations
 
@@ -7,19 +7,19 @@ from PyQt6.QtGui import QColor, QPainter, QPen
 from PyQt6.QtWidgets import QWidget
 from shared_ui.colors import BG_PRIMARY
 
-from .timeline_colors import (
+from .scrubber_colors import (
+    BORDER_SCRUBBER,
     BORDER_TICK,
-    BORDER_TIMELINE,
-    TIMELINE_ACTIVE,
-    TIMELINE_CURSOR,
-    TIMELINE_LOADED,
-    TIMELINE_LOOP,
-    TIMELINE_SUGGESTED_IN,
-    TIMELINE_SUGGESTED_OUT,
+    SCRUBBER_ACTIVE,
+    SCRUBBER_CURSOR,
+    SCRUBBER_LOADED,
+    SCRUBBER_LOOP,
+    SCRUBBER_SUGGESTED_IN,
+    SCRUBBER_SUGGESTED_OUT,
 )
 
 
-class TimelineWidget(QWidget):
+class ScrubberWidget(QWidget):
     """Displays loaded/active ranges with cursor, loop position, and suggestions."""
 
     cursor_jumped = pyqtSignal(int)
@@ -96,12 +96,12 @@ class TimelineWidget(QWidget):
         # Loaded range
         lx1 = self.x_for_index(self.loaded_start)
         lx2 = self.x_for_index(self.loaded_end)
-        p.fillRect(lx1, 0, lx2 - lx1, h, TIMELINE_LOADED)
+        p.fillRect(lx1, 0, lx2 - lx1, h, SCRUBBER_LOADED)
 
         # Active range
         ax1 = self.x_for_index(self.active_start)
         ax2 = self.x_for_index(self.active_end)
-        p.fillRect(ax1, 0, ax2 - ax1, h, TIMELINE_ACTIVE)
+        p.fillRect(ax1, 0, ax2 - ax1, h, SCRUBBER_ACTIVE)
 
         # Frame tick dots (upper and lower edges)
         tick_pen = QPen(BORDER_TICK, 1)
@@ -113,20 +113,20 @@ class TimelineWidget(QWidget):
 
         # Suggested in/out dotted lines
         if self.suggested_in is not None:
-            self._draw_dotted_line(p, self.x_for_index(self.suggested_in), h, TIMELINE_SUGGESTED_IN)
+            self._draw_dotted_line(p, self.x_for_index(self.suggested_in), h, SCRUBBER_SUGGESTED_IN)
         if self.suggested_out is not None:
-            self._draw_dotted_line(p, self.x_for_index(self.suggested_out), h, TIMELINE_SUGGESTED_OUT)
+            self._draw_dotted_line(p, self.x_for_index(self.suggested_out), h, SCRUBBER_SUGGESTED_OUT)
 
         # Loop position
         loop_x = self.x_for_index(self.loop_pos)
-        p.fillRect(loop_x - 1, 0, 3, h, TIMELINE_LOOP)
+        p.fillRect(loop_x - 1, 0, 3, h, SCRUBBER_LOOP)
 
         # Cursor position (on top)
         cur_x = self.x_for_index(self.cursor_pos)
-        p.fillRect(cur_x - 1, 0, 3, h, TIMELINE_CURSOR)
+        p.fillRect(cur_x - 1, 0, 3, h, SCRUBBER_CURSOR)
 
         # Outer border
-        pen = QPen(BORDER_TIMELINE, 1)
+        pen = QPen(BORDER_SCRUBBER, 1)
         p.setPen(pen)
         p.drawRect(0, 0, w - 1, h - 1)
 

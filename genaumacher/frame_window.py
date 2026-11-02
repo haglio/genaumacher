@@ -72,5 +72,5 @@ class FrameWindow:
         self.current += shift
 
     def jump_to(self, idx: int) -> None:
-        """Put the cursor on `idx` -- what a click on the timeline asks for."""
+        """Put the cursor on `idx` -- what a click on the scrubber asks for."""
         self.current = idx

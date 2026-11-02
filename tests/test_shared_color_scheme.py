@@ -1,6 +1,6 @@
 """Genaumacher's chrome takes its colors from the family's palette, not its own.
 
-Most of it always did -- the timeline, the legend and the video pane all read
+Most of it always did -- the scrubber, the legend and the video pane all read
 shared_ui tokens.  What was left were the strays: the button fill, its hover and
 pressed shades, two borders and a brace outline, each written as a hex literal
 nobody else in the family used.  Strays like those are why one app ends up

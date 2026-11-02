@@ -17,10 +17,10 @@ from shared_ui.spacing import BUTTON_SIZE
 
 from genaumacher.gui.floating_controls import FloatingControlLayout
 from genaumacher.gui.main_window import GenaumacherMainWindow, _WrapRow
+from genaumacher.gui.scrubber_colors import SCRUBBER_LOADED
+from genaumacher.gui.scrubber_controls import ScrubberControls
+from genaumacher.gui.scrubber_widget import ScrubberWidget
 from genaumacher.gui.shortcuts import SHORTCUTS
-from genaumacher.gui.timeline_colors import TIMELINE_LOADED
-from genaumacher.gui.timeline_controls import TimelineControls
-from genaumacher.gui.timeline_widget import TimelineWidget
 from genaumacher.loop_modes import LoopMode
 from genaumacher.wrap_modes import WrapMode
 
@@ -58,14 +58,14 @@ class TestConstruction:
         assert window.left_pane is not None
         assert window.right_pane is not None
 
-    def test_has_timeline(self, window):
-        assert window.timeline is not None
+    def test_has_scrubber(self, window):
+        assert window.scrubber is not None
 
     def test_has_button_bar(self, window):
         assert window.button_bar is not None
 
-    def test_has_timeline_controls(self, window):
-        assert window.timeline_controls is not None
+    def test_has_scrubber_controls(self, window):
+        assert window.scrubber_controls is not None
 
     def test_has_legend(self, window):
         assert window.legend is not None
@@ -81,7 +81,7 @@ class TestConstruction:
     def test_the_compact_controls_all_come_out_the_same_size(self, window):
         """The bound, shift and mark buttons are one metric, so a row of them
         lines up; the two that carry a whole word are wider than that."""
-        tc, bb = window.timeline_controls, window.button_bar
+        tc, bb = window.scrubber_controls, window.button_bar
         compact = {
             (btn.width(), btn.height())
             for btn in (tc.shift_left_btn, tc.shift_right_btn,
@@ -332,20 +332,20 @@ def shown_window(mock_state):
 
 
 class TestDynamicPositioning:
-    """Shift/mark/wrap buttons must track timeline positions each tick."""
+    """Shift/mark/wrap buttons must track scrubber positions each tick."""
 
     def test_shift_buttons_center_on_active_range(self, shown_window, mock_state):
         w = shown_window
         mock_state.active_start = 20
         mock_state.active_end = 80
-        w.timeline.set_loaded_range(0, 100)
-        w.timeline.set_active_range(20, 80)
+        w.scrubber.set_loaded_range(0, 100)
+        w.scrubber.set_active_range(20, 80)
         QApplication.processEvents()
 
         w.update_button_positions()
 
-        tl = w.timeline
-        tc = w.timeline_controls
+        tl = w.scrubber
+        tc = w.scrubber_controls
         in_x = tl.mapToGlobal(QPoint(tl.x_for_index(20), 0)).x()
         out_x = tl.mapToGlobal(QPoint(tl.x_for_index(80), 0)).x()
         expected_center = (in_x + out_x) // 2
@@ -358,8 +358,8 @@ class TestDynamicPositioning:
 
     def test_shift_buttons_move_when_active_range_changes(self, shown_window, mock_state):
         w = shown_window
-        tl = w.timeline
-        tc = w.timeline_controls
+        tl = w.scrubber
+        tc = w.scrubber_controls
         tl.set_loaded_range(0, 100)
 
         # Position with active range at left
@@ -385,12 +385,12 @@ class TestDynamicPositioning:
         mock_state.active_start = 20
         mock_state.active_end = 80
         mock_state.current = 50
-        w.timeline.set_loaded_range(0, 100)
-        w.timeline.set_active_range(20, 80)
+        w.scrubber.set_loaded_range(0, 100)
+        w.scrubber.set_active_range(20, 80)
         QApplication.processEvents()
         w.update_button_positions()
 
-        tc = w.timeline_controls
+        tc = w.scrubber_controls
         in_right = tc.mark_in_btn.mapToGlobal(
             QPoint(tc.mark_in_btn.width(), 0)
         ).x()
@@ -405,12 +405,12 @@ class TestDynamicPositioning:
         mock_state.active_start = 40
         mock_state.active_end = 60
         mock_state.current = 10  # left of active range
-        w.timeline.set_loaded_range(0, 100)
-        w.timeline.set_active_range(40, 60)
+        w.scrubber.set_loaded_range(0, 100)
+        w.scrubber.set_active_range(40, 60)
         QApplication.processEvents()
         w.update_button_positions()
 
-        tc = w.timeline_controls
+        tc = w.scrubber_controls
         # mark_in follows cursor (x=10), mark_out follows active_start (x=40)
         in_x = tc.mark_in_btn.mapToGlobal(QPoint(0, 0)).x()
         out_x = tc.mark_out_btn.mapToGlobal(QPoint(0, 0)).x()
@@ -421,26 +421,26 @@ class TestDynamicPositioning:
         mock_state.active_start = 20
         mock_state.active_end = 80
         mock_state.current = 80  # at active_end
-        w.timeline.set_loaded_range(0, 100)
+        w.scrubber.set_loaded_range(0, 100)
         QApplication.processEvents()
         w.update_button_positions()
 
-        assert not w.timeline_controls.mark_in_btn.isEnabled()
-        assert w.timeline_controls.mark_out_btn.isEnabled()
+        assert not w.scrubber_controls.mark_in_btn.isEnabled()
+        assert w.scrubber_controls.mark_out_btn.isEnabled()
 
     def test_wrap_button_color_changes_with_mode(self, shown_window, mock_state):
         w = shown_window
-        w.timeline.set_loaded_range(0, 100)
-        w.timeline.set_active_range(20, 80)
+        w.scrubber.set_loaded_range(0, 100)
+        w.scrubber.set_active_range(20, 80)
         QApplication.processEvents()
 
         mock_state.wrap_mode = WrapMode.OVER_LOADED
         w.update_button_positions()
-        blue_style = w.timeline_controls.wrap_btn.styleSheet()
+        blue_style = w.scrubber_controls.wrap_btn.styleSheet()
 
         mock_state.wrap_mode = WrapMode.OVER_ACTIVE
         w.update_button_positions()
-        yellow_style = w.timeline_controls.wrap_btn.styleSheet()
+        yellow_style = w.scrubber_controls.wrap_btn.styleSheet()
 
         assert blue_style != yellow_style
 
@@ -448,7 +448,7 @@ class TestDynamicPositioning:
         w = shown_window
         mock_state.wrap_mode = WrapMode.OVER_LOADED
         w.update_button_positions()
-        button = w.timeline_controls.wrap_btn
+        button = w.scrubber_controls.wrap_btn
         restyled = []
         button.setStyleSheet = restyled.append
 
@@ -462,12 +462,12 @@ class TestDynamicPositioning:
         mock_state.wrap_mode = WrapMode.OVER_LOADED
         mock_state.loaded_start = 0
         mock_state.loaded_end = 100
-        w.timeline.set_loaded_range(0, 100)
+        w.scrubber.set_loaded_range(0, 100)
         QApplication.processEvents()
         w.update_button_positions()
 
-        # Brace should span full timeline width (loaded range)
-        assert _brace_width(w, rendered) > w.timeline.width() * 0.8
+        # Brace should span full scrubber width (loaded range)
+        assert _brace_width(w, rendered) > w.scrubber.width() * 0.8
 
     def test_wrap_brace_narrows_to_active_range_in_yellow_mode(self, shown_window, mock_state, rendered):
         w = shown_window
@@ -476,18 +476,18 @@ class TestDynamicPositioning:
         mock_state.active_end = 60
         mock_state.loaded_start = 0
         mock_state.loaded_end = 100
-        w.timeline.set_loaded_range(0, 100)
-        w.timeline.set_active_range(40, 60)
+        w.scrubber.set_loaded_range(0, 100)
+        w.scrubber.set_active_range(40, 60)
         QApplication.processEvents()
         w.update_button_positions()
 
-        # Brace should be much narrower than timeline (only 20% of loaded range)
+        # Brace should be much narrower than scrubber (only 20% of loaded range)
         brace_width = _brace_width(w, rendered)
-        assert brace_width < w.timeline.width() * 0.4
+        assert brace_width < w.scrubber.width() * 0.4
 
 
 class TestWrapBrace:
-    """The brace under the timeline showing what the cursor wraps within."""
+    """The brace under the scrubber showing what the cursor wraps within."""
 
     def test_it_draws_a_line_across_exactly_the_span_it_was_given(self, rendered):
         row = _WrapRow()
@@ -514,19 +514,19 @@ class TestFloatingControlsStandAlone:
     def test_it_places_the_wrap_button_over_the_range_it_is_given(self):
         host = QWidget()
         host.resize(600, 200)
-        timeline = TimelineWidget(host)
-        timeline.resize(600, 24)
-        timeline.set_loaded_range(0, 100)
-        controls = TimelineControls(host)
+        scrubber = ScrubberWidget(host)
+        scrubber.resize(600, 24)
+        scrubber.set_loaded_range(0, 100)
+        controls = ScrubberControls(host)
         shift_row, mark_row = QWidget(host), QWidget(host)
         wrap_row = _WrapRow(host)
         for row in (shift_row, mark_row, wrap_row):
             row.resize(600, 32)
-        layout = FloatingControlLayout(timeline, controls, shift_row, mark_row, wrap_row)
+        layout = FloatingControlLayout(scrubber, controls, shift_row, mark_row, wrap_row)
 
         layout.place(active_start=20, active_end=80, cursor=50,
-                     wrap_from=0, wrap_to=100, wrap_color=TIMELINE_LOADED)
+                     wrap_from=0, wrap_to=100, wrap_color=SCRUBBER_LOADED)
 
         center = controls.wrap_btn.x() + controls.wrap_btn.width() // 2
-        assert abs(center - timeline.width() // 2) <= 2
-        assert TIMELINE_LOADED.name() in controls.wrap_btn.styleSheet()
+        assert abs(center - scrubber.width() // 2) <= 2
+        assert SCRUBBER_LOADED.name() in controls.wrap_btn.styleSheet()
