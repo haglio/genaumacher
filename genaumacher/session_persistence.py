@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Any
+
+from app_support.file_channel import write_whole
 
 from .loop_modes import LoopMode
 from .paths import LAST_SESSION_FILE
@@ -16,26 +17,19 @@ logger = logging.getLogger(__name__)
 
 
 def safe_atomic_write_json(path: Path, payload: dict[str, Any]) -> tuple[bool, str]:
-    """Write `payload` to `path` via a temp file, and say whether it landed.
+    """Write `payload` to `path` whole, and say whether it landed.
 
     The autosave warning the user sees is built from nothing but this return
     value, so a failure reported as a success is a session that silently stops
-    being written.
+    being written. A sessions folder that has moved is a failure, never made again.
     """
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    if not path.parent.is_dir():
+        return False, f"{path.parent} is not there, so {path.name} was not saved"
     try:
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(payload, f, indent=2)
-            f.write("\n")
-        os.replace(tmp, path)
-        return True, ""
-    except Exception as exc:
-        try:
-            if tmp.exists():
-                tmp.unlink()
-        except Exception:
-            pass
+        write_whole(path, json.dumps(payload, indent=2) + "\n")
+    except (OSError, TypeError, ValueError) as exc:
         return False, str(exc)
+    return True, ""
 
 
 def remember_last_session(session_path: Path | str) -> None:
