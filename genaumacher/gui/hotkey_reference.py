@@ -75,7 +75,7 @@ class HotkeyReferenceWidget(QWidget):
     # -- Painting --------------------------------------------------------------
 
     def _draw_keycap(self, p: QPainter, x: int, top: int, key: str, font: QFont) -> int:
-        """Draw one keycap with its glyph centered; returns how far x moves."""
+        """Draw one keycap with its symbol centered; returns how far x moves."""
         width = self._keycap_width(p, key, font)
         cap = QRectF(x, top, width, KEYCAP_HEIGHT)
 

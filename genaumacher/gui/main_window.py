@@ -90,8 +90,8 @@ class GenaumacherMainWindow(QMainWindow):
         self.resize(1520, 960)
 
         # Video panes
-        self.left_pane = VideoPane()
-        self.right_pane = VideoPane()
+        self.frame_at_cursor_pane = VideoPane()
+        self.loop_preview_pane = VideoPane()
 
         # Scrubber
         self.scrubber = ScrubberWidget()
@@ -161,28 +161,28 @@ class GenaumacherMainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         # Pane headers
-        left_header = QLabel("frame at cursor")
-        left_header.setFont(make_font(FONT_UI, SIZE_HEADING))
-        left_header.setStyleSheet(LABEL_STYLE)
-        left_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        left_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
+        frame_at_cursor_header = QLabel("frame at cursor")
+        frame_at_cursor_header.setFont(make_font(FONT_UI, SIZE_HEADING))
+        frame_at_cursor_header.setStyleSheet(LABEL_STYLE)
+        frame_at_cursor_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        frame_at_cursor_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
 
-        right_header = QLabel("loop preview")
-        right_header.setFont(make_font(FONT_UI, SIZE_HEADING))
-        right_header.setStyleSheet(LABEL_STYLE)
-        right_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        right_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
+        loop_preview_header = QLabel("loop preview")
+        loop_preview_header.setFont(make_font(FONT_UI, SIZE_HEADING))
+        loop_preview_header.setStyleSheet(LABEL_STYLE)
+        loop_preview_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        loop_preview_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
 
         # Pane columns
         left_col = QVBoxLayout()
         left_col.setSpacing(GAP_SMALL)
-        left_col.addWidget(left_header)
-        left_col.addWidget(self.left_pane, stretch=1)
+        left_col.addWidget(frame_at_cursor_header)
+        left_col.addWidget(self.frame_at_cursor_pane, stretch=1)
 
         right_col = QVBoxLayout()
         right_col.setSpacing(GAP_SMALL)
-        right_col.addWidget(right_header)
-        right_col.addWidget(self.right_pane, stretch=1)
+        right_col.addWidget(loop_preview_header)
+        right_col.addWidget(self.loop_preview_pane, stretch=1)
 
         panes_row = QHBoxLayout()
         panes_row.addLayout(left_col, stretch=1)
@@ -323,11 +323,11 @@ class GenaumacherMainWindow(QMainWindow):
         loop_idx = state.in_point
         try:
             loop_idx = current_loop_frame_index(state)
-            self._fill(self.right_pane, safe_frame(state, loop_idx))
+            self._fill(self.loop_preview_pane, safe_frame(state, loop_idx))
         except _UNDECODABLE:
             pass
         try:
-            self._fill(self.left_pane, safe_frame(state, state.cursor))
+            self._fill(self.frame_at_cursor_pane, safe_frame(state, state.cursor))
         except _UNDECODABLE:
             pass
         return loop_idx

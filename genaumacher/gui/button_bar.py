@@ -8,7 +8,7 @@ from shared_ui.colors import TEXT_PRIMARY
 from shared_ui.icon_button import fill_square_with_icon
 from shared_ui.icons import qt_icon
 
-# The chrome's own text color, so a glyph on a button matches the label beside it.
+# The chrome's own text color, so a symbol on a button matches the label beside it.
 _ICON_COLOR = TEXT_PRIMARY
 
 
