@@ -124,7 +124,6 @@
     "tests/test_icon.py": 3,
     "tests/test_interpolator_environment.py": 29,
     "tests/test_launch_smoke.py": 42,
-    "tests/test_launcher_contract.py": 8,
     "tests/test_launcher_dialog.py": 10,
     "tests/test_legend_widget.py": 20,
     "tests/test_loop_cursor.py": 9,
