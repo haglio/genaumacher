@@ -27,7 +27,7 @@ class GenaumacherApp:
 
         # AppUserModelID is already set by app.main() before we get here;
         # do NOT override it — it must stay "FunTime.Genaumacher" to match the
-        # shortcut so Windows groups the taskbar entry correctly.
+        # hotkey so Windows groups the taskbar entry correctly.
 
         self._app = QApplication.instance()
         if self._app is None:

@@ -16,11 +16,11 @@ from shared_ui.preview import Preview
 from shared_ui.spacing import BUTTON_SIZE
 
 from genaumacher.gui.floating_controls import FloatingControlLayout
+from genaumacher.gui.hotkeys import HOTKEYS
 from genaumacher.gui.main_window import GenaumacherMainWindow, _WrapRow
 from genaumacher.gui.scrubber_colors import SCRUBBER_BOUNDS
 from genaumacher.gui.scrubber_controls import ScrubberControls
 from genaumacher.gui.scrubber_widget import ScrubberWidget
-from genaumacher.gui.shortcuts import SHORTCUTS
 from genaumacher.loop_modes import LoopMode
 from genaumacher.wrap_modes import WrapMode
 
@@ -68,7 +68,7 @@ class TestConstruction:
         assert window.scrubber_controls is not None
 
     def test_has_legend(self, window):
-        assert window.legend is not None
+        assert window.hotkey_reference is not None
 
     def test_window_title(self, window):
         assert window.windowTitle() == "Genaumacher"
@@ -205,7 +205,7 @@ def _with_suggestions(state):
 
 
 # (label, Qt key, event text, prepare, what to read afterwards, what it must be)
-# -- every key the shortcut table binds, read off a real VideoState.  Six of
+# -- every key the hotkey table binds, read off a real VideoState.  Six of
 # these used to be `patch(...); assert_called_once_with(state)`, which pins the
 # import name rather than the edit: swapping the handlers under s/d and w/l,
 # and flipping the sign of both change_speed steps, shipped green.
@@ -255,7 +255,7 @@ class TestKeyDispatch:
         assert observe(state) == expected
 
     def test_every_key_the_table_binds_has_a_case(self):
-        """A key added to the shortcut table without a case here fails this.
+        """A key added to the hotkey table without a case here fails this.
 
         Fourteen of the twenty went unpinned for exactly as long as nothing
         counted them.  This used to read the literals out of `keyPressEvent`'s
@@ -266,8 +266,8 @@ class TestKeyDispatch:
         exercised = {text or key for _, key, text, *_ in _KEY_BINDINGS}
         exercised |= {Qt.Key.Key_Return, Qt.Key.Key_Enter, "q"}  # the cases below
 
-        bound = {key for s in SHORTCUTS for key in s.keys}
-        bound |= {code for s in SHORTCUTS for code in s.qt_keys}
+        bound = {key for s in HOTKEYS for key in s.keys}
+        bound |= {code for s in HOTKEYS for code in s.qt_keys}
 
         assert bound == exercised
 

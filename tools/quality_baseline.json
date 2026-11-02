@@ -27,7 +27,7 @@
     "tests/test_taskbar_identity.py": 9
   },
   "mutables_imported": {
-    "genaumacher/gui/shortcuts.py": 1
+    "genaumacher/gui/hotkeys.py": 1
   },
   "patches": {
     "tests/test_export_pipeline.py": 5,
@@ -68,11 +68,11 @@
     "genaumacher/gui/floating_controls.py": 15,
     "genaumacher/gui/frame_converter.py": 8,
     "genaumacher/gui/launcher_dialog.py": 11,
-    "genaumacher/gui/legend_widget.py": 18,
+    "genaumacher/gui/hotkey_reference.py": 18,
     "genaumacher/gui/main_window.py": 44,
     "genaumacher/gui/main_window_style.py": 12,
     "genaumacher/gui/playback_timer.py": 2,
-    "genaumacher/gui/shortcuts.py": 27,
+    "genaumacher/gui/hotkeys.py": 27,
     "genaumacher/gui/scrubber_colors.py": 15,
     "genaumacher/gui/scrubber_controls.py": 8,
     "genaumacher/gui/scrubber_widget.py": 14,
@@ -125,7 +125,7 @@
     "tests/test_interpolator_environment.py": 29,
     "tests/test_launch_smoke.py": 42,
     "tests/test_launcher_dialog.py": 10,
-    "tests/test_legend_widget.py": 20,
+    "tests/test_hotkey_reference.py": 20,
     "tests/test_loop_cursor.py": 9,
     "tests/test_main_funestra_prefill.py": 40,
     "tests/test_main_window.py": 31,
@@ -135,7 +135,7 @@
     "tests/test_process_name.py": 14,
     "tests/test_session_file_round_trip.py": 24,
     "tests/test_shared_color_scheme.py": 24,
-    "tests/test_shortcuts.py": 7,
+    "tests/test_hotkeys.py": 7,
     "tests/test_sidecar.py": 2,
     "tests/test_suggestion_search.py": 30,
     "tests/test_suggestions.py": 1,
