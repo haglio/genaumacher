@@ -169,5 +169,26 @@
     "tests/test_genaumacher_session_launch.py": 1,
     "tests/test_genaumacher_session_persistence.py": 1
   },
-  "statements": {}
+  "statements": {},
+  "uncovered_lines": {
+    "genaumacher/__main__.py": 3,
+    "genaumacher/app.py": 8,
+    "genaumacher/create_session.py": 23,
+    "genaumacher/editing.py": 2,
+    "genaumacher/export_steps.py": 29,
+    "genaumacher/gui/app.py": 1,
+    "genaumacher/gui/export_dialog.py": 1,
+    "genaumacher/gui/floating_controls.py": 1,
+    "genaumacher/gui/launcher_dialog.py": 7,
+    "genaumacher/gui/main_window.py": 2,
+    "genaumacher/loop_suggestions.py": 4,
+    "genaumacher/main_funestra_prefill.py": 4,
+    "genaumacher/normalize.py": 5,
+    "genaumacher/normalize_media.py": 50,
+    "genaumacher/normalize_transforms.py": 17,
+    "genaumacher/playback.py": 1,
+    "genaumacher/session_launch.py": 10,
+    "genaumacher/state_factory.py": 3,
+    "genaumacher/suggestion_search.py": 3
+  }
 }
