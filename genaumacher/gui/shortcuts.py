@@ -19,15 +19,15 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
 
+from genaumacher.bounds import contract_left, contract_right, extend_left, extend_right
 from genaumacher.editing import (
     accept_suggested_in,
     accept_suggested_out,
     cycle_loop_mode,
     set_mark_in,
     set_mark_out,
-    shift_active_range,
+    shift_in_out,
 )
-from genaumacher.loaded_bounds import contract_left, contract_right, extend_left, extend_right
 from genaumacher.navigation import move_current_left, move_current_right, toggle_wrap_mode
 from genaumacher.playback import change_speed, toggle_loop_pause
 
@@ -76,8 +76,8 @@ SHORTCUTS: tuple[Shortcut, ...] = (
              qt_keys=(Qt.Key.Key_Return, Qt.Key.Key_Enter)),
     Shortcut("extend_left", _edits(extend_left), ("a",), keys=("a",)),
     Shortcut("contract_left", _edits(contract_left), ("s",), keys=("s",)),
-    Shortcut("shift_left", _edits(shift_active_range, -1), ("<",), keys=(",", "<")),
-    Shortcut("shift_right", _edits(shift_active_range, 1), (">",), keys=(".", ">")),
+    Shortcut("shift_left", _edits(shift_in_out, -1), ("<",), keys=(",", "<")),
+    Shortcut("shift_right", _edits(shift_in_out, 1), (">",), keys=(".", ">")),
     Shortcut("cursor_left", _edits(move_current_left), ("left",),
              qt_keys=(Qt.Key.Key_Left,)),
     Shortcut("cursor_right", _edits(move_current_right), ("right",),

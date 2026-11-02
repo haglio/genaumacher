@@ -10,9 +10,9 @@ if TYPE_CHECKING:
 
 def toggle_wrap_mode(state: VideoState) -> None:
     state.wrap_mode = (
-        WrapMode.OVER_ACTIVE if state.wrap_mode is WrapMode.OVER_LOADED else WrapMode.OVER_LOADED
+        WrapMode.OVER_IN_OUT if state.wrap_mode is WrapMode.OVER_BOUNDS else WrapMode.OVER_BOUNDS
     )
-    if state.wrap_mode is WrapMode.OVER_ACTIVE:
+    if state.wrap_mode is WrapMode.OVER_IN_OUT:
         state.window.hold_within(*wrap_bounds(state))
     state.save_edit()
 

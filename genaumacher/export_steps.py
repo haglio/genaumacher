@@ -98,9 +98,9 @@ def export_raw_clip(state: VideoState, out_path: Path, progress: ExportProgress)
     ffmpeg = find_tool("ffmpeg")
     if not ffmpeg:
         return False, "ffmpeg not found on PATH"
-    clip_duration = max(1.0 / state.fps, (state.active_end - state.active_start + 1) / state.fps)
-    start_sec = state.active_start / state.fps
-    end_sec = (state.active_end + 1) / state.fps
+    clip_duration = max(1.0 / state.fps, (state.out_point - state.in_point + 1) / state.fps)
+    start_sec = state.in_point / state.fps
+    end_sec = (state.out_point + 1) / state.fps
     # Seek near the target so ffmpeg jumps to a nearby keyframe. Then trim using
     # timestamps relative to the seeked input segment.
     seek_sec = max(0.0, start_sec - 5.0)

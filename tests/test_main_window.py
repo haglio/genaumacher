@@ -17,7 +17,7 @@ from shared_ui.spacing import BUTTON_SIZE
 
 from genaumacher.gui.floating_controls import FloatingControlLayout
 from genaumacher.gui.main_window import GenaumacherMainWindow, _WrapRow
-from genaumacher.gui.scrubber_colors import SCRUBBER_LOADED
+from genaumacher.gui.scrubber_colors import SCRUBBER_BOUNDS
 from genaumacher.gui.scrubber_controls import ScrubberControls
 from genaumacher.gui.scrubber_widget import ScrubberWidget
 from genaumacher.gui.shortcuts import SHORTCUTS
@@ -32,13 +32,13 @@ def mock_state():
     state.path = "/video.mp4"
     state.fps = 30.0
     state.total_frames = 300
-    state.loaded_start = 0
-    state.loaded_end = 100
-    state.active_start = 20
-    state.active_end = 80
+    state.left_bound = 0
+    state.right_bound = 100
+    state.in_point = 20
+    state.out_point = 80
     state.current = 50
     state.loop_mode = LoopMode.BASE_TIP_BASE
-    state.wrap_mode = WrapMode.OVER_LOADED
+    state.wrap_mode = WrapMode.OVER_BOUNDS
     state.speed = 1.0
     state.loop_paused = False
     state.suggested_in = None
@@ -185,8 +185,8 @@ class TestExportWiring:
 # The state every dispatch case starts from: room on both sides of the loaded
 # range to contract into, and room outside it to extend into.
 _DISPATCH_STATE = {
-    "total_frames": 100, "loaded_start": 10, "loaded_end": 60,
-    "active_start": 20, "active_end": 40, "current": 30, "base_step": 5,
+    "total_frames": 100, "left_bound": 10, "right_bound": 60,
+    "in_point": 20, "out_point": 40, "current": 30, "base_step": 5,
 }
 
 
@@ -213,22 +213,22 @@ _KEY_BINDINGS = [
     ("left", Qt.Key.Key_Left, "", _no_prep, lambda s: s.current, 29),
     ("right", Qt.Key.Key_Right, "", _no_prep, lambda s: s.current, 31),
     ("space", Qt.Key.Key_Space, "", _no_prep, lambda s: s.loop_paused, True),
-    ("a extends left", Qt.Key.Key_A, "a", _no_prep, lambda s: s.loaded_start, 5),
-    ("s contracts left", Qt.Key.Key_S, "s", _no_prep, lambda s: s.loaded_start, 15),
-    ("d contracts right", Qt.Key.Key_D, "d", _no_prep, lambda s: s.loaded_end, 55),
-    ("f extends right", Qt.Key.Key_F, "f", _no_prep, lambda s: s.loaded_end, 65),
-    ("i marks in", Qt.Key.Key_I, "i", _no_prep, lambda s: s.active_start, 30),
-    ("[ marks in", Qt.Key.Key_BracketLeft, "[", _no_prep, lambda s: s.active_start, 30),
-    ("o marks out", Qt.Key.Key_O, "o", _no_prep, lambda s: s.active_end, 30),
-    ("] marks out", Qt.Key.Key_BracketRight, "]", _no_prep, lambda s: s.active_end, 30),
-    ("9 accepts the suggested in", Qt.Key.Key_9, "9", _with_suggestions, lambda s: s.active_start, 25),
-    ("( accepts the suggested in", Qt.Key.Key_ParenLeft, "(", _with_suggestions, lambda s: s.active_start, 25),
-    ("0 accepts the suggested out", Qt.Key.Key_0, "0", _with_suggestions, lambda s: s.active_end, 35),
-    (") accepts the suggested out", Qt.Key.Key_ParenRight, ")", _with_suggestions, lambda s: s.active_end, 35),
-    (", shifts left", Qt.Key.Key_Comma, ",", _no_prep, lambda s: (s.active_start, s.active_end), (0, 20)),
-    ("< shifts left", Qt.Key.Key_Less, "<", _no_prep, lambda s: (s.active_start, s.active_end), (0, 20)),
-    (". shifts right", Qt.Key.Key_Period, ".", _no_prep, lambda s: (s.active_start, s.active_end), (40, 60)),
-    ("> shifts right", Qt.Key.Key_Greater, ">", _no_prep, lambda s: (s.active_start, s.active_end), (40, 60)),
+    ("a extends left", Qt.Key.Key_A, "a", _no_prep, lambda s: s.left_bound, 5),
+    ("s contracts left", Qt.Key.Key_S, "s", _no_prep, lambda s: s.left_bound, 15),
+    ("d contracts right", Qt.Key.Key_D, "d", _no_prep, lambda s: s.right_bound, 55),
+    ("f extends right", Qt.Key.Key_F, "f", _no_prep, lambda s: s.right_bound, 65),
+    ("i marks in", Qt.Key.Key_I, "i", _no_prep, lambda s: s.in_point, 30),
+    ("[ marks in", Qt.Key.Key_BracketLeft, "[", _no_prep, lambda s: s.in_point, 30),
+    ("o marks out", Qt.Key.Key_O, "o", _no_prep, lambda s: s.out_point, 30),
+    ("] marks out", Qt.Key.Key_BracketRight, "]", _no_prep, lambda s: s.out_point, 30),
+    ("9 accepts the suggested in", Qt.Key.Key_9, "9", _with_suggestions, lambda s: s.in_point, 25),
+    ("( accepts the suggested in", Qt.Key.Key_ParenLeft, "(", _with_suggestions, lambda s: s.in_point, 25),
+    ("0 accepts the suggested out", Qt.Key.Key_0, "0", _with_suggestions, lambda s: s.out_point, 35),
+    (") accepts the suggested out", Qt.Key.Key_ParenRight, ")", _with_suggestions, lambda s: s.out_point, 35),
+    (", shifts left", Qt.Key.Key_Comma, ",", _no_prep, lambda s: (s.in_point, s.out_point), (0, 20)),
+    ("< shifts left", Qt.Key.Key_Less, "<", _no_prep, lambda s: (s.in_point, s.out_point), (0, 20)),
+    (". shifts right", Qt.Key.Key_Period, ".", _no_prep, lambda s: (s.in_point, s.out_point), (40, 60)),
+    ("> shifts right", Qt.Key.Key_Greater, ">", _no_prep, lambda s: (s.in_point, s.out_point), (40, 60)),
     ("w toggles the wrap range", Qt.Key.Key_W, "w", _no_prep, lambda s: s.wrap_mode, "yellow"),
     ("l cycles the loop mode", Qt.Key.Key_L, "l", _no_prep, lambda s: s.loop_mode, "tip-base-tip"),
     ("- slows down", Qt.Key.Key_Minus, "-", _no_prep, lambda s: s.speed, 0.75),
@@ -274,14 +274,14 @@ class TestKeyDispatch:
     def test_an_unbound_key_changes_nothing(self, make_state):
         state = make_state(**_DISPATCH_STATE)
         window = GenaumacherMainWindow(state)
-        before = (state.current, state.active_start, state.active_end,
-                  state.loaded_start, state.loaded_end, state.wrap_mode,
+        before = (state.current, state.in_point, state.out_point,
+                  state.left_bound, state.right_bound, state.wrap_mode,
                   state.loop_mode, state.speed, state.persist_session.calls)
 
         _press(window, Qt.Key.Key_Z, "z")
 
-        assert (state.current, state.active_start, state.active_end,
-                state.loaded_start, state.loaded_end, state.wrap_mode,
+        assert (state.current, state.in_point, state.out_point,
+                state.left_bound, state.right_bound, state.wrap_mode,
                 state.loop_mode, state.speed, state.persist_session.calls) == before
 
     @pytest.mark.parametrize("key", [Qt.Key.Key_Return, Qt.Key.Key_Enter])
@@ -334,12 +334,12 @@ def shown_window(mock_state):
 class TestDynamicPositioning:
     """Shift/mark/wrap buttons must track scrubber positions each tick."""
 
-    def test_shift_buttons_center_on_active_range(self, shown_window, mock_state):
+    def test_shift_buttons_center_on_in_out(self, shown_window, mock_state):
         w = shown_window
-        mock_state.active_start = 20
-        mock_state.active_end = 80
-        w.scrubber.set_loaded_range(0, 100)
-        w.scrubber.set_active_range(20, 80)
+        mock_state.in_point = 20
+        mock_state.out_point = 80
+        w.scrubber.set_bounds(0, 100)
+        w.scrubber.set_in_out(20, 80)
         QApplication.processEvents()
 
         w.update_button_positions()
@@ -356,24 +356,24 @@ class TestDynamicPositioning:
 
         assert abs(actual_center - expected_center) < 10
 
-    def test_shift_buttons_move_when_active_range_changes(self, shown_window, mock_state):
+    def test_shift_buttons_move_when_in_out_changes(self, shown_window, mock_state):
         w = shown_window
         tl = w.scrubber
         tc = w.scrubber_controls
-        tl.set_loaded_range(0, 100)
+        tl.set_bounds(0, 100)
 
-        # Position with active range at left
-        mock_state.active_start = 0
-        mock_state.active_end = 20
-        tl.set_active_range(0, 20)
+        # Position with in-out at left
+        mock_state.in_point = 0
+        mock_state.out_point = 20
+        tl.set_in_out(0, 20)
         QApplication.processEvents()
         w.update_button_positions()
         left_pos = tc.shift_left_btn.mapToGlobal(QPoint(0, 0)).x()
 
-        # Move active range to right
-        mock_state.active_start = 60
-        mock_state.active_end = 80
-        tl.set_active_range(60, 80)
+        # Move in-out to right
+        mock_state.in_point = 60
+        mock_state.out_point = 80
+        tl.set_in_out(60, 80)
         QApplication.processEvents()
         w.update_button_positions()
         right_pos = tc.shift_left_btn.mapToGlobal(QPoint(0, 0)).x()
@@ -382,11 +382,11 @@ class TestDynamicPositioning:
 
     def test_mark_buttons_straddle_cursor_inside_active(self, shown_window, mock_state):
         w = shown_window
-        mock_state.active_start = 20
-        mock_state.active_end = 80
+        mock_state.in_point = 20
+        mock_state.out_point = 80
         mock_state.current = 50
-        w.scrubber.set_loaded_range(0, 100)
-        w.scrubber.set_active_range(20, 80)
+        w.scrubber.set_bounds(0, 100)
+        w.scrubber.set_in_out(20, 80)
         QApplication.processEvents()
         w.update_button_positions()
 
@@ -402,26 +402,26 @@ class TestDynamicPositioning:
 
     def test_mark_buttons_split_when_cursor_outside_active(self, shown_window, mock_state):
         w = shown_window
-        mock_state.active_start = 40
-        mock_state.active_end = 60
-        mock_state.current = 10  # left of active range
-        w.scrubber.set_loaded_range(0, 100)
-        w.scrubber.set_active_range(40, 60)
+        mock_state.in_point = 40
+        mock_state.out_point = 60
+        mock_state.current = 10  # left of in-out
+        w.scrubber.set_bounds(0, 100)
+        w.scrubber.set_in_out(40, 60)
         QApplication.processEvents()
         w.update_button_positions()
 
         tc = w.scrubber_controls
-        # mark_in follows cursor (x=10), mark_out follows active_start (x=40)
+        # mark_in follows cursor (x=10), mark_out follows in_point (x=40)
         in_x = tc.mark_in_btn.mapToGlobal(QPoint(0, 0)).x()
         out_x = tc.mark_out_btn.mapToGlobal(QPoint(0, 0)).x()
         assert out_x > in_x + 50  # should be visibly separated
 
     def test_mark_in_disabled_at_active_end(self, shown_window, mock_state):
         w = shown_window
-        mock_state.active_start = 20
-        mock_state.active_end = 80
-        mock_state.current = 80  # at active_end
-        w.scrubber.set_loaded_range(0, 100)
+        mock_state.in_point = 20
+        mock_state.out_point = 80
+        mock_state.current = 80  # at out_point
+        w.scrubber.set_bounds(0, 100)
         QApplication.processEvents()
         w.update_button_positions()
 
@@ -430,15 +430,15 @@ class TestDynamicPositioning:
 
     def test_wrap_button_color_changes_with_mode(self, shown_window, mock_state):
         w = shown_window
-        w.scrubber.set_loaded_range(0, 100)
-        w.scrubber.set_active_range(20, 80)
+        w.scrubber.set_bounds(0, 100)
+        w.scrubber.set_in_out(20, 80)
         QApplication.processEvents()
 
-        mock_state.wrap_mode = WrapMode.OVER_LOADED
+        mock_state.wrap_mode = WrapMode.OVER_BOUNDS
         w.update_button_positions()
         blue_style = w.scrubber_controls.wrap_btn.styleSheet()
 
-        mock_state.wrap_mode = WrapMode.OVER_ACTIVE
+        mock_state.wrap_mode = WrapMode.OVER_IN_OUT
         w.update_button_positions()
         yellow_style = w.scrubber_controls.wrap_btn.styleSheet()
 
@@ -446,7 +446,7 @@ class TestDynamicPositioning:
 
     def test_a_tick_that_keeps_the_wrap_color_does_not_restyle_the_wrap_button(self, shown_window, mock_state):
         w = shown_window
-        mock_state.wrap_mode = WrapMode.OVER_LOADED
+        mock_state.wrap_mode = WrapMode.OVER_BOUNDS
         w.update_button_positions()
         button = w.scrubber_controls.wrap_btn
         restyled = []
@@ -459,29 +459,29 @@ class TestDynamicPositioning:
 
     def test_wrap_brace_spans_loaded_range_in_blue_mode(self, shown_window, mock_state, rendered):
         w = shown_window
-        mock_state.wrap_mode = WrapMode.OVER_LOADED
-        mock_state.loaded_start = 0
-        mock_state.loaded_end = 100
-        w.scrubber.set_loaded_range(0, 100)
+        mock_state.wrap_mode = WrapMode.OVER_BOUNDS
+        mock_state.left_bound = 0
+        mock_state.right_bound = 100
+        w.scrubber.set_bounds(0, 100)
         QApplication.processEvents()
         w.update_button_positions()
 
-        # Brace should span full scrubber width (loaded range)
+        # Brace should span full scrubber width (bounds)
         assert _brace_width(w, rendered) > w.scrubber.width() * 0.8
 
-    def test_wrap_brace_narrows_to_active_range_in_yellow_mode(self, shown_window, mock_state, rendered):
+    def test_wrap_brace_narrows_to_in_out_in_yellow_mode(self, shown_window, mock_state, rendered):
         w = shown_window
-        mock_state.wrap_mode = WrapMode.OVER_ACTIVE
-        mock_state.active_start = 40
-        mock_state.active_end = 60
-        mock_state.loaded_start = 0
-        mock_state.loaded_end = 100
-        w.scrubber.set_loaded_range(0, 100)
-        w.scrubber.set_active_range(40, 60)
+        mock_state.wrap_mode = WrapMode.OVER_IN_OUT
+        mock_state.in_point = 40
+        mock_state.out_point = 60
+        mock_state.left_bound = 0
+        mock_state.right_bound = 100
+        w.scrubber.set_bounds(0, 100)
+        w.scrubber.set_in_out(40, 60)
         QApplication.processEvents()
         w.update_button_positions()
 
-        # Brace should be much narrower than scrubber (only 20% of loaded range)
+        # Brace should be much narrower than scrubber (only 20% of bounds)
         brace_width = _brace_width(w, rendered)
         assert brace_width < w.scrubber.width() * 0.4
 
@@ -516,7 +516,7 @@ class TestFloatingControlsStandAlone:
         host.resize(600, 200)
         scrubber = ScrubberWidget(host)
         scrubber.resize(600, 24)
-        scrubber.set_loaded_range(0, 100)
+        scrubber.set_bounds(0, 100)
         controls = ScrubberControls(host)
         shift_row, mark_row = QWidget(host), QWidget(host)
         wrap_row = _WrapRow(host)
@@ -524,9 +524,9 @@ class TestFloatingControlsStandAlone:
             row.resize(600, 32)
         layout = FloatingControlLayout(scrubber, controls, shift_row, mark_row, wrap_row)
 
-        layout.place(active_start=20, active_end=80, cursor=50,
-                     wrap_from=0, wrap_to=100, wrap_color=SCRUBBER_LOADED)
+        layout.place(in_point=20, out_point=80, cursor=50,
+                     wrap_from=0, wrap_to=100, wrap_color=SCRUBBER_BOUNDS)
 
         center = controls.wrap_btn.x() + controls.wrap_btn.width() // 2
         assert abs(center - scrubber.width() // 2) <= 2
-        assert SCRUBBER_LOADED.name() in controls.wrap_btn.styleSheet()
+        assert SCRUBBER_BOUNDS.name() in controls.wrap_btn.styleSheet()

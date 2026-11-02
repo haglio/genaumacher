@@ -10,34 +10,34 @@ if TYPE_CHECKING:
 
 
 def contract_left(state: VideoState) -> None:
-    if state.window.contract_left(state.active_start):
+    if state.window.contract_left(state.in_point):
         prune_loaded_caches(state)
         update_loop_suggestions(state)
         state.save_edit()
 
 
 def extend_left(state: VideoState) -> None:
-    before = state.loaded_start
-    ensure_loaded(state, state.window.step_out_left(), state.loaded_end)
-    if state.loaded_start == before:
+    before = state.left_bound
+    ensure_loaded(state, state.window.step_out_left(), state.right_bound)
+    if state.left_bound == before:
         return  # at the start of the video: nothing moved, nothing to save
     update_loop_suggestions(state)
     state.save_edit()
 
 
 def contract_right(state: VideoState) -> None:
-    if state.window.contract_right(state.active_end):
+    if state.window.contract_right(state.out_point):
         prune_loaded_caches(state)
         update_loop_suggestions(state)
         state.save_edit()
 
 
 def extend_right(state: VideoState) -> None:
-    before = state.loaded_end
+    before = state.right_bound
     # The edge is the last frame `ensure_loaded` got: the loader itself gets
     # past a damaged read, so nothing here has to claim frames it never saw.
-    ensure_loaded(state, state.loaded_start, state.window.step_out_right())
-    if state.loaded_end == before:
+    ensure_loaded(state, state.left_bound, state.window.step_out_right())
+    if state.right_bound == before:
         return  # the end of the video, or of what decodes: nothing to save
     update_loop_suggestions(state)
     state.save_edit()

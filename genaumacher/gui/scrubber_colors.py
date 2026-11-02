@@ -31,10 +31,10 @@ TEXT_LEGEND_JOIN = TEXT_MUTED
 BORDER_SCRUBBER = BORDER_DEFAULT
 BORDER_TICK = BORDER_DEFAULT
 
-# There is one blue in the family: the loaded range is it, and the range in
+# There is one blue in the family: the bounds is it, and the range in
 # play is it tinted lighter.
-SCRUBBER_LOADED = BLUE
-SCRUBBER_ACTIVE = BLUE_LIGHT
+SCRUBBER_BOUNDS = BLUE
+SCRUBBER_IN_OUT = BLUE_LIGHT
 SCRUBBER_CURSOR = WHITE
 SCRUBBER_LOOP = RED
 # The two suggested points are marks that can land on either range, so each is

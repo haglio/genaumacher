@@ -40,8 +40,8 @@ def build_clip_whole_state(video_file: str) -> VideoState:
         fps=fps,
         window=FrameWindow(
             total_frames=total_frames,
-            loaded_start=0,
-            loaded_end=end_idx,
+            left_bound=0,
+            right_bound=end_idx,
             current=0,
             base_step=max(1, int(round(fps))),
         ),

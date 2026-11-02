@@ -88,8 +88,8 @@ class TestLoadingASavedSession:
         state = build_state(LoadSession(session_json=str(saved)))
 
         assert state.session_name == "seaside walk"
-        assert (state.active_start, state.active_end) == (110, 150)
-        assert (state.loaded_start, state.loaded_end) == (100, 160)
+        assert (state.in_point, state.out_point) == (110, 150)
+        assert (state.left_bound, state.right_bound) == (100, 160)
         assert state.current == 120
         assert state.loop_mode == "tip-base"
         assert state.wrap_mode == "yellow"
@@ -136,7 +136,7 @@ class TestCreatingANewSession:
         assert written["active_end"] == 524  # plus five seconds, inclusive
         assert written["loop_mode"] == "tip-base"
         assert written["vr"] is False
-        assert (state.active_start, state.active_end) == (375, 524)
+        assert (state.in_point, state.out_point) == (375, 524)
 
     def test_an_hour_long_timestamp_is_parsed_whole(self, library):
         build_state(self._new(timestamp="00:00:20", seconds=1.0))
@@ -163,7 +163,7 @@ class TestCreatingANewSession:
 
         state = build_state(self._new())
 
-        assert (state.active_start, state.active_end) == (7, 9)
+        assert (state.in_point, state.out_point) == (7, 9)
         assert json.loads(existing.read_text(encoding="utf-8"))["active_start"] == 7
 
 
@@ -178,8 +178,8 @@ class TestBuildClipWholeState:
             yield build_clip_whole_state("/library/seaside walk.mp4")
 
     def test_the_range_covers_the_video_bar_its_duplicate_last_frame(self, whole):
-        assert (whole.active_start, whole.active_end) == (0, 298)
-        assert (whole.loaded_start, whole.loaded_end) == (0, 298)
+        assert (whole.in_point, whole.out_point) == (0, 298)
+        assert (whole.left_bound, whole.right_bound) == (0, 298)
 
     def test_it_loads_no_frames(self, whole):
         assert whole.frames == {}

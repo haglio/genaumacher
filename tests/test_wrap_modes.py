@@ -10,21 +10,21 @@ from genaumacher.wrap_modes import WrapMode, wrap_bounds
 
 class TestWrapBounds:
     def test_over_the_loaded_range_the_cursor_roams_everything_loaded(self, make_state):
-        state = make_state(loaded_start=10, loaded_end=60, active_start=20,
-                           active_end=40, wrap_mode=WrapMode.OVER_LOADED)
+        state = make_state(left_bound=10, right_bound=60, in_point=20,
+                           out_point=40, wrap_mode=WrapMode.OVER_BOUNDS)
 
         assert wrap_bounds(state) == (10, 60)
 
-    def test_over_the_active_range_it_is_held_to_the_clip(self, make_state):
-        state = make_state(loaded_start=10, loaded_end=60, active_start=20,
-                           active_end=40, wrap_mode=WrapMode.OVER_ACTIVE)
+    def test_over_the_in_out_it_is_held_to_the_clip(self, make_state):
+        state = make_state(left_bound=10, right_bound=60, in_point=20,
+                           out_point=40, wrap_mode=WrapMode.OVER_IN_OUT)
 
         assert wrap_bounds(state) == (20, 40)
 
     def test_the_two_modes_are_the_colors_the_session_file_carries(self):
         """The session format is unversioned and evolver reads it, so the value
         stays the color it has always been; only the name says what it means."""
-        assert (WrapMode.OVER_LOADED, WrapMode.OVER_ACTIVE) == ("blue", "yellow")
+        assert (WrapMode.OVER_BOUNDS, WrapMode.OVER_IN_OUT) == ("blue", "yellow")
 
 
 @pytest.mark.repo_check

@@ -35,14 +35,14 @@ class TestWrapMode:
     def test_the_two_words_are_the_colors_the_version_one_file_holds(self):
         """Evolver enumerates and rewrites these files, and the format is
         unversioned, so the wire word stays the color it always was."""
-        assert (WrapMode.OVER_LOADED.value, WrapMode.OVER_ACTIVE.value) == ("blue", "yellow")
+        assert (WrapMode.OVER_BOUNDS.value, WrapMode.OVER_IN_OUT.value) == ("blue", "yellow")
 
     def test_a_known_word_reads_as_its_entry(self):
-        assert read_wrap_mode("yellow") is WrapMode.OVER_ACTIVE
-        assert read_wrap_mode(WrapMode.OVER_LOADED) is WrapMode.OVER_LOADED
+        assert read_wrap_mode("yellow") is WrapMode.OVER_IN_OUT
+        assert read_wrap_mode(WrapMode.OVER_BOUNDS) is WrapMode.OVER_BOUNDS
 
     def test_a_word_it_does_not_know_reads_as_over_the_loaded_range(self):
         """The range a new session wraps within; what the loader used to do with a
-        stray word was fall through to the active range, which nothing asked for."""
+        stray word was fall through to the in-out, which nothing asked for."""
         for raw in ("red", "", None):
-            assert read_wrap_mode(raw) is WrapMode.OVER_LOADED
+            assert read_wrap_mode(raw) is WrapMode.OVER_BOUNDS

@@ -25,13 +25,13 @@ def mock_state():
     state.path = "/video.mp4"
     state.fps = 30.0
     state.total_frames = 300
-    state.loaded_start = 0
-    state.loaded_end = 100
-    state.active_start = 20
-    state.active_end = 80
+    state.left_bound = 0
+    state.right_bound = 100
+    state.in_point = 20
+    state.out_point = 80
     state.current = 50
     state.loop_mode = LoopMode.BASE_TIP_BASE
-    state.wrap_mode = WrapMode.OVER_LOADED
+    state.wrap_mode = WrapMode.OVER_BOUNDS
     state.speed = 1.0
     state.loop_paused = False
     state.suggested_in = None
@@ -80,8 +80,8 @@ class TestConstruction:
 
 # The state _on_tick is driven against: a real one, with frames it can decode.
 _TICK_STATE = {
-    "total_frames": 100, "loaded_start": 10, "loaded_end": 60,
-    "active_start": 20, "active_end": 40, "current": 33, "base_step": 5,
+    "total_frames": 100, "left_bound": 10, "right_bound": 60,
+    "in_point": 20, "out_point": 40, "current": 33, "base_step": 5,
     "fps": 25.0,
 }
 
@@ -121,10 +121,10 @@ class TestOnTick:
         live_app._on_tick()
 
         scrubber = live_app.window.scrubber
-        assert (scrubber.loaded_start, scrubber.loaded_end) == (10, 60)
-        assert (scrubber.active_start, scrubber.active_end) == (20, 40)
+        assert (scrubber.left_bound, scrubber.right_bound) == (10, 60)
+        assert (scrubber.in_point, scrubber.out_point) == (20, 40)
         assert scrubber.cursor_pos == 33
-        assert state.active_start <= scrubber.loop_pos <= state.active_end
+        assert state.in_point <= scrubber.loop_pos <= state.out_point
 
     def test_it_follows_the_state_when_it_moves(self, live_app):
         live_app._on_tick()
@@ -135,7 +135,7 @@ class TestOnTick:
 
         scrubber = live_app.window.scrubber
         assert scrubber.cursor_pos == 47
-        assert scrubber.active_end == 50
+        assert scrubber.out_point == 50
 
     def test_it_passes_the_suggestions_through(self, live_app):
         live_app._state.suggestions.offer(22, 38)

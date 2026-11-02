@@ -35,7 +35,7 @@ class VideoState:
     session_name: str
     session_path: str
     loop_mode: LoopMode = LoopMode.BASE_TIP_BASE
-    wrap_mode: WrapMode = WrapMode.OVER_LOADED
+    wrap_mode: WrapMode = WrapMode.OVER_BOUNDS
     skip_normalize: bool = False
     vr: bool = False
     session_warning: str = ""
@@ -49,7 +49,7 @@ class VideoState:
     # The frame window's five fields are session-JSON keys, so they are readable
     # here under the names the payload builder writes -- but only readable.  A
     # module that wants one changed asks the window for the change it wants;
-    # that is what stops `loaded_start <= current <= loaded_end` being
+    # that is what stops `left_bound <= current <= right_bound` being
     # re-established by hand at every call site.
 
     @property
@@ -57,12 +57,12 @@ class VideoState:
         return self.window.total_frames
 
     @property
-    def loaded_start(self) -> int:
-        return self.window.loaded_start
+    def left_bound(self) -> int:
+        return self.window.left_bound
 
     @property
-    def loaded_end(self) -> int:
-        return self.window.loaded_end
+    def right_bound(self) -> int:
+        return self.window.right_bound
 
     @property
     def current(self) -> int:
@@ -81,11 +81,11 @@ class VideoState:
     # the range rather than getting a reader here that only a test would use.
 
     @property
-    def active_start(self) -> int:
+    def in_point(self) -> int:
         return self.clip.start
 
     @property
-    def active_end(self) -> int:
+    def out_point(self) -> int:
         return self.clip.end
 
     # The offered pair is drawn on the scrubber and read by the two accept

@@ -289,10 +289,10 @@ def make_state():
     def factory(
         *,
         total_frames: int = 100,
-        loaded_start: int = 0,
-        loaded_end: int | None = None,
-        active_start: int = 10,
-        active_end: int | None = None,
+        left_bound: int = 0,
+        right_bound: int | None = None,
+        in_point: int = 10,
+        out_point: int | None = None,
         current: int = 20,
         base_step: int = 5,
         fps: float = 30.0,
@@ -302,37 +302,37 @@ def make_state():
         session_name: str = "test_session",
         path: str = "/fake/video.mp4",
         session_path: str = "/fake/sessions/test_session.json",
-        initial_active_start: int | None = None,
-        initial_active_end: int | None = None,
+        initial_in_point: int | None = None,
+        initial_out_point: int | None = None,
         loop_anchor: float | None = None,
         loop_paused: bool = False,
         paused_loop_idx: int | None = None,
         paused_loop_pos: int | None = None,
     ) -> VideoState:
-        if loaded_end is None:
-            loaded_end = total_frames - 1
-        if active_end is None:
-            active_end = total_frames - 10
+        if right_bound is None:
+            right_bound = total_frames - 1
+        if out_point is None:
+            out_point = total_frames - 10
         return VideoState(
             cap=_FakeCapture(total_frames),
             path=path,
             fps=fps,
             window=FrameWindow(
                 total_frames=total_frames,
-                loaded_start=loaded_start,
-                loaded_end=loaded_end,
+                left_bound=left_bound,
+                right_bound=right_bound,
                 current=current,
                 base_step=base_step,
             ),
             clip=ClipRange(
-                start=active_start,
-                end=active_end,
-                anchor_in=active_start,
-                anchor_out=active_end,
+                start=in_point,
+                end=out_point,
+                anchor_in=in_point,
+                anchor_out=out_point,
             ),
             frames={
                 i: np.zeros((2, 2, 3), dtype=np.uint8)
-                for i in range(loaded_start, loaded_end + 1)
+                for i in range(left_bound, right_bound + 1)
             },
             loop=LoopCursor(
                 anchor=time.monotonic() if loop_anchor is None else loop_anchor,
@@ -343,10 +343,10 @@ def make_state():
             ),
             suggestions=Suggestions(
                 initial_start=(
-                    active_start if initial_active_start is None else initial_active_start
+                    in_point if initial_in_point is None else initial_in_point
                 ),
                 initial_end=(
-                    active_end if initial_active_end is None else initial_active_end
+                    out_point if initial_out_point is None else initial_out_point
                 ),
             ),
             session_name=session_name,

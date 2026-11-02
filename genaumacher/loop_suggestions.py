@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def update_loop_suggestions(state: VideoState) -> None:
-    start_changed, end_changed = state.suggestions.moved(state.active_start, state.active_end)
+    start_changed, end_changed = state.suggestions.moved(state.in_point, state.out_point)
     use_turning_point = state.loop_mode in {LoopMode.BASE_TIP, LoopMode.TIP_BASE}
 
     suggested_in: int | None = None
@@ -22,40 +22,40 @@ def update_loop_suggestions(state: VideoState) -> None:
 
     if start_changed:
         if use_turning_point:
-            candidate = best_turning_point_index(state, state.active_start, direction=+1)
-            if candidate is not None and state.active_start < candidate <= state.loaded_end:
+            candidate = best_turning_point_index(state, state.in_point, direction=+1)
+            if candidate is not None and state.in_point < candidate <= state.right_bound:
                 suggested_out = candidate
         else:
-            match_idx = best_duplicate_match_index(state, state.active_start, direction=+1)
+            match_idx = best_duplicate_match_index(state, state.in_point, direction=+1)
             if match_idx is not None:
                 candidate = match_idx - 1
-                if state.active_start < candidate <= state.loaded_end:
+                if state.in_point < candidate <= state.right_bound:
                     suggested_out = candidate
 
     if end_changed:
         if use_turning_point:
-            candidate = best_turning_point_index(state, state.active_end, direction=-1)
-            if candidate is not None and state.loaded_start <= candidate < state.active_end:
+            candidate = best_turning_point_index(state, state.out_point, direction=-1)
+            if candidate is not None and state.left_bound <= candidate < state.out_point:
                 suggested_in = candidate
         else:
-            match_idx = best_duplicate_match_index(state, state.active_end, direction=-1)
+            match_idx = best_duplicate_match_index(state, state.out_point, direction=-1)
             if match_idx is not None:
                 candidate = match_idx + 1
-                if state.loaded_start <= candidate < state.active_end:
+                if state.left_bound <= candidate < state.out_point:
                     suggested_in = candidate
 
     if start_changed and end_changed and not use_turning_point:
-        anchor_in = state.clip.anchor_in if state.clip.anchor_in is not None else state.active_start
-        anchor_out = state.clip.anchor_out if state.clip.anchor_out is not None else state.active_end
-        best_pair = (state.active_start, state.active_end)
+        anchor_in = state.clip.anchor_in if state.clip.anchor_in is not None else state.in_point
+        anchor_out = state.clip.anchor_out if state.clip.anchor_out is not None else state.out_point
+        best_pair = (state.in_point, state.out_point)
         best_score = pair_transition_score(state, *best_pair)
         for start_shift in range(-2, 3):
             candidate_start = anchor_in + start_shift
-            if candidate_start < state.loaded_start or candidate_start > state.loaded_end:
+            if candidate_start < state.left_bound or candidate_start > state.right_bound:
                 continue
             for end_shift in range(-2, 3):
                 candidate_end = anchor_out + end_shift
-                if candidate_end < state.loaded_start or candidate_end > state.loaded_end:
+                if candidate_end < state.left_bound or candidate_end > state.right_bound:
                     continue
                 if candidate_start >= candidate_end:
                     continue

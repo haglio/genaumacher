@@ -50,14 +50,14 @@ def ensure_loaded(state: VideoState, want_start: int, want_end: int) -> None:
     want_start = max(0, want_start)
     want_end = min(window.total_frames - 1, want_end)
     changed = False
-    if want_start < window.loaded_start:
-        state.frames.update(load_range(state.cap, want_start, window.loaded_start - 1))
+    if want_start < window.left_bound:
+        state.frames.update(load_range(state.cap, want_start, window.left_bound - 1))
         window.widen_left_to(want_start)
         changed = True
-    if want_end > window.loaded_end:
-        new_frames = load_range(state.cap, window.loaded_end + 1, want_end)
+    if want_end > window.right_bound:
+        new_frames = load_range(state.cap, window.right_bound + 1, want_end)
         state.frames.update(new_frames)
-        window.widen_right_to(max(new_frames.keys(), default=window.loaded_end))
+        window.widen_right_to(max(new_frames.keys(), default=window.right_bound))
         changed = True
     if changed:
         state.bump_render()
@@ -66,7 +66,7 @@ def ensure_loaded(state: VideoState, want_start: int, want_end: int) -> None:
 def prune_loaded_caches(state: VideoState) -> None:
     for cache in (state.frames, state.frame_signatures):
         for idx in list(cache):
-            if idx < state.loaded_start or idx > state.loaded_end:
+            if idx < state.left_bound or idx > state.right_bound:
                 del cache[idx]
 
 

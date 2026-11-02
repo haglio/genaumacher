@@ -5,7 +5,7 @@ from genaumacher.frame_window import FrameWindow
 
 
 def _window(**overrides) -> FrameWindow:
-    kwargs = dict(total_frames=100, loaded_start=10, loaded_end=60,
+    kwargs = dict(total_frames=100, left_bound=10, right_bound=60,
                   current=30, base_step=5)
     kwargs.update(overrides)
     return FrameWindow(**kwargs)
@@ -13,10 +13,10 @@ def _window(**overrides) -> FrameWindow:
 
 class TestCount:
     def test_it_counts_both_ends_of_the_loaded_stretch(self):
-        assert _window(loaded_start=0, loaded_end=49).count == 50
+        assert _window(left_bound=0, right_bound=49).count == 50
 
     def test_a_single_loaded_frame_counts_as_one(self):
-        assert _window(loaded_start=5, loaded_end=5).count == 1
+        assert _window(left_bound=5, right_bound=5).count == 1
 
 
 class TestHoldWithin:
@@ -45,30 +45,30 @@ class TestHoldWithin:
 
 
 class TestContractLeft:
-    """One step off the left, never eating into the active range."""
+    """One step off the left, never eating into the in-out."""
 
     def test_it_takes_one_step_off_the_left(self):
-        window = _window(loaded_start=10, base_step=5)
+        window = _window(left_bound=10, base_step=5)
 
-        assert window.contract_left(active_start=20) is True
-        assert window.loaded_start == 15
+        assert window.contract_left(in_point=20) is True
+        assert window.left_bound == 15
 
-    def test_it_refuses_when_a_step_would_reach_the_active_range(self):
-        window = _window(loaded_start=0, base_step=5)
+    def test_it_refuses_when_a_step_would_reach_the_in_out(self):
+        window = _window(left_bound=0, base_step=5)
 
-        assert window.contract_left(active_start=3) is False
-        assert window.loaded_start == 0
+        assert window.contract_left(in_point=3) is False
+        assert window.left_bound == 0
 
     def test_a_step_that_lands_exactly_on_the_active_start_is_allowed(self):
-        window = _window(loaded_start=10, base_step=5)
+        window = _window(left_bound=10, base_step=5)
 
-        assert window.contract_left(active_start=15) is True
-        assert window.loaded_start == 15
+        assert window.contract_left(in_point=15) is True
+        assert window.left_bound == 15
 
     def test_it_drags_a_stranded_cursor_along(self):
-        window = _window(loaded_start=10, current=12, base_step=5)
+        window = _window(left_bound=10, current=12, base_step=5)
 
-        window.contract_left(active_start=20)
+        window.contract_left(in_point=20)
 
         assert window.current == 15
 
@@ -77,21 +77,21 @@ class TestContractRight:
     """The mirror of the left contraction."""
 
     def test_it_takes_one_step_off_the_right(self):
-        window = _window(loaded_end=99, base_step=5)
+        window = _window(right_bound=99, base_step=5)
 
-        assert window.contract_right(active_end=70) is True
-        assert window.loaded_end == 94
+        assert window.contract_right(out_point=70) is True
+        assert window.right_bound == 94
 
-    def test_it_refuses_when_a_step_would_reach_the_active_range(self):
-        window = _window(loaded_end=99, base_step=5)
+    def test_it_refuses_when_a_step_would_reach_the_in_out(self):
+        window = _window(right_bound=99, base_step=5)
 
-        assert window.contract_right(active_end=97) is False
-        assert window.loaded_end == 99
+        assert window.contract_right(out_point=97) is False
+        assert window.right_bound == 99
 
     def test_it_drags_a_stranded_cursor_along(self):
-        window = _window(loaded_end=99, current=98, base_step=5)
+        window = _window(right_bound=99, current=98, base_step=5)
 
-        window.contract_right(active_end=70)
+        window.contract_right(out_point=70)
 
         assert window.current == 94
 
@@ -100,16 +100,16 @@ class TestStepOut:
     """Where one step further out would land, stopped by the video's own ends."""
 
     def test_a_step_out_to_the_left_is_one_base_step(self):
-        assert _window(loaded_start=20, base_step=5).step_out_left() == 15
+        assert _window(left_bound=20, base_step=5).step_out_left() == 15
 
     def test_a_step_out_to_the_left_stops_at_the_first_frame(self):
-        assert _window(loaded_start=2, base_step=5).step_out_left() == 0
+        assert _window(left_bound=2, base_step=5).step_out_left() == 0
 
     def test_a_step_out_to_the_right_is_one_base_step(self):
-        assert _window(loaded_end=60, base_step=5, total_frames=100).step_out_right() == 65
+        assert _window(right_bound=60, base_step=5, total_frames=100).step_out_right() == 65
 
     def test_a_step_out_to_the_right_stops_at_the_last_frame(self):
-        assert _window(loaded_end=97, base_step=5, total_frames=100).step_out_right() == 99
+        assert _window(right_bound=97, base_step=5, total_frames=100).step_out_right() == 99
 
 
 class TestWiden:
@@ -120,32 +120,32 @@ class TestWiden:
     """
 
     def test_it_moves_the_left_edge_out(self):
-        window = _window(loaded_start=20)
+        window = _window(left_bound=20)
 
         window.widen_left_to(15)
 
-        assert window.loaded_start == 15
+        assert window.left_bound == 15
 
     def test_a_left_edge_already_further_out_stands(self):
-        window = _window(loaded_start=20)
+        window = _window(left_bound=20)
 
         window.widen_left_to(25)
 
-        assert window.loaded_start == 20
+        assert window.left_bound == 20
 
     def test_it_moves_the_right_edge_out(self):
-        window = _window(loaded_end=60)
+        window = _window(right_bound=60)
 
         window.widen_right_to(65)
 
-        assert window.loaded_end == 65
+        assert window.right_bound == 65
 
     def test_a_right_edge_already_further_out_stands(self):
-        window = _window(loaded_end=60)
+        window = _window(right_bound=60)
 
         window.widen_right_to(55)
 
-        assert window.loaded_end == 60
+        assert window.right_bound == 60
 
 
 class TestTheEdgeIsOnlyEverWidenedToAFrame:
@@ -154,7 +154,7 @@ class TestTheEdgeIsOnlyEverWidenedToAFrame:
     last frame the loader produced."""
 
     def test_nothing_reaches_the_edge_to_a_bare_number(self):
-        assert not hasattr(_window(loaded_end=60), "reach_right_to")
+        assert not hasattr(_window(right_bound=60), "reach_right_to")
 
 
 class TestStepCursor:

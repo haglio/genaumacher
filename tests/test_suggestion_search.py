@@ -48,7 +48,7 @@ class TestSmooth1d:
 class TestTheCandidateWindow:
     def test_it_starts_ten_frames_clear_of_the_reference(self, make_state):
         """A loop shorter than the minimum gap is not a loop."""
-        state = make_state(total_frames=200, loaded_start=0, loaded_end=120)
+        state = make_state(total_frames=200, left_bound=0, right_bound=120)
 
         candidates, _smoothed = _curve(state, 40, direction=+1)
 
@@ -56,12 +56,12 @@ class TestTheCandidateWindow:
         assert candidates[-1] == 120
 
     def test_there_is_no_curve_when_the_window_holds_too_few_frames(self, make_state):
-        state = make_state(total_frames=200, loaded_start=0, loaded_end=52)
+        state = make_state(total_frames=200, left_bound=0, right_bound=52)
 
         assert _curve(state, 40, direction=+1) is None
 
     def test_there_is_no_curve_when_the_window_is_empty(self, make_state):
-        state = make_state(total_frames=200, loaded_start=0, loaded_end=45)
+        state = make_state(total_frames=200, left_bound=0, right_bound=45)
 
         assert _curve(state, 40, direction=+1) is None
 
@@ -69,17 +69,17 @@ class TestTheCandidateWindow:
 class TestTheTwoDirectionsAreMirrorImages:
     """Both windows start beside the reference frame and run away from it.
 
-    Backward used to start at `loaded_start` -- the frame *farthest* from the
+    Backward used to start at `left_bound` -- the frame *farthest* from the
     reference -- and run towards it, while the dip and peak walks in
     `best_turning_point_index` and `best_duplicate_match_index` skip a fixed head
     of that list and take their baseline from it. Forward that head is "the
     frames beside the reference"; backward it was "the frames at the other end of
-    the loaded range", which in base-tip-base -- the most common mode -- is where
+    the bounds", which in base-tip-base -- the most common mode -- is where
     the suggested mark-in point came from.
     """
 
     def test_forward_the_window_begins_next_to_the_reference(self, make_state):
-        state = make_state(total_frames=200, loaded_start=20, loaded_end=120)
+        state = make_state(total_frames=200, left_bound=20, right_bound=120)
 
         candidates, _smoothed = _curve(state, 60, direction=+1)
 
@@ -87,7 +87,7 @@ class TestTheTwoDirectionsAreMirrorImages:
         assert candidates[-1] == 120  # and it ends at the far edge
 
     def test_backward_the_window_begins_next_to_the_reference_too(self, make_state):
-        state = make_state(total_frames=200, loaded_start=20, loaded_end=120)
+        state = make_state(total_frames=200, left_bound=20, right_bound=120)
 
         candidates, _smoothed = _curve(state, 60, direction=-1)
 
@@ -95,7 +95,7 @@ class TestTheTwoDirectionsAreMirrorImages:
         assert candidates[-1] == 20  # and it ends at the far edge
 
     def test_each_step_away_from_the_reference_is_one_step_along_the_list(self, make_state):
-        state = make_state(total_frames=200, loaded_start=20, loaded_end=120)
+        state = make_state(total_frames=200, left_bound=20, right_bound=120)
 
         forward, _f = _curve(state, 60, direction=+1)
         backward, _b = _curve(state, 60, direction=-1)
@@ -104,7 +104,7 @@ class TestTheTwoDirectionsAreMirrorImages:
         assert [c - 60 for c in backward[:3]] == [-10, -11, -12]
 
     def test_the_two_windows_hold_the_same_frames_in_opposite_order(self, make_state):
-        state = make_state(total_frames=200, loaded_start=20, loaded_end=120)
+        state = make_state(total_frames=200, left_bound=20, right_bound=120)
 
         backward, _b = _curve(state, 60, direction=-1)
 
@@ -119,7 +119,7 @@ class TestFindingTheRepeatBeforeAFrame:
     at the repeat. Searching backward from frame 180 the nearest repeat is 120.
     With the backward window running from the far end, the search answered 60 --
     a whole period too early, and the turning point came back as 12, near the
-    start of the loaded range.
+    start of the bounds.
     """
 
     PERIOD = 60
@@ -129,7 +129,7 @@ class TestFindingTheRepeatBeforeAFrame:
     def looping_clip(self, make_state):
         rng = np.random.default_rng(11)
         texture = rng.integers(0, 256, (64, 64, 3), dtype=np.uint8)
-        state = make_state(total_frames=201, loaded_start=0, loaded_end=200, fps=30.0)
+        state = make_state(total_frames=201, left_bound=0, right_bound=200, fps=30.0)
         state.frames = {
             i: np.roll(texture, i % self.PERIOD, axis=1) for i in range(201)
         }
@@ -161,7 +161,7 @@ class TestTheDipItself:
     def test_it_names_what_it_found(self, make_state):
         rng = np.random.default_rng(11)
         texture = rng.integers(0, 256, (64, 64, 3), dtype=np.uint8)
-        state = make_state(total_frames=201, loaded_start=0, loaded_end=200, fps=30.0)
+        state = make_state(total_frames=201, left_bound=0, right_bound=200, fps=30.0)
         state.frames = {i: np.roll(texture, i % 60, axis=1) for i in range(201)}
         state.frame_signatures = {}
 
