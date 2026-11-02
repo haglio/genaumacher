@@ -135,7 +135,7 @@ def test_an_edit_rewrites_the_values_and_nothing_else(session_file, load_session
     """An edited session keeps every key, in order -- only the values move."""
 
     state = load_session()
-    set_mark_in(state)  # current (120) becomes the new active_start (was 90)
+    set_mark_in(state)  # current (120) becomes the new in_point (was 90)
 
     saved = json.loads(session_file.read_text(encoding="utf-8"))
     golden = json.loads(GOLDEN_SESSION)
@@ -151,7 +151,7 @@ def test_closing_an_edited_session_asks_nothing_and_loses_nothing(load_session):
     state = load_session()
     window = GenaumacherMainWindow(state)
     window.show()
-    set_mark_in(state)  # current (120) becomes the new active_start (was 90)
+    set_mark_in(state)  # current (120) becomes the new in_point (was 90)
 
     boxes_it_put_up: list[str] = []
 
@@ -171,4 +171,4 @@ def test_closing_an_edited_session_asks_nothing_and_loses_nothing(load_session):
 
     assert boxes_it_put_up == []
     assert closed is True
-    assert load_session().active_start == 120
+    assert load_session().in_point == 120

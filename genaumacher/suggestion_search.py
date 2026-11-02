@@ -49,11 +49,11 @@ def candidate_similarity_curve(
     # Both directions run outwards from the reference, so index 0 is always its
     # nearest candidate. The dip and peak walks below skip a fixed head of this
     # list and take their baseline from it; when the backward list ran the other
-    # way, that head was the far end of the loaded range instead.
+    # way, that head was the far end of the bounds instead.
     if direction > 0:
-        candidates = list(range(ref_idx + min_gap, state.loaded_end + 1))
+        candidates = list(range(ref_idx + min_gap, state.right_bound + 1))
     else:
-        candidates = list(range(ref_idx - min_gap, state.loaded_start - 1, -1))
+        candidates = list(range(ref_idx - min_gap, state.left_bound - 1, -1))
     if not candidates:
         return None
 
@@ -155,22 +155,22 @@ def best_turning_point_index(
 
 def pair_transition_score(
     state: VideoState,
-    active_start: int,
-    active_end: int,
+    in_point: int,
+    out_point: int,
 ) -> float:
     scores: list[float] = []
-    if active_end + 1 <= state.loaded_end:
+    if out_point + 1 <= state.right_bound:
         scores.append(
             structural_similarity_score(
-                signature_for_index(state, active_start),
-                signature_for_index(state, active_end + 1),
+                signature_for_index(state, in_point),
+                signature_for_index(state, out_point + 1),
             )
         )
-    if active_start - 1 >= state.loaded_start:
+    if in_point - 1 >= state.left_bound:
         scores.append(
             structural_similarity_score(
-                signature_for_index(state, active_start - 1),
-                signature_for_index(state, active_end),
+                signature_for_index(state, in_point - 1),
+                signature_for_index(state, out_point),
             )
         )
     if not scores:

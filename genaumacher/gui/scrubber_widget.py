@@ -1,4 +1,4 @@
-"""Custom-painted scrubber bar showing loaded/active ranges, cursor, and suggestions."""
+"""Custom-painted scrubber bar showing loaded/in-outs, cursor, and suggestions."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ from shared_ui.colors import BG_PRIMARY
 from .scrubber_colors import (
     BORDER_SCRUBBER,
     BORDER_TICK,
-    SCRUBBER_ACTIVE,
+    SCRUBBER_BOUNDS,
     SCRUBBER_CURSOR,
-    SCRUBBER_LOADED,
+    SCRUBBER_IN_OUT,
     SCRUBBER_LOOP,
     SCRUBBER_SUGGESTED_IN,
     SCRUBBER_SUGGESTED_OUT,
@@ -20,16 +20,16 @@ from .scrubber_colors import (
 
 
 class ScrubberWidget(QWidget):
-    """Displays loaded/active ranges with cursor, loop position, and suggestions."""
+    """Displays loaded/in-outs with cursor, loop position, and suggestions."""
 
     cursor_jumped = pyqtSignal(int)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.loaded_start: int = 0
-        self.loaded_end: int = 0
-        self.active_start: int = 0
-        self.active_end: int = 0
+        self.left_bound: int = 0
+        self.right_bound: int = 0
+        self.in_point: int = 0
+        self.out_point: int = 0
         self.cursor_pos: int = 0
         self.loop_pos: int = 0
         self.suggested_in: int | None = None
@@ -39,14 +39,14 @@ class ScrubberWidget(QWidget):
 
     # -- Public setters -------------------------------------------------------
 
-    def set_loaded_range(self, start: int, end: int) -> None:
-        self.loaded_start = start
-        self.loaded_end = end
+    def set_bounds(self, start: int, end: int) -> None:
+        self.left_bound = start
+        self.right_bound = end
         self.update()
 
-    def set_active_range(self, start: int, end: int) -> None:
-        self.active_start = start
-        self.active_end = end
+    def set_in_out(self, start: int, end: int) -> None:
+        self.in_point = start
+        self.out_point = end
         self.update()
 
     def set_cursor_position(self, idx: int) -> None:
@@ -65,16 +65,16 @@ class ScrubberWidget(QWidget):
     # -- Coordinate mapping ---------------------------------------------------
 
     def x_for_index(self, idx: int) -> int:
-        count = max(1, self.loaded_end - self.loaded_start)
-        frac = (idx - self.loaded_start) / count
+        count = max(1, self.right_bound - self.left_bound)
+        frac = (idx - self.left_bound) / count
         return int(round(frac * self.width()))
 
     def index_for_x(self, x: int) -> int:
         x = max(0, min(self.width(), x))
-        count = max(1, self.loaded_end - self.loaded_start)
+        count = max(1, self.right_bound - self.left_bound)
         frac = x / self.width() if self.width() > 0 else 0.0
-        idx = self.loaded_start + int(round(frac * count))
-        return max(self.loaded_start, min(self.loaded_end, idx))
+        idx = self.left_bound + int(round(frac * count))
+        return max(self.left_bound, min(self.right_bound, idx))
 
     # -- Events ---------------------------------------------------------------
 
@@ -94,19 +94,19 @@ class ScrubberWidget(QWidget):
         p.fillRect(self.rect(), BG_PRIMARY)
 
         # Loaded range
-        lx1 = self.x_for_index(self.loaded_start)
-        lx2 = self.x_for_index(self.loaded_end)
-        p.fillRect(lx1, 0, lx2 - lx1, h, SCRUBBER_LOADED)
+        lx1 = self.x_for_index(self.left_bound)
+        lx2 = self.x_for_index(self.right_bound)
+        p.fillRect(lx1, 0, lx2 - lx1, h, SCRUBBER_BOUNDS)
 
         # Active range
-        ax1 = self.x_for_index(self.active_start)
-        ax2 = self.x_for_index(self.active_end)
-        p.fillRect(ax1, 0, ax2 - ax1, h, SCRUBBER_ACTIVE)
+        ax1 = self.x_for_index(self.in_point)
+        ax2 = self.x_for_index(self.out_point)
+        p.fillRect(ax1, 0, ax2 - ax1, h, SCRUBBER_IN_OUT)
 
         # Frame tick dots (upper and lower edges)
         tick_pen = QPen(BORDER_TICK, 1)
         p.setPen(tick_pen)
-        for i in range(self.loaded_start, self.loaded_end + 1):
+        for i in range(self.left_bound, self.right_bound + 1):
             tx = self.x_for_index(i)
             p.drawPoint(tx, 2)
             p.drawPoint(tx, h - 3)

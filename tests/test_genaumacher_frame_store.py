@@ -87,15 +87,15 @@ def test_load_range_gives_up_on_a_file_that_has_ended():
 
 
 def test_ensure_loaded_expands_missing_edges_and_bumps_render_rev(make_state):
-    state = make_state(loaded_start=10, loaded_end=20)
+    state = make_state(left_bound=10, right_bound=20)
     left_frames = {i: np.full((2, 2, 3), i, dtype=np.uint8) for i in range(5, 10)}
     right_frames = {i: np.full((2, 2, 3), i, dtype=np.uint8) for i in range(21, 26)}
 
     with patch("genaumacher.frame_store.load_range", side_effect=[left_frames, right_frames]) as load:
         ensure_loaded(state, 5, 25)
 
-    assert state.loaded_start == 5
-    assert state.loaded_end == 25
+    assert state.left_bound == 5
+    assert state.right_bound == 25
     assert state.render_rev == 1
     assert state.frames[5].shape == (2, 2, 3)
     assert state.frames[25].shape == (2, 2, 3)
@@ -104,19 +104,19 @@ def test_ensure_loaded_expands_missing_edges_and_bumps_render_rev(make_state):
 
 
 def test_ensure_loaded_is_noop_when_requested_range_is_already_loaded(make_state):
-    state = make_state(loaded_start=10, loaded_end=20)
+    state = make_state(left_bound=10, right_bound=20)
 
     with patch("genaumacher.frame_store.load_range") as load:
         ensure_loaded(state, 12, 18)
 
-    assert state.loaded_start == 10
-    assert state.loaded_end == 20
+    assert state.left_bound == 10
+    assert state.right_bound == 20
     assert state.render_rev == 0
     load.assert_not_called()
 
 
 def test_safe_frame_loads_missing_index_on_demand(make_state):
-    state = make_state(loaded_start=10, loaded_end=20)
+    state = make_state(left_bound=10, right_bound=20)
     missing_frame = np.ones((2, 2, 3), dtype=np.uint8)
     state.frames.pop(25, None)
 

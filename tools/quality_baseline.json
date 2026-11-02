@@ -79,7 +79,7 @@
     "genaumacher/gui/video_pane.py": 3,
     "genaumacher/interpolator_environment.py": 24,
     "genaumacher/launch_choice.py": 10,
-    "genaumacher/loaded_bounds.py": 2,
+    "genaumacher/bounds.py": 2,
     "genaumacher/loop_cursor.py": 14,
     "genaumacher/loop_modes.py": 4,
     "genaumacher/main_funestra_prefill.py": 28,

@@ -37,7 +37,7 @@ from .main_window_style import (
     refuse_focus,
     small_font,
 )
-from .scrubber_colors import SCRUBBER_ACTIVE, SCRUBBER_LOADED
+from .scrubber_colors import SCRUBBER_BOUNDS, SCRUBBER_IN_OUT
 from .scrubber_controls import ScrubberControls
 from .scrubber_widget import ScrubberWidget
 from .shortcuts import BY_NAME, legend_rows, shortcut_for
@@ -282,15 +282,15 @@ class GenaumacherMainWindow(QMainWindow):
         state = self._state
         wrap_from, wrap_to = wrap_bounds(state)
         self._floating.place(
-            active_start=state.active_start,
-            active_end=state.active_end,
+            in_point=state.in_point,
+            out_point=state.out_point,
             cursor=state.current,
             wrap_from=wrap_from,
             wrap_to=wrap_to,
             wrap_color=(
-                SCRUBBER_LOADED
-                if state.wrap_mode is WrapMode.OVER_LOADED
-                else SCRUBBER_ACTIVE
+                SCRUBBER_BOUNDS
+                if state.wrap_mode is WrapMode.OVER_BOUNDS
+                else SCRUBBER_IN_OUT
             ),
         )
 
@@ -320,7 +320,7 @@ class GenaumacherMainWindow(QMainWindow):
         spans a frame the decoder never produced, which out of a Qt slot would
         be out of the process.
         """
-        loop_idx = state.active_start
+        loop_idx = state.in_point
         try:
             loop_idx = current_loop_frame_index(state)
             self._fill(self.right_pane, safe_frame(state, loop_idx))
@@ -337,8 +337,8 @@ class GenaumacherMainWindow(QMainWindow):
         pane.set_frame(scale_to_fit(image, pane.width(), pane.height()))
 
     def _draw_scrubber(self, state: VideoState, loop_idx: int) -> None:
-        self.scrubber.set_loaded_range(state.loaded_start, state.loaded_end)
-        self.scrubber.set_active_range(state.active_start, state.active_end)
+        self.scrubber.set_bounds(state.left_bound, state.right_bound)
+        self.scrubber.set_in_out(state.in_point, state.out_point)
         self.scrubber.set_cursor_position(state.current)
         self.scrubber.set_loop_position(loop_idx)
         self.scrubber.set_suggestions(state.suggested_in, state.suggested_out)
@@ -347,7 +347,7 @@ class GenaumacherMainWindow(QMainWindow):
         cursor_max = state.loaded_count - 1
         width = max(2, len(str(max(0, cursor_max))))
         self.cursor_label.setText(
-            f"cursor: {state.current - state.loaded_start:0{width}d}/{cursor_max}"
+            f"cursor: {state.current - state.left_bound:0{width}d}/{cursor_max}"
             f" @ {format_seconds(state.current / state.fps)}"
         )
 

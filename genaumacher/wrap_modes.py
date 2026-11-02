@@ -17,15 +17,15 @@ if TYPE_CHECKING:
 
 
 class WrapMode(StrEnum):
-    OVER_LOADED = "blue"
-    OVER_ACTIVE = "yellow"
+    OVER_BOUNDS = "blue"
+    OVER_IN_OUT = "yellow"
 
 
 def read_wrap_mode(raw: object) -> WrapMode:
     try:
         return WrapMode(raw)
     except ValueError:
-        return WrapMode.OVER_LOADED
+        return WrapMode.OVER_BOUNDS
 
 
 def wrap_bounds(state: VideoState) -> tuple[int, int]:
@@ -35,6 +35,6 @@ def wrap_bounds(state: VideoState) -> tuple[int, int]:
     literal in the scrubber widget.  A typo in any of them read as the active
     range and said nothing.
     """
-    if state.wrap_mode is WrapMode.OVER_LOADED:
-        return state.loaded_start, state.loaded_end
-    return state.active_start, state.active_end
+    if state.wrap_mode is WrapMode.OVER_BOUNDS:
+        return state.left_bound, state.right_bound
+    return state.in_point, state.out_point

@@ -29,7 +29,7 @@ class FloatingControlLayout:
         self._wrap_row = wrap_row
         self._wrap_color: QColor | None = None
 
-    def place(self, *, active_start: int, active_end: int, cursor: int,
+    def place(self, *, in_point: int, out_point: int, cursor: int,
               wrap_from: int, wrap_to: int, wrap_color: QColor) -> None:
         """Move every floating button to where its index now is.
 
@@ -38,19 +38,19 @@ class FloatingControlLayout:
         """
         if self._scrubber.width() <= 0:
             return
-        self._place_shift(active_start, active_end)
-        self._place_marks(active_start, active_end, cursor)
+        self._place_shift(in_point, out_point)
+        self._place_marks(in_point, out_point, cursor)
         self._place_wrap(wrap_from, wrap_to, wrap_color)
 
     def _offset_in(self, row: QWidget) -> int:
         """X offset of the scrubber's origin in `row`'s coordinate system."""
         return row.mapFromGlobal(self._scrubber.mapToGlobal(QPoint(0, 0))).x()
 
-    def _place_shift(self, active_start: int, active_end: int) -> None:
-        """Straddling the midpoint of the active range."""
+    def _place_shift(self, in_point: int, out_point: int) -> None:
+        """Straddling the midpoint of the in-out."""
         tl, tc = self._scrubber, self._controls
         center = self._offset_in(self._shift_row) + (
-            tl.x_for_index(active_start) + tl.x_for_index(active_end)
+            tl.x_for_index(in_point) + tl.x_for_index(out_point)
         ) // 2
         width = tc.shift_left_btn.width()
         y = (self._shift_row.height() - tc.shift_left_btn.height()) // 2
@@ -59,7 +59,7 @@ class FloatingControlLayout:
         tc.shift_left_btn.show()
         tc.shift_right_btn.show()
 
-    def _place_marks(self, active_start: int, active_end: int, cursor: int) -> None:
+    def _place_marks(self, in_point: int, out_point: int, cursor: int) -> None:
         """Straddling the cursor inside the range; split around it outside."""
         tl, tc = self._scrubber, self._controls
         offset = self._offset_in(self._mark_row)
@@ -67,19 +67,19 @@ class FloatingControlLayout:
         width = tc.mark_in_btn.width()
         y = (self._mark_row.height() - tc.mark_in_btn.height()) // 2
 
-        if cursor < active_start:
-            start_x = offset + tl.x_for_index(active_start)
+        if cursor < in_point:
+            start_x = offset + tl.x_for_index(in_point)
             tc.mark_in_btn.move(cursor_x - width // 2, y)
             tc.mark_out_btn.move(start_x - width // 2, y)
-        elif cursor > active_end:
-            end_x = offset + tl.x_for_index(active_end)
+        elif cursor > out_point:
+            end_x = offset + tl.x_for_index(out_point)
             tc.mark_in_btn.move(end_x - width // 2, y)
             tc.mark_out_btn.move(cursor_x - width // 2, y)
         else:
             tc.mark_in_btn.move(cursor_x - GAP // 2 - width, y)
             tc.mark_out_btn.move(cursor_x + GAP // 2, y)
-        tc.mark_in_btn.setEnabled(cursor < active_end)
-        tc.mark_out_btn.setEnabled(cursor > active_start)
+        tc.mark_in_btn.setEnabled(cursor < out_point)
+        tc.mark_out_btn.setEnabled(cursor > in_point)
         tc.mark_in_btn.show()
         tc.mark_out_btn.show()
 

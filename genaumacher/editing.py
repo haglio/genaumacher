@@ -39,7 +39,7 @@ def accept_suggested_out(state: VideoState) -> None:
         _mark_moved(state)
 
 
-def shift_active_range(state: VideoState, direction: int) -> None:
+def shift_in_out(state: VideoState, direction: int) -> None:
     if direction == 0:
         return
     shift = state.clip.span * (1 if direction > 0 else -1)

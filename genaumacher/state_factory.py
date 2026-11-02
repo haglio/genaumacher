@@ -45,18 +45,18 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
     if total_frames <= 0:
         raise RuntimeError("Invalid frame count metadata")
 
-    loaded_start = int(payload["loaded_start"])
-    loaded_end = int(payload["loaded_end"])
-    active_start = int(payload["active_start"])
-    active_end = int(payload["active_end"])
-    current = int(payload.get("current", active_start))
+    left_bound = int(payload["loaded_start"])
+    right_bound = int(payload["loaded_end"])
+    in_point = int(payload["active_start"])
+    out_point = int(payload["active_end"])
+    current = int(payload.get("current", in_point))
     loop_mode = read_loop_mode(payload.get("loop_mode"))
     wrap_mode = read_wrap_mode(payload.get("wrap_mode"))
     speed = _normalized_speed(float(payload.get("speed", 1.0)))
     vr = bool(payload.get("vr", False))
     session_name = payload.get("session_name", session_name)
 
-    frames = load_range(cap, loaded_start, loaded_end)
+    frames = load_range(cap, left_bound, right_bound)
     if not frames:
         raise RuntimeError("No frames were extracted for the requested/session interval")
     state = VideoState(
@@ -65,20 +65,20 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
         fps=fps,
         window=FrameWindow(
             total_frames=total_frames,
-            loaded_start=loaded_start,
-            loaded_end=max(frames.keys()),
+            left_bound=left_bound,
+            right_bound=max(frames.keys()),
             current=current,
             base_step=max(1, int(round(fps))),
         ),
         clip=ClipRange(
-            start=active_start,
-            end=active_end,
-            anchor_in=active_start,
-            anchor_out=active_end,
+            start=in_point,
+            end=out_point,
+            anchor_in=in_point,
+            anchor_out=out_point,
         ),
         frames=frames,
         loop=LoopCursor(anchor=time.monotonic(), speed=speed),
-        suggestions=Suggestions(initial_start=active_start, initial_end=active_end),
+        suggestions=Suggestions(initial_start=in_point, initial_end=out_point),
         session_name=session_name,
         session_path=str(SESSIONS_DIR / f"{sanitize_name(session_name)}.json"),
         loop_mode=loop_mode,

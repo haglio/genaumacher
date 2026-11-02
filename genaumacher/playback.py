@@ -14,9 +14,9 @@ def current_loop_frame_index(state: VideoState) -> int:
 
 
 def loop_preview_indices(state: VideoState) -> list[int]:
-    forward = list(range(state.active_start, state.active_end + 1))
+    forward = list(range(state.in_point, state.out_point + 1))
     if not forward:
-        return [state.active_start]
+        return [state.in_point]
     if state.loop_mode is LoopMode.TIP_BASE_TIP:
         shift = max(1, len(forward) // 2)
         return forward[shift:] + forward[:shift]
