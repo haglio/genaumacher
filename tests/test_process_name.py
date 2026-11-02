@@ -13,7 +13,7 @@ from pathlib import Path
 
 from app_support.launcher import launchers
 from app_support.process_identity import ProcessNamer
-from app_support.process_identity_check import assert_the_app_names_its_process
+from app_support.process_identity_check import ProcessName, assert_the_process_is_named
 
 from genaumacher.app import _name_this_process
 
@@ -40,6 +40,13 @@ def test_the_app_prepares_that_copy_for_next_time(tmp_path: Path):
     Described as the app's name alone: one app with one window, so the row is its
     name, not its name twice.  Carrying the app's own mark.  And never taking a
     launch down: nothing to copy from costs the name and nothing else."""
-    assert_the_app_names_its_process(
-        _name_this_process, tmp_path, app_name=APP_NAME, role=ROLE,
-        interpreter=LAUNCHER.interpreter, row=APP_NAME, icon=PROJECT_DIR / "genaumacher.ico")
+    assert_the_process_is_named(
+        _name_this_process, tmp_path,
+        ProcessName(
+            app_name=APP_NAME,
+            role=ROLE,
+            interpreter=LAUNCHER.interpreter,
+            row=APP_NAME,
+            icon=PROJECT_DIR / "genaumacher.ico",
+        ),
+    )
