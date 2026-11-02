@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from shared_ui import loading_process
-from shared_ui.loading_window import Loading, LoadingCanceled
+from shared_ui.loading_window import LoadingCanceled
+from shared_ui.testing import loading_at_the_click, loading_process_opened
 
 from genaumacher import app
 from genaumacher.window_icons import genaumacher_icon_path
@@ -24,7 +24,7 @@ class _Loading:
 
 
 def _launch(happened: list[str], loading: _Loading) -> int:
-    with patch.object(Loading, "at_the_click", return_value=loading) as opened, \
+    with loading_at_the_click(loading) as opened, \
          patch.object(app, "launch_state", side_effect=lambda: happened.append("launcher") or None), \
          patch.object(app, "_set_windows_app_user_model_id"), \
          patch.object(app, "_name_this_process"), \
@@ -52,7 +52,7 @@ def test_the_loading_screen_runs_in_a_process_of_its_own_wearing_genaumachers_ta
         monkeypatch):
     monkeypatch.setattr(app.sys, "platform", "win32")
 
-    with patch.object(loading_process.LoadingProcess, "open") as opened:
+    with loading_process_opened() as opened:
         app.open_the_loading_screen(None)
 
     opened.assert_called_once_with(
@@ -64,7 +64,7 @@ def test_the_loading_screen_runs_in_a_process_of_its_own_wearing_genaumachers_ta
 def test_off_windows_the_loading_screen_wears_no_taskbar_identity(monkeypatch):
     monkeypatch.setattr(app.sys, "platform", "linux")
 
-    with patch.object(loading_process.LoadingProcess, "open") as opened:
+    with loading_process_opened() as opened:
         app.open_the_loading_screen(None)
 
     assert opened.call_args.kwargs["app_id"] is None
