@@ -84,6 +84,16 @@ not bump it. The near miss that still counts: a default tuned in
 - `sessions/` and `raw_clips/` are at the project root (not inside `genaumacher/`). They are gitignored runtime data.
 - A test that runs an export or the normalize step into `flicks_dir()` writes that flick's metadata sidecar for real. Ask for the `library` fixture, which gives the test a library under tmp; without it the sidecar lands in the library this machine's Haglio settings name.
 
+## One word per thing
+
+`glossary.json` lists the things on this app's screen and their words, and
+`tests/test_glossary.py` holds the code to it. A noun for something drawn is a row
+there before it is a word in the code, so a new name is a row he rules on. A rename
+moves the old word from the row's `code_today` to its `retired`, which the test holds
+at zero. What is stored on disk keeps its name (a saved session's `active_start` and
+`loaded_start`, the `clip_postprocess` stamp, the overlay's `main_player_status_file`)
+unless every reader changes with it.
+
 ## Test fixtures must be fabricated, never copied from the real library
 
 Every fixture value that stands in for library data — a video title, a filename,

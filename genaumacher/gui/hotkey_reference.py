@@ -31,7 +31,7 @@ class HotkeyReferenceWidget(QWidget):
     """Paints whatever rows it is given, keycap style.
 
     It is handed its rows rather than fetching them.  Reaching for
-    `hotkeys.legend_rows()` here would bind the whole action layer at import
+    `hotkeys.hotkey_reference_rows()` here would bind the whole action layer at import
     -- `hotkeys` names the editing functions, which reach `frame_store`,
     which imports cv2 -- so a widget whose only job is drawing keycaps would
     need the video decoder to be importable at all.  It did not before this

@@ -98,7 +98,7 @@ class ScrubberWidget(QWidget):
         lx2 = self.x_for_index(self.right_bound)
         p.fillRect(lx1, 0, lx2 - lx1, h, SCRUBBER_BOUNDS)
 
-        # Active range
+        # In-out
         ax1 = self.x_for_index(self.in_point)
         ax2 = self.x_for_index(self.out_point)
         p.fillRect(ax1, 0, ax2 - ax1, h, SCRUBBER_IN_OUT)
