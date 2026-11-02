@@ -55,8 +55,8 @@ def window(mock_state):
 
 class TestConstruction:
     def test_has_video_panes(self, window):
-        assert window.left_pane is not None
-        assert window.right_pane is not None
+        assert window.frame_at_cursor_pane is not None
+        assert window.loop_preview_pane is not None
 
     def test_has_scrubber(self, window):
         assert window.scrubber is not None

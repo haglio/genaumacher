@@ -147,13 +147,13 @@ class TestOnTick:
 
     def test_it_puts_a_frame_in_both_panes(self, live_app, rendered):
         window = live_app.window
-        assert _is_blank(window.left_pane, rendered)
-        assert _is_blank(window.right_pane, rendered)
+        assert _is_blank(window.frame_at_cursor_pane, rendered)
+        assert _is_blank(window.loop_preview_pane, rendered)
 
         live_app._on_tick()
 
-        assert not _is_blank(window.left_pane, rendered)
-        assert not _is_blank(window.right_pane, rendered)
+        assert not _is_blank(window.frame_at_cursor_pane, rendered)
+        assert not _is_blank(window.loop_preview_pane, rendered)
 
     def test_it_writes_the_cursor_position_and_timestamp(self, live_app):
         live_app._on_tick()
@@ -200,8 +200,8 @@ class TestOnTick:
         with patch("genaumacher.gui.main_window.safe_frame", side_effect=KeyError("gone")):
             live_app._on_tick()
 
-        assert _is_blank(live_app.window.left_pane, rendered)
-        assert _is_blank(live_app.window.right_pane, rendered)
+        assert _is_blank(live_app.window.frame_at_cursor_pane, rendered)
+        assert _is_blank(live_app.window.loop_preview_pane, rendered)
         assert live_app.window.scrubber.cursor_pos == 33
         assert live_app.window.speed_label.text() == "speed: 1.00x (playing)"
 
@@ -246,7 +246,7 @@ def test_a_frame_the_decoder_will_not_give_up_does_not_take_the_window_with_it(l
                side_effect=RuntimeError("Could not load frame 211")):
         live_app._on_tick()
 
-    assert _is_blank(live_app.window.left_pane, rendered)
-    assert _is_blank(live_app.window.right_pane, rendered)
+    assert _is_blank(live_app.window.frame_at_cursor_pane, rendered)
+    assert _is_blank(live_app.window.loop_preview_pane, rendered)
     assert live_app.window.scrubber.cursor_pos == 33
     assert live_app.window.speed_label.text() == "speed: 1.00x (playing)"

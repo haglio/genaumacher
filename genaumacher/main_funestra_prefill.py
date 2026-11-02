@@ -39,7 +39,7 @@ class SessionPrefill:
     timestamp: str
 
 
-def main_player_status_file() -> Path | None:
+def main_funestra_status_file() -> Path | None:
     """The status file named in the content overlay, if this machine names one."""
     raw = load_content().get("main_player_status_file")
     return Path(raw) if raw else None
@@ -59,7 +59,7 @@ def _published_values(status_file: Path) -> dict[str, str]:
 
 def detect_main_funestra_session_prefill(status_file: Path | None = None) -> SessionPrefill | None:
     """What the Main Funestra is showing, or None when there is nothing to open a session on."""
-    status_file = main_player_status_file() if status_file is None else status_file
+    status_file = main_funestra_status_file() if status_file is None else status_file
     if status_file is None:
         return None
 

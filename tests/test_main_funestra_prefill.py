@@ -70,7 +70,7 @@ class TestWhenThereIsNothingToPrefill:
     """Every one of these is a normal state, not an error: no prefill, blank form."""
 
     def test_a_machine_that_has_not_named_the_status_file(self, monkeypatch):
-        monkeypatch.setattr(main_funestra_prefill, "main_player_status_file", lambda: None)
+        monkeypatch.setattr(main_funestra_prefill, "main_funestra_status_file", lambda: None)
 
         assert detect_main_funestra_session_prefill() is None
 
