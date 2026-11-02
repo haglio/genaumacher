@@ -4,9 +4,7 @@
   "fan_out": {
     "genaumacher/gui/main_window.py": 17
   },
-  "library_patches": {
-    "tests/test_loading.py": 3
-  },
+  "library_patches": {},
   "methods": {},
   "mocks": {
     "tests/test_genaumacher_export.py": 10,
@@ -43,7 +41,7 @@
     "tests/test_genaumacher_state.py": 17,
     "tests/test_genaumacher_state_factory.py": 2,
     "tests/test_launcher_dialog.py": 1,
-    "tests/test_loading.py": 7,
+    "tests/test_loading.py": 4,
     "tests/test_main_window.py": 4,
     "tests/test_normalize.py": 4,
     "tests/test_normalize_pipeline.py": 15,
