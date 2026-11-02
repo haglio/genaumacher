@@ -119,7 +119,7 @@
     "tests/test_genaumacher_paths.py": 61,
     "tests/test_genaumacher_registration.py": 19,
     "tests/test_genaumacher_session_launch.py": 12,
-    "tests/test_genaumacher_session_persistence.py": 20,
+    "tests/test_genaumacher_session_persistence.py": 12,
     "tests/test_genaumacher_state.py": 44,
     "tests/test_genaumacher_state_factory.py": 3,
     "tests/test_gui_headless.py": 4,

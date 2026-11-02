@@ -109,6 +109,12 @@ class TestLoadingASavedSession:
 
         assert library.pointer.read_text(encoding="utf-8") == str(saved)
 
+    def test_a_pointer_that_cannot_be_written_does_not_stop_the_session_opening(self, library):
+        saved = _write_session(library.sessions, "seaside walk")
+        library.pointer.mkdir()
+
+        assert build_state(LoadSession(session_json=str(saved))).session_path == str(saved)
+
 
 class TestCreatingANewSession:
     def _new(self, **overrides):
