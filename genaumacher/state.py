@@ -88,7 +88,7 @@ class VideoState:
     def active_end(self) -> int:
         return self.clip.end
 
-    # The offered pair is drawn on the timeline and read by the two accept
+    # The offered pair is drawn on the scrubber and read by the two accept
     # operations; the opening selection it is compared against is nobody's
     # business but the search's.
 

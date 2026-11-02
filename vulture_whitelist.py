@@ -7,8 +7,8 @@ answers a report, and an entry may only be added with the reason it answers one.
 from __future__ import annotations
 
 # --- Qt method overrides, called by the event loop, not by us ---
-_.paintEvent  # legend_widget, main_window, timeline_widget, video_pane
-_.mousePressEvent  # timeline_widget
+_.paintEvent  # legend_widget, main_window, scrubber_widget, video_pane
+_.mousePressEvent  # scrubber_widget
 
 # --- Written by production code through setattr on dynamic state, read where vulture cannot follow ---
 _._export_worker  # main_window

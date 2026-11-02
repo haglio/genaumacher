@@ -110,21 +110,21 @@ def _is_blank(pane, rendered) -> bool:
 class TestOnTick:
     """The whole visible application, sixty times a second.
 
-    Nothing exercised it: making it feed the timeline zeros instead of reading
+    Nothing exercised it: making it feed the scrubber zeros instead of reading
     the state left the whole suite at baseline, and gui/app.py sat at 30%
     covered with 51 of its 73 statements never run.
     """
 
-    def test_it_hands_the_timeline_the_state_it_is_looking_at(self, live_app):
+    def test_it_hands_the_scrubber_the_state_it_is_looking_at(self, live_app):
         state = live_app._state
 
         live_app._on_tick()
 
-        timeline = live_app.window.timeline
-        assert (timeline.loaded_start, timeline.loaded_end) == (10, 60)
-        assert (timeline.active_start, timeline.active_end) == (20, 40)
-        assert timeline.cursor_pos == 33
-        assert state.active_start <= timeline.loop_pos <= state.active_end
+        scrubber = live_app.window.scrubber
+        assert (scrubber.loaded_start, scrubber.loaded_end) == (10, 60)
+        assert (scrubber.active_start, scrubber.active_end) == (20, 40)
+        assert scrubber.cursor_pos == 33
+        assert state.active_start <= scrubber.loop_pos <= state.active_end
 
     def test_it_follows_the_state_when_it_moves(self, live_app):
         live_app._on_tick()
@@ -133,17 +133,17 @@ class TestOnTick:
 
         live_app._on_tick()
 
-        timeline = live_app.window.timeline
-        assert timeline.cursor_pos == 47
-        assert timeline.active_end == 50
+        scrubber = live_app.window.scrubber
+        assert scrubber.cursor_pos == 47
+        assert scrubber.active_end == 50
 
     def test_it_passes_the_suggestions_through(self, live_app):
         live_app._state.suggestions.offer(22, 38)
 
         live_app._on_tick()
 
-        timeline = live_app.window.timeline
-        assert (timeline.suggested_in, timeline.suggested_out) == (22, 38)
+        scrubber = live_app.window.scrubber
+        assert (scrubber.suggested_in, scrubber.suggested_out) == (22, 38)
 
     def test_it_puts_a_frame_in_both_panes(self, live_app, rendered):
         window = live_app.window
@@ -188,10 +188,10 @@ class TestOnTick:
 
         live_app._on_tick()
 
-        assert live_app.window.timeline_controls.loop_mode_btn.text() == "tip-base"
+        assert live_app.window.scrubber_controls.loop_mode_btn.text() == "tip-base"
 
     def test_a_frame_that_cannot_be_decoded_does_not_stop_the_rest(self, live_app, rendered):
-        """The panes go without, but the timeline and labels still update.
+        """The panes go without, but the scrubber and labels still update.
 
         Patched where the window binds it, not where it is defined: the window
         imports the name at module level, so patching `genaumacher.frame_store`
@@ -202,7 +202,7 @@ class TestOnTick:
 
         assert _is_blank(live_app.window.left_pane, rendered)
         assert _is_blank(live_app.window.right_pane, rendered)
-        assert live_app.window.timeline.cursor_pos == 33
+        assert live_app.window.scrubber.cursor_pos == 33
         assert live_app.window.speed_label.text() == "speed: 1.00x (playing)"
 
 
@@ -220,7 +220,7 @@ class TestRun:
             live_app.run()
 
         assert ticked_within(live_app.playback_timer.tick, 2000) is True
-        assert live_app.window.timeline.cursor_pos == 33
+        assert live_app.window.scrubber.cursor_pos == 33
 
     def test_closing_the_window_stops_the_animation(self, live_app, ticked_within):
         with patch.object(QApplication, "exec", return_value=0):
@@ -248,5 +248,5 @@ def test_a_frame_the_decoder_will_not_give_up_does_not_take_the_window_with_it(l
 
     assert _is_blank(live_app.window.left_pane, rendered)
     assert _is_blank(live_app.window.right_pane, rendered)
-    assert live_app.window.timeline.cursor_pos == 33
+    assert live_app.window.scrubber.cursor_pos == 33
     assert live_app.window.speed_label.text() == "speed: 1.00x (playing)"

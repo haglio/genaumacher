@@ -1,4 +1,4 @@
-"""Tests for genaumacher.gui.timeline_widget — timeline bar display."""
+"""Tests for genaumacher.gui.scrubber_widget — scrubber bar display."""
 
 from __future__ import annotations
 
@@ -6,20 +6,20 @@ import pytest
 from PyQt6.QtCore import QPointF, Qt
 from PyQt6.QtGui import QMouseEvent
 
-from genaumacher.gui.timeline_colors import (
-    TIMELINE_ACTIVE,
-    TIMELINE_CURSOR,
-    TIMELINE_LOADED,
-    TIMELINE_LOOP,
-    TIMELINE_SUGGESTED_IN,
-    TIMELINE_SUGGESTED_OUT,
+from genaumacher.gui.scrubber_colors import (
+    SCRUBBER_ACTIVE,
+    SCRUBBER_CURSOR,
+    SCRUBBER_LOADED,
+    SCRUBBER_LOOP,
+    SCRUBBER_SUGGESTED_IN,
+    SCRUBBER_SUGGESTED_OUT,
 )
-from genaumacher.gui.timeline_widget import TimelineWidget
+from genaumacher.gui.scrubber_widget import ScrubberWidget
 
 
 @pytest.fixture
 def widget():
-    w = TimelineWidget()
+    w = ScrubberWidget()
     w.resize(800, 40)
     return w
 
@@ -117,7 +117,7 @@ class TestClickSignal:
 
 
 class TestPainting:
-    """The bands and lines the user actually reads the timeline by.
+    """The bands and lines the user actually reads the scrubber by.
 
     Nothing asserted a painted pixel, so replacing ``paintEvent``'s body with
     ``return`` was caught only by the dead-code guard.
@@ -137,29 +137,29 @@ class TestPainting:
         return image.pixelColor(x, 12).name()
 
     def test_the_loaded_range_is_drawn_outside_the_active_one(self, painted):
-        assert self._band(painted, 40) == TIMELINE_LOADED.name()
-        assert self._band(painted, 700) == TIMELINE_LOADED.name()
+        assert self._band(painted, 40) == SCRUBBER_LOADED.name()
+        assert self._band(painted, 700) == SCRUBBER_LOADED.name()
 
     def test_the_active_range_is_drawn_over_it(self, painted):
-        assert self._band(painted, 300) == TIMELINE_ACTIVE.name()
-        assert self._band(painted, 500) == TIMELINE_ACTIVE.name()
+        assert self._band(painted, 300) == SCRUBBER_ACTIVE.name()
+        assert self._band(painted, 500) == SCRUBBER_ACTIVE.name()
 
     def test_the_active_band_starts_and_ends_where_its_marks_are(self, painted, widget):
         just_inside = widget.x_for_index(20) + 3
         just_outside = widget.x_for_index(20) - 3
 
-        assert self._band(painted, just_inside) == TIMELINE_ACTIVE.name()
-        assert self._band(painted, just_outside) == TIMELINE_LOADED.name()
+        assert self._band(painted, just_inside) == SCRUBBER_ACTIVE.name()
+        assert self._band(painted, just_outside) == SCRUBBER_LOADED.name()
 
     def test_the_cursor_is_drawn_where_it_sits(self, painted, widget):
-        assert self._band(painted, widget.x_for_index(50)) == TIMELINE_CURSOR.name()
+        assert self._band(painted, widget.x_for_index(50)) == SCRUBBER_CURSOR.name()
 
     def test_the_loop_position_is_drawn_where_it_sits(self, painted, widget):
-        assert self._band(painted, widget.x_for_index(30)) == TIMELINE_LOOP.name()
+        assert self._band(painted, widget.x_for_index(30)) == SCRUBBER_LOOP.name()
 
     def test_both_suggestions_are_drawn_where_they_sit(self, painted, widget):
-        assert self._band(painted, widget.x_for_index(10)) == TIMELINE_SUGGESTED_IN.name()
-        assert self._band(painted, widget.x_for_index(90)) == TIMELINE_SUGGESTED_OUT.name()
+        assert self._band(painted, widget.x_for_index(10)) == SCRUBBER_SUGGESTED_IN.name()
+        assert self._band(painted, widget.x_for_index(90)) == SCRUBBER_SUGGESTED_OUT.name()
 
     def test_no_suggestion_lines_appear_when_there_are_none(self, widget, rendered):
         widget.set_loaded_range(0, 100)
@@ -171,8 +171,8 @@ class TestPainting:
         image = rendered(widget)
 
         drawn = {image.pixelColor(x, 12).name() for x in range(4, 796)}
-        assert TIMELINE_SUGGESTED_IN.name() not in drawn
-        assert TIMELINE_SUGGESTED_OUT.name() not in drawn
+        assert SCRUBBER_SUGGESTED_IN.name() not in drawn
+        assert SCRUBBER_SUGGESTED_OUT.name() not in drawn
 
     def test_the_cursor_is_drawn_on_top_of_the_loop_position(self, widget, rendered):
         widget.set_loaded_range(0, 100)
@@ -182,4 +182,4 @@ class TestPainting:
 
         image = rendered(widget)
 
-        assert self._band(image, widget.x_for_index(50)) == TIMELINE_CURSOR.name()
+        assert self._band(image, widget.x_for_index(50)) == SCRUBBER_CURSOR.name()
