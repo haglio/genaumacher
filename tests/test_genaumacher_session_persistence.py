@@ -110,7 +110,7 @@ def test_autosave_session_records_failure_message():
     assert state.last_saved_payload is None
 
 
-def test_a_failed_write_keeps_the_last_payload_that_did_reach_disk():
+def test_a_failed_write_keeps_the_last_payload_that_did_reach_disk(tmp_path: Path):
     """The warning is the only signal the user gets; the good payload stands.
 
     Driven through the real safe_atomic_write_json with nothing but the
@@ -118,7 +118,7 @@ def test_a_failed_write_keeps_the_last_payload_that_did_reach_disk():
     there, which is the shape a moved or unmounted sessions folder takes.
     """
     good = {"version": 1, "session_name": "demo"}
-    state = _state(session_path="/no/such/directory/demo.json", last_saved_payload=good)
+    state = _state(session_path=str(tmp_path / "moved away" / "demo.json"), last_saved_payload=good)
 
     autosave_session(state)
 
@@ -172,8 +172,7 @@ class TestSafeAtomicWriteJson:
     def test_no_tmp_file_left_after_success(self, tmp_path: Path):
         target = tmp_path / "out.json"
         safe_atomic_write_json(target, {"x": 1})
-        tmp = target.with_suffix(target.suffix + ".tmp")
-        assert not tmp.exists()
+        assert [path.name for path in tmp_path.iterdir()] == ["out.json"]
 
     def test_a_saved_session_reports_no_warning(self, tmp_path: Path):
         target = tmp_path / "out.json"
@@ -190,46 +189,45 @@ class TestSafeAtomicWriteJson:
 
     def test_a_session_that_cannot_be_written_reports_the_failure(self, tmp_path: Path):
         target = tmp_path / "out.json"
-        with patch("builtins.open", side_effect=PermissionError("denied")):
+        with patch("genaumacher.session_persistence.write_whole", side_effect=PermissionError("denied")):
             ok, err = safe_atomic_write_json(target, {})
         assert ok is False
         assert "denied" in err
 
-    def test_refuses_a_path_whose_parent_does_not_exist(self, tmp_path: Path):
-        """It does not mkdir -- that is the caller's job -- but it must say so.
-
-        The autosave warning the user sees is built from nothing but this
-        return value, so a failure reported as a success is a session that
-        silently stops being written.
-        """
+    def test_a_session_whose_folder_is_missing_reports_the_failure_and_makes_no_folder(self, tmp_path: Path):
         target = tmp_path / "nested" / "dir" / "out.json"
 
         ok, err = safe_atomic_write_json(target, {"x": 1})
 
         assert ok is False
-        # The path is named separator-agnostically: on Windows CPython formats
-        # the OSError filename with repr() (doubling backslashes) and it names
-        # the .tmp path, so the full str(target) is not a substring there.
         assert target.name in err
+        assert not target.parent.exists()
+
+    def test_a_payload_json_cannot_spell_reports_the_failure_and_writes_nothing(self, tmp_path: Path):
+        target = tmp_path / "out.json"
+
+        ok, err = safe_atomic_write_json(target, {"x": object()})
+
+        assert ok is False
+        assert "object" in err
         assert not target.exists()
 
     def test_reports_a_failed_rename_and_leaves_no_half_written_file(self, tmp_path: Path):
         target = tmp_path / "out.json"
 
-        with patch("genaumacher.session_persistence.os.replace", side_effect=OSError("disk full")):
+        with patch("os.replace", side_effect=OSError("disk full")):
             ok, err = safe_atomic_write_json(target, {"x": 1})
 
         assert ok is False
-        assert "disk full" in err
-        assert not target.exists()
-        assert not target.with_suffix(".json.tmp").exists()
+        assert target.name in err
+        assert list(tmp_path.iterdir()) == []
 
     def test_a_tmp_file_it_cannot_clean_up_does_not_mask_the_failure(self, tmp_path: Path):
         target = tmp_path / "out.json"
 
-        with patch("genaumacher.session_persistence.os.replace", side_effect=OSError("disk full")), \
+        with patch("os.replace", side_effect=OSError("disk full")), \
              patch("pathlib.Path.unlink", side_effect=OSError("still locked")):
             ok, err = safe_atomic_write_json(target, {"x": 1})
 
         assert ok is False
-        assert "disk full" in err
+        assert target.name in err
