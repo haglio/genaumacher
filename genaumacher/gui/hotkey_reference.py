@@ -1,4 +1,4 @@
-"""Custom-painted keycap shortcut legend."""
+"""Custom-painted keycap hotkey hotkey reference."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ from shared_ui.colors import BG_KEYCAP, BG_PRIMARY, BORDER_DEFAULT, TEXT_PRIMARY
 from shared_ui.fonts import FONT_UI, SIZE_SMALL, SIZE_TINY
 from shared_ui.spacing import BUTTON_GAP, BUTTON_PAD_H_TIGHT, GAP_DIALOG, GAP_SMALL
 
-from .scrubber_colors import TEXT_LEGEND_JOIN, TEXT_LEGEND_LABEL
+from .scrubber_colors import TEXT_HOTKEY_REFERENCE_JOIN, TEXT_HOTKEY_REFERENCE_LABEL
 
 if TYPE_CHECKING:
-    from .shortcuts import LegendEntry
+    from .hotkeys import HotkeyReferenceEntry
 
 # Keycap metrics, named once for the pass that measures a row and the pass
 # that draws it: a size written out in both is a size that can change in one
@@ -27,21 +27,21 @@ JOINER_GAP = GAP_SMALL
 LABEL_GAP = GAP_DIALOG
 
 
-class LegendWidget(QWidget):
+class HotkeyReferenceWidget(QWidget):
     """Paints whatever rows it is given, keycap style.
 
     It is handed its rows rather than fetching them.  Reaching for
-    `shortcuts.legend_rows()` here would bind the whole action layer at import
-    -- `shortcuts` names the editing functions, which reach `frame_store`,
+    `hotkeys.legend_rows()` here would bind the whole action layer at import
+    -- `hotkeys` names the editing functions, which reach `frame_store`,
     which imports cv2 -- so a widget whose only job is drawing keycaps would
     need the video decoder to be importable at all.  It did not before this
     table existed and it does not now.
     """
 
-    def __init__(self, rows: tuple[tuple[LegendEntry, ...], ...],
+    def __init__(self, rows: tuple[tuple[HotkeyReferenceEntry, ...], ...],
                  parent: QWidget | None = None):
         super().__init__(parent)
-        self.legend_rows = rows
+        self.hotkey_reference_rows = rows
         self.setMinimumHeight(80)
 
     # -- Metrics ---------------------------------------------------------------
@@ -62,7 +62,7 @@ class LegendWidget(QWidget):
         return p.fontMetrics().horizontalAdvance(f": {label}") + LABEL_GAP
 
     def _row_width(self, p: QPainter, row, key_font, label_font, join_font) -> int:
-        """Pre-calculate the total pixel width of a legend row."""
+        """Pre-calculate the total pixel width of a hotkey reference row."""
         width = 0
         for keys, joiner, label in row:
             for i, key in enumerate(keys):
@@ -105,9 +105,9 @@ class LegendWidget(QWidget):
         label_font = QFont(FONT_UI, SIZE_TINY)
         join_font = QFont(FONT_UI, SIZE_TINY)
 
-        row_height = self.height() // max(1, len(self.legend_rows))
+        row_height = self.height() // max(1, len(self.hotkey_reference_rows))
 
-        for row_idx, row in enumerate(self.legend_rows):
+        for row_idx, row in enumerate(self.hotkey_reference_rows):
             y = row_idx * row_height
             baseline = y + row_height // 2 + 4
             cap_top = y + (row_height - KEYCAP_HEIGHT) // 2
@@ -117,14 +117,14 @@ class LegendWidget(QWidget):
                 for i, key in enumerate(keys):
                     if i > 0 and joiner:
                         p.setFont(join_font)
-                        p.setPen(TEXT_LEGEND_JOIN)
+                        p.setPen(TEXT_HOTKEY_REFERENCE_JOIN)
                         p.drawText(x + 2, baseline, joiner)
                         x += self._joiner_width(p, joiner, join_font)
 
                     x += self._draw_keycap(p, x, cap_top, key, key_font)
 
                 p.setFont(label_font)
-                p.setPen(TEXT_LEGEND_LABEL)
+                p.setPen(TEXT_HOTKEY_REFERENCE_LABEL)
                 p.drawText(x + 4, baseline, f": {label}")
                 x += self._label_width(p, label, label_font)
 

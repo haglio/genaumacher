@@ -29,7 +29,8 @@ from .export_dialog import ExportDialog
 from .export_worker import connect_export
 from .floating_controls import FloatingControlLayout
 from .frame_converter import bgr_to_qimage, scale_to_fit
-from .legend_widget import LegendWidget
+from .hotkey_reference import HotkeyReferenceWidget
+from .hotkeys import BY_NAME, hotkey_for, hotkey_reference_rows
 from .main_window_style import (
     LABEL_STYLE,
     WARNING_STYLE,
@@ -40,7 +41,6 @@ from .main_window_style import (
 from .scrubber_colors import SCRUBBER_BOUNDS, SCRUBBER_IN_OUT
 from .scrubber_controls import ScrubberControls
 from .scrubber_widget import ScrubberWidget
-from .shortcuts import BY_NAME, legend_rows, shortcut_for
 from .video_pane import VideoPane
 
 if TYPE_CHECKING:
@@ -99,7 +99,7 @@ class GenaumacherMainWindow(QMainWindow):
         # Controls (created for signal management; buttons placed individually)
         self.button_bar = ButtonBar()
         self.scrubber_controls = ScrubberControls()
-        self.legend = LegendWidget(legend_rows())
+        self.hotkey_reference = HotkeyReferenceWidget(hotkey_reference_rows())
 
         # -- Labels ---------------------------------------------------------------
 
@@ -133,7 +133,7 @@ class GenaumacherMainWindow(QMainWindow):
 
         # -- Wire signals ---------------------------------------------------------
 
-        # Each button runs the shortcut of the same name, so a button and its
+        # Each button runs the hotkey of the same name, so a button and its
         # key cannot come to mean different things.
         for signal, name in (
             (self.button_bar.speed_down_clicked, "speed_down"),
@@ -261,7 +261,7 @@ class GenaumacherMainWindow(QMainWindow):
         main_layout.addWidget(self._wrap_row)
         main_layout.addLayout(mode_row)
         main_layout.addWidget(self.warning_label)
-        main_layout.addWidget(self.legend)
+        main_layout.addWidget(self.hotkey_reference)
 
         self._floating = FloatingControlLayout(
             self.scrubber, tc, self._shift_row, self._mark_row, self._wrap_row
@@ -272,7 +272,7 @@ class GenaumacherMainWindow(QMainWindow):
 
     @property
     def state(self) -> VideoState:
-        """The session the window is editing -- what the shortcuts act on."""
+        """The session the window is editing -- what the hotkeys act on."""
         return self._state
 
     # -- Dynamic button positioning -------------------------------------------
@@ -371,11 +371,11 @@ class GenaumacherMainWindow(QMainWindow):
     # -- Key dispatch ----------------------------------------------------------
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        shortcut = shortcut_for(event.key(), event.text().lower())
-        if shortcut is None:
+        hotkey = hotkey_for(event.key(), event.text().lower())
+        if hotkey is None:
             super().keyPressEvent(event)
             return
-        shortcut.action(self)
+        hotkey.action(self)
 
     # -- Export ----------------------------------------------------------------
 
@@ -389,9 +389,9 @@ class GenaumacherMainWindow(QMainWindow):
     # -- Helpers ---------------------------------------------------------------
 
     def _runs(self, name: str):
-        """A slot that runs the named shortcut against this window."""
-        shortcut = BY_NAME[name]
-        return lambda: shortcut.action(self)
+        """A slot that runs the named hotkey against this window."""
+        hotkey = BY_NAME[name]
+        return lambda: hotkey.action(self)
 
     def _on_scrubber_click(self, idx: int) -> None:
         self._state.window.jump_to(idx)

@@ -1,4 +1,4 @@
-"""What the scrubber and the legend paint with: purpose names over the family's
+"""What the scrubber and the hotkey reference paint with: purpose names over the family's
 hues and tiers.
 
 These lived in ``shared_ui.colors`` under a section headed with this app's
@@ -22,10 +22,10 @@ from shared_ui.colors import (
     YELLOW,
 )
 
-# The legend's two tiers are the body tiers: a label reads as body text and the
+# The hotkey reference's two tiers are the body tiers: a label reads as body text and the
 # " or " between items reads as muted.
-TEXT_LEGEND_LABEL = TEXT_SECONDARY
-TEXT_LEGEND_JOIN = TEXT_MUTED
+TEXT_HOTKEY_REFERENCE_LABEL = TEXT_SECONDARY
+TEXT_HOTKEY_REFERENCE_JOIN = TEXT_MUTED
 
 # A scrubber's outline and its ticks are the standard border.
 BORDER_SCRUBBER = BORDER_DEFAULT
