@@ -26,7 +26,7 @@ from genaumacher.wrap_modes import WrapMode, wrap_bounds
 from .button_bar import ButtonBar
 from .export_dialog import ExportDialog
 from .export_worker import connect_export
-from .floating_controls import FloatingControlLayout
+from .floating_controls import FloatingControlLayout, FloatingMarks
 from .frame_converter import bgr_to_qimage, scale_to_fit
 from .hotkey_reference import HotkeyReferenceWidget
 from .hotkeys import BY_NAME, hotkey_for, hotkey_reference_rows
@@ -72,6 +72,35 @@ class _WrapRow(QWidget):
         p.end()
 
 
+def _small_label(text: str = "") -> QLabel:
+    label = QLabel(text)
+    label.setFont(small_font())
+    label.setStyleSheet(LABEL_STYLE)
+    return label
+
+
+def _pane_column(heading: str, pane: VideoPane) -> QVBoxLayout:
+    header = QLabel(heading)
+    header.setFont(make_font(FONT_UI, SIZE_HEADING))
+    header.setStyleSheet(LABEL_STYLE)
+    header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
+
+    column = QVBoxLayout()
+    column.setSpacing(GAP_SMALL)
+    column.addWidget(header)
+    column.addWidget(pane, stretch=1)
+    return column
+
+
+def _button_row_of(*buttons: QWidget) -> QWidget:
+    row = QWidget()
+    row.setFixedHeight(32)
+    for button in buttons:
+        button.setParent(row)
+    return row
+
+
 class GenaumacherMainWindow(QMainWindow):
     closed = pyqtSignal()
 
@@ -91,34 +120,40 @@ class GenaumacherMainWindow(QMainWindow):
         self.scrubber_controls = ScrubberControls()
         self.hotkey_reference = HotkeyReferenceWidget(hotkey_reference_rows())
 
+        self._make_labels(state)
+        self._wire_controls()
+
+        central = QWidget()
+        self.setCentralWidget(central)
+        self._lay_out(central)
+
+        self._floating = FloatingControlLayout(
+            self.scrubber, self.scrubber_controls, self._shift_row, self._mark_row, self._wrap_row
+        )
+
+        dress_controls(central, self.button_bar, self.scrubber_controls)
+        refuse_focus(self)
+
+    def _make_labels(self, state: VideoState) -> None:
         self.session_label = QLabel(state.session_name)
         self.session_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.session_label.setFont(make_font(FONT_UI, SIZE_HEADING, bold=True))
 
-        self.file_info_label = QLabel(
+        self.file_info_label = _small_label(
             f"file: {os.path.basename(state.path)}    fps: {state.fps:.3f}"
         )
         self.file_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.file_info_label.setFont(small_font())
-        self.file_info_label.setStyleSheet(LABEL_STYLE)
 
-        self.cursor_label = QLabel()
-        self.cursor_label.setFont(small_font())
-        self.cursor_label.setStyleSheet(LABEL_STYLE)
-
-        self.loop_label = QLabel()
-        self.loop_label.setFont(small_font())
-        self.loop_label.setStyleSheet(LABEL_STYLE)
-
-        self.speed_label = QLabel()
-        self.speed_label.setFont(small_font())
-        self.speed_label.setStyleSheet(LABEL_STYLE)
+        self.cursor_label = _small_label()
+        self.loop_label = _small_label()
+        self.speed_label = _small_label()
 
         self.warning_label = QLabel()
         self.warning_label.setFont(small_font())
         self.warning_label.setStyleSheet(WARNING_STYLE)
         self.warning_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+    def _wire_controls(self) -> None:
         for signal, name in (
             (self.button_bar.speed_down_clicked, "speed_down"),
             (self.button_bar.speed_up_clicked, "speed_up"),
@@ -139,37 +174,35 @@ class GenaumacherMainWindow(QMainWindow):
 
         self.scrubber.cursor_jumped.connect(self._on_scrubber_click)
 
-        central = QWidget()
-        self.setCentralWidget(central)
+    def _lay_out(self, central: QWidget) -> None:
+        panes_row = self._panes_row()
+        info_row = self._info_row()
+        scrubber_row = self._scrubber_row()
+        mode_row = self._loop_mode_row()
 
-        frame_at_cursor_header = QLabel("frame at cursor")
-        frame_at_cursor_header.setFont(make_font(FONT_UI, SIZE_HEADING))
-        frame_at_cursor_header.setStyleSheet(LABEL_STYLE)
-        frame_at_cursor_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        frame_at_cursor_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
+        main_layout = QVBoxLayout(central)
+        main_layout.setContentsMargins(MARGIN_STANDARD, GAP_SMALL, MARGIN_STANDARD, GAP_SMALL)
+        main_layout.setSpacing(GAP_SMALL)
+        main_layout.addWidget(self.session_label)
+        main_layout.addWidget(self.file_info_label)
+        main_layout.addLayout(panes_row, stretch=1)
+        main_layout.addLayout(info_row)
+        main_layout.addWidget(self._shift_row)
+        main_layout.addLayout(scrubber_row)
+        main_layout.addWidget(self._mark_row)
+        main_layout.addWidget(self._wrap_row)
+        main_layout.addLayout(mode_row)
+        main_layout.addWidget(self.warning_label)
+        main_layout.addWidget(self.hotkey_reference)
 
-        loop_preview_header = QLabel("loop preview")
-        loop_preview_header.setFont(make_font(FONT_UI, SIZE_HEADING))
-        loop_preview_header.setStyleSheet(LABEL_STYLE)
-        loop_preview_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        loop_preview_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
-
-        left_col = QVBoxLayout()
-        left_col.setSpacing(GAP_SMALL)
-        left_col.addWidget(frame_at_cursor_header)
-        left_col.addWidget(self.frame_at_cursor_pane, stretch=1)
-
-        right_col = QVBoxLayout()
-        right_col.setSpacing(GAP_SMALL)
-        right_col.addWidget(loop_preview_header)
-        right_col.addWidget(self.loop_preview_pane, stretch=1)
-
+    def _panes_row(self) -> QHBoxLayout:
         panes_row = QHBoxLayout()
-        panes_row.addLayout(left_col, stretch=1)
-        panes_row.addLayout(right_col, stretch=1)
+        panes_row.addLayout(_pane_column("frame at cursor", self.frame_at_cursor_pane), stretch=1)
+        panes_row.addLayout(_pane_column("loop preview", self.loop_preview_pane), stretch=1)
+        return panes_row
 
+    def _info_row(self) -> QHBoxLayout:
         bb = self.button_bar
-        tc = self.scrubber_controls
 
         left_info = QVBoxLayout()
         left_info.setSpacing(0)
@@ -196,11 +229,12 @@ class GenaumacherMainWindow(QMainWindow):
         info_row = QHBoxLayout()
         info_row.addLayout(left_info, stretch=1)
         info_row.addLayout(right_side, stretch=1)
+        return info_row
 
-        self._shift_row = QWidget()
-        self._shift_row.setFixedHeight(32)
-        tc.shift_left_btn.setParent(self._shift_row)
-        tc.shift_right_btn.setParent(self._shift_row)
+    def _scrubber_row(self) -> QHBoxLayout:
+        tc = self.scrubber_controls
+
+        self._shift_row = _button_row_of(tc.shift_left_btn, tc.shift_right_btn)
 
         scrubber_row = QHBoxLayout()
         scrubber_row.addWidget(tc.extend_left_btn)
@@ -209,41 +243,19 @@ class GenaumacherMainWindow(QMainWindow):
         scrubber_row.addWidget(tc.contract_right_btn)
         scrubber_row.addWidget(tc.extend_right_btn)
 
-        self._mark_row = QWidget()
-        self._mark_row.setFixedHeight(32)
-        tc.mark_in_btn.setParent(self._mark_row)
-        tc.mark_out_btn.setParent(self._mark_row)
+        self._mark_row = _button_row_of(tc.mark_in_btn, tc.mark_out_btn)
 
         self._wrap_row = _WrapRow()
         self._wrap_row.setFixedHeight(36)
         tc.wrap_btn.setParent(self._wrap_row)
+        return scrubber_row
 
+    def _loop_mode_row(self) -> QHBoxLayout:
         mode_row = QHBoxLayout()
         mode_row.addStretch()
-        mode_row.addWidget(tc.loop_mode_btn)
+        mode_row.addWidget(self.scrubber_controls.loop_mode_btn)
         mode_row.addStretch()
-
-        main_layout = QVBoxLayout(central)
-        main_layout.setContentsMargins(MARGIN_STANDARD, GAP_SMALL, MARGIN_STANDARD, GAP_SMALL)
-        main_layout.setSpacing(GAP_SMALL)
-        main_layout.addWidget(self.session_label)
-        main_layout.addWidget(self.file_info_label)
-        main_layout.addLayout(panes_row, stretch=1)
-        main_layout.addLayout(info_row)
-        main_layout.addWidget(self._shift_row)
-        main_layout.addLayout(scrubber_row)
-        main_layout.addWidget(self._mark_row)
-        main_layout.addWidget(self._wrap_row)
-        main_layout.addLayout(mode_row)
-        main_layout.addWidget(self.warning_label)
-        main_layout.addWidget(self.hotkey_reference)
-
-        self._floating = FloatingControlLayout(
-            self.scrubber, tc, self._shift_row, self._mark_row, self._wrap_row
-        )
-
-        dress_controls(central, bb, tc)
-        refuse_focus(self)
+        return mode_row
 
     @property
     def state(self) -> VideoState:
@@ -252,7 +264,7 @@ class GenaumacherMainWindow(QMainWindow):
     def update_button_positions(self) -> None:
         state = self._state
         wrap_from, wrap_to = wrap_bounds(state)
-        self._floating.place(
+        self._floating.place(FloatingMarks(
             in_point=state.in_point,
             out_point=state.out_point,
             cursor=state.cursor,
@@ -263,7 +275,7 @@ class GenaumacherMainWindow(QMainWindow):
                 if state.wrap_mode is WrapMode.OVER_BOUNDS
                 else SCRUBBER_IN_OUT
             ),
-        )
+        ))
 
     def render(self, state: VideoState) -> None:
         loop_idx = self._draw_frames(state)

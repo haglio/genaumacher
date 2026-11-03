@@ -13,7 +13,7 @@ from shared_ui.fonts import FONT_UI
 from shared_ui.preview import Preview
 from shared_ui.spacing import BUTTON_SIZE
 
-from genaumacher.gui.floating_controls import FloatingControlLayout
+from genaumacher.gui.floating_controls import FloatingControlLayout, FloatingMarks
 from genaumacher.gui.hotkeys import HOTKEYS
 from genaumacher.gui.main_window import GenaumacherMainWindow, _WrapRow
 from genaumacher.gui.scrubber_colors import SCRUBBER_BOUNDS
@@ -226,10 +226,10 @@ _KEY_BINDINGS = [
 
 class TestKeyDispatch:
     @pytest.mark.parametrize(
-        ("key", "text", "prepare", "observe", "expected"),
-        [pytest.param(k, t, p, o, e, id=label) for label, k, t, p, o, e in _KEY_BINDINGS],
+        "binding", [pytest.param(rest, id=label) for label, *rest in _KEY_BINDINGS],
     )
-    def test_a_key_makes_its_edit(self, make_state, key, text, prepare, observe, expected):
+    def test_a_key_makes_its_edit(self, make_state, binding):
+        key, text, prepare, observe, expected = binding
         state = make_state(**_DISPATCH_STATE)
         prepare(state)
         window = GenaumacherMainWindow(state)
@@ -485,8 +485,8 @@ class TestFloatingControlsStandAlone:
             row.resize(600, 32)
         layout = FloatingControlLayout(scrubber, controls, shift_row, mark_row, wrap_row)
 
-        layout.place(in_point=20, out_point=80, cursor=50,
-                     wrap_from=0, wrap_to=100, wrap_color=SCRUBBER_BOUNDS)
+        layout.place(FloatingMarks(in_point=20, out_point=80, cursor=50,
+                                   wrap_from=0, wrap_to=100, wrap_color=SCRUBBER_BOUNDS))
 
         center = controls.wrap_btn.x() + controls.wrap_btn.width() // 2
         assert abs(center - scrubber.width() // 2) <= 2
@@ -508,6 +508,6 @@ def test_no_floating_button_is_placed_before_the_scrubber_has_a_width():
     scrubber = _NoWidthYet()
     layout = FloatingControlLayout(scrubber, None, None, None, None)
 
-    layout.place(in_point=1, out_point=2, cursor=1, wrap_from=1, wrap_to=2, wrap_color=QColor())
+    layout.place(FloatingMarks(in_point=1, out_point=2, cursor=1, wrap_from=1, wrap_to=2, wrap_color=QColor()))
 
     assert scrubber.asked == []
