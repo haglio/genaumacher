@@ -7,6 +7,8 @@ from fractions import Fraction
 
 import cv2
 
+from .normalize_options import NormalizeOptions
+
 
 def _run_checked(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -63,10 +65,7 @@ def read_frames(path: str) -> list:
 def encode_with_ffmpeg(
     frames: list,
     fps: float,
-    out_path: str,
-    crf: int,
-    preset: str,
-    pix_fmt: str,
+    options: NormalizeOptions,
     input_audio_path: str | None = None,
 ) -> None:
     if not shutil.which("ffmpeg"):
@@ -89,10 +88,10 @@ def encode_with_ffmpeg(
 
     cmd += [
         "-c:v", "libx264",
-        "-preset", preset,
-        "-crf", str(crf),
-        "-pix_fmt", pix_fmt,
-        out_path,
+        "-preset", options.preset,
+        "-crf", str(options.crf),
+        "-pix_fmt", options.pix_fmt,
+        options.output,
     ]
 
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)

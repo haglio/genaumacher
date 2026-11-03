@@ -5,7 +5,6 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 
-from .loop_modes import LoopMode
 from .normalize_media import encode_with_ffmpeg, ffprobe_video, read_frames
 from .normalize_options import NormalizeOptions
 from .normalize_transforms import (
@@ -93,34 +92,31 @@ def _registered_seam(
 
 def build_output_frames(
     frames: list,
+    options: NormalizeOptions,
     *,
-    loop_mode: LoopMode,
     bridge_frames: int,
-    mode: str,
-    keep_length: bool,
-    symmetric_blend: int,
     seam_frames: int = 0,
 ) -> tuple[list, int]:
-    work_frames = normalize_loop_mode(frames, loop_mode)
+    work_frames = normalize_loop_mode(frames, options.loop_mode)
     normalized_n = len(work_frames)
 
-    if mode == "register":
+    if options.mode == "register":
         registered = _registered_seam(
             work_frames,
             bridge_frames=bridge_frames,
-            keep_length=keep_length,
-            symmetric_blend=symmetric_blend,
+            keep_length=options.keep_length,
+            symmetric_blend=options.symmetric_blend,
             seam_frames=seam_frames,
         )
         if registered is not None:
             return registered, normalized_n
         bridge_mode = "flow"
     else:
-        bridge_mode = mode
+        bridge_mode = options.mode
 
-    work_frames = _softly_blended(work_frames, symmetric_blend, normalized_n)
+    work_frames = _softly_blended(work_frames, options.symmetric_blend, normalized_n)
     bridge = build_bridge(work_frames[-1], work_frames[0], bridge_frames, bridge_mode)
-    return _with_bridge(work_frames, bridge, bridge_frames, keep_length), normalized_n
+    return _with_bridge(work_frames, bridge, bridge_frames, options.keep_length), normalized_n
 
 
 def normalize_clip(
@@ -154,13 +150,7 @@ def normalize_clip(
         normalized_frame_count=len(normalized_preview),
     )
     out_frames, normalized_n = build_output_frames(
-        frames,
-        loop_mode=options.loop_mode,
-        bridge_frames=bridge_frames,
-        mode=options.mode,
-        keep_length=options.keep_length,
-        symmetric_blend=options.symmetric_blend,
-        seam_frames=seam_frames_count,
+        frames, options, bridge_frames=bridge_frames, seam_frames=seam_frames_count,
     )
     say(_FRAMES_BUILT)
 
@@ -173,10 +163,7 @@ def normalize_clip(
         encode_with_ffmpeg(
             frames_to_encode,
             fps,
-            options.output,
-            options.crf,
-            options.preset,
-            options.pix_fmt,
+            options,
             input_audio_path=options.input if options.copy_audio else None,
         )
 
