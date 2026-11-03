@@ -198,3 +198,33 @@ class TestRifeSeam:
         assert not np.array_equal(result[0], frames[0])
         assert not np.array_equal(result[-1], frames[-1])
         assert np.array_equal(result[5], frames[5])
+
+
+class TestWhatTheSeamDoesToAFrame:
+    @staticmethod
+    def _frames() -> list[np.ndarray]:
+        return [np.full((2, 2, 3), value, dtype=np.uint8) for value in range(0, 160, 20)]
+
+    def test_no_frame_moves_more_than_halfway_toward_its_partner(self, interpolator):
+        frames = self._frames()
+
+        result = build_rife_seam(frames, 4)
+
+        assert result[-1][0, 0, 0] == (frames[-1][0, 0, 0] // 2 + frames[0][0, 0, 0] // 2)
+
+    def test_a_seam_wider_than_half_the_clip_is_capped_at_half(self, interpolator):
+        frames = self._frames()
+
+        widest = build_rife_seam(frames, len(frames))
+        half = build_rife_seam(frames, len(frames) // 2)
+
+        assert [int(frame[0, 0, 0]) for frame in widest] == [int(frame[0, 0, 0]) for frame in half]
+
+    def test_a_frame_moves_toward_its_partner_and_stays_nearer_itself(self, interpolator):
+        frames = self._frames()
+
+        moved = int(build_rife_seam(frames, 4)[-2][0, 0, 0])
+
+        own, partner = int(frames[-2][0, 0, 0]), int(frames[1][0, 0, 0])
+        assert abs(moved - own) < abs(moved - partner)
+        assert moved != own

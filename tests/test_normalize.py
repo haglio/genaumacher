@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import subprocess
 import sys
 from pathlib import Path
@@ -9,7 +11,7 @@ import pytest
 
 from genaumacher.export_progress import fraction_in
 from genaumacher.loop_modes import LoopMode
-from genaumacher.normalize import main, parse_options
+from genaumacher.normalize import _say_how_far, main, parse_options
 from genaumacher.normalize_options import NormalizeOptions
 from genaumacher.normalize_transforms import normalize_loop_mode, shift_frames_halfway
 
@@ -133,3 +135,18 @@ def test_the_cli_runs_a_clip_through_and_prints_what_it_wrote(cli_run):
     assert "Final size (bytes): 32" in printed
     assert f"Wrote: {output}" in printed
     assert output.exists()
+
+
+def test_each_progress_line_is_flushed_so_it_arrives_while_the_work_goes_on():
+    class _Stream(io.StringIO):
+        flushed_at: int = -1
+
+        def flush(self) -> None:
+            self.flushed_at = len(self.getvalue())
+
+    stream = _Stream()
+
+    with contextlib.redirect_stdout(stream):
+        _say_how_far(0.5)
+
+    assert stream.flushed_at == len(stream.getvalue()) > 0

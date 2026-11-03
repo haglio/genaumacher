@@ -7,10 +7,12 @@ from PyQt6.QtGui import QImage, QPixmap
 
 
 def bgr_to_qimage(frame: np.ndarray) -> QImage:
-    h, w, ch = frame.shape
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    bytes_per_line = ch * w
-    return QImage(rgb.data, w, h, bytes_per_line, QImage.Format.Format_RGB888).copy()
+    return rgb_to_qimage(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
+
+def rgb_to_qimage(rgb: np.ndarray) -> QImage:
+    h, w, ch = rgb.shape
+    return QImage(rgb.data, w, h, ch * w, QImage.Format.Format_RGB888).copy()
 
 
 def scale_to_fit(image: QImage, max_w: int, max_h: int) -> QImage:

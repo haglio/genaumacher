@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from genaumacher.frame_store import (
+    _FAILED_READS_TOLERATED,
     ensure_loaded,
     load_range,
     safe_frame,
@@ -24,8 +25,8 @@ def test_a_backwards_window_loads_no_frames():
 
 
 class _DamagedAt:
-    def __init__(self, bad: int):
-        self._bad = bad
+    def __init__(self, *bad: int):
+        self._bad = set(bad)
         self._pos = 0
         self.seeks: list[int] = []
 
@@ -35,7 +36,7 @@ class _DamagedAt:
         return True
 
     def read(self):
-        if self._pos == self._bad:
+        if self._pos in self._bad:
             return False, None
         self._pos += 1
         return True, np.zeros((2, 2, 3), dtype=np.uint8)
@@ -143,3 +144,13 @@ def test_signature_for_index_caches_processed_signature(make_state):
     assert first is cached_signature
     assert second is cached_signature
     preprocess.assert_called_once()
+
+
+def test_a_good_read_between_two_damaged_patches_starts_the_count_of_failed_reads_again():
+    width = _FAILED_READS_TOLERATED - 1
+    good_between = 10 + width
+    cap = _DamagedAt(*range(10, good_between), *range(good_between + 1, good_between + 1 + width))
+
+    result = load_range(cap, 9, good_between + 1 + width)
+
+    assert sorted(result) == [9, good_between, good_between + 1 + width]

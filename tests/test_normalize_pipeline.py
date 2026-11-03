@@ -419,3 +419,22 @@ class TestSayingHowFarItHasGot:
         summary, _ = run_pipeline(_options(tmp_path))
 
         assert summary["output_frames"] == 4
+
+
+def test_when_the_two_ends_will_not_align_the_register_mode_bridges_by_optical_flow():
+    too_small_to_align = [np.random.RandomState(seed).randint(0, 256, (8, 8, 3), dtype=np.uint8)
+                          for seed in range(6)]
+
+    def last_frame_in(mode: str) -> np.ndarray:
+        out, _ = build_output_frames(
+            too_small_to_align,
+            loop_mode=LoopMode.BASE_TIP_BASE,
+            bridge_frames=1,
+            mode=mode,
+            keep_length=True,
+            symmetric_blend=0,
+        )
+        return out[-1]
+
+    assert np.array_equal(last_frame_in("register"), last_frame_in("flow"))
+    assert not np.array_equal(last_frame_in("register"), last_frame_in("blend"))

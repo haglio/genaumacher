@@ -66,10 +66,21 @@ class TestWhenThereIsNothingToPrefill:
 
         assert detect_main_funestra_session_prefill(path) is None
 
-    def test_a_playhead_that_is_not_a_number(self, tmp_path: Path):
+    def test_a_blank_playhead_starts_at_zero(self, tmp_path: Path):
         prefill = detect_main_funestra_session_prefill(_status(tmp_path, position_ms="  "))
 
         assert prefill.timestamp == "00:00:00.000"
+
+    def test_a_playhead_that_is_not_a_number_costs_the_timestamp_and_not_the_video(self, tmp_path: Path):
+        prefill = detect_main_funestra_session_prefill(_status(tmp_path, position_ms="soon"))
+
+        assert prefill.timestamp == "00:00:00.000"
+
+    def test_a_status_file_of_undecodable_bytes(self, tmp_path: Path):
+        path = tmp_path / "main_player_status.txt"
+        path.write_bytes(b"video=\xff\xfe")
+
+        assert detect_main_funestra_session_prefill(path) is None
 
     def test_a_file_that_cannot_be_read(self, tmp_path: Path):
         assert detect_main_funestra_session_prefill(tmp_path) is None

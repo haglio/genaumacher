@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from PyQt6.QtGui import QImage
 
-from genaumacher.gui.frame_converter import bgr_to_qimage, scale_to_fit
+from genaumacher.gui.frame_converter import bgr_to_qimage, rgb_to_qimage, scale_to_fit
 
 
 class TestBgrToQImage:
@@ -39,6 +39,14 @@ class TestBgrToQImage:
         assert pixel.red() == 150
         assert pixel.green() == 100
         assert pixel.blue() == 50
+
+    def test_the_image_owns_its_pixels_once_the_conversion_is_over(self):
+        rgb = np.full((1, 1, 3), 50, dtype=np.uint8)
+
+        result = rgb_to_qimage(rgb)
+        rgb[:] = 200
+
+        assert result.pixelColor(0, 0).red() == 50
 
 
 class TestScaleToFit:
