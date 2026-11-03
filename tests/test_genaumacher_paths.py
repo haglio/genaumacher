@@ -197,6 +197,18 @@ class TestAMachineWithNoLibraryYet:
 
         assert library_is_configured() is False
 
+    def test_a_placeholder_library_gets_no_folders_though_its_tree_is_laid_out(
+        self, tmp_path: Path, checkout_dirs, shared_settings
+    ):
+        genau = tmp_path / "genau"
+        flat_flicks_in(genau / "flicks").mkdir(parents=True)
+        audio = tmp_path / "audio"
+        shared_settings({**haglio_settings.EXAMPLE, "genau_dir": str(genau), "genau_audio_dir": str(audio)})
+
+        ensure_runtime_dirs()
+
+        assert not audio.exists()
+
     def test_the_repos_own_directories_are_still_made(self, checkout_dirs, shared_settings):
         shared_settings()
 

@@ -9,6 +9,7 @@ import pytest
 
 from genaumacher.export_progress import progress_line
 from genaumacher.export_steps import (
+    _has_audio_stream,
     _parse_ffmpeg_clock,
     _run_ffmpeg_with_progress,
     export_full_audio_mp3,
@@ -276,6 +277,12 @@ class TestRunNormalize:
 
 
 class TestExportFullAudioMp3:
+    def test_with_no_ffprobe_audio_is_assumed_and_ffmpeg_decides(self):
+        assert _has_audio_stream("video.mp4", None) is True
+
+    def test_when_the_probe_fails_audio_is_assumed_and_ffmpeg_decides(self, tmp_path: Path):
+        assert _has_audio_stream("video.mp4", str(tmp_path / "no_such_ffprobe")) is True
+
     def test_skips_when_no_audio_stream(self, tmp_path: Path, make_state):
         progress = _Recorder()
         state = make_state()

@@ -154,6 +154,11 @@ class TestMain:
     def _with_runs(self, monkeypatch, answer: bool) -> None:
         monkeypatch.setattr(fetch_rife, "runs", lambda: answer)
 
+    def test_a_file_left_empty_does_not_count_as_fetched(self, fetched):
+        (fetched / fetch_rife.FILES[0]).write_bytes(b"")
+
+        assert fetch_rife.is_present() is False
+
     def test_it_reports_success_when_the_interpolator_works(self, fetched, monkeypatch):
         self._with_runs(monkeypatch, True)
 
@@ -209,6 +214,9 @@ class TestDownload:
         fetch_rife.download(archive)
 
         assert fetched == [(fetch_rife.URL, fetch_rife._DOWNLOAD_TIMEOUT)]
+
+    def test_a_stalled_download_has_a_time_limit(self):
+        assert fetch_rife._DOWNLOAD_TIMEOUT > 0
 
     def test_a_download_that_does_not_match_is_refused_and_removed(
         self, tmp_path: Path, monkeypatch

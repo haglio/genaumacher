@@ -148,8 +148,7 @@ def run_normalize(state: VideoState, raw_path: Path, out_path: Path, progress: E
     return True, str(out_path)
 
 
-def _has_audio_stream(video_path: str) -> bool:
-    ffprobe = find_tool("ffprobe")
+def _has_audio_stream(video_path: str, ffprobe: str | None) -> bool:
     if not ffprobe:
         return True
     try:
@@ -169,7 +168,7 @@ def export_full_audio_mp3(state: VideoState, out_path: Path, progress: ExportPro
     ffmpeg = find_tool("ffmpeg")
     if not ffmpeg:
         return False, "ffmpeg not found on PATH"
-    if not _has_audio_stream(state.path):
+    if not _has_audio_stream(state.path, find_tool("ffprobe")):
         progress.audio(1.0)
         return True, "No audio stream in source video"
     full_duration = max(1.0 / state.fps, state.total_frames / state.fps)

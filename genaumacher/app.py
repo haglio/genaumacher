@@ -89,7 +89,7 @@ def main() -> int:
     except Exception as exc:
         logger.exception("Genaumacher crashed")
         try:
-        # What failed may be the import of Qt itself.
+            # What failed may be the import of Qt itself.
             from PyQt6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
 
             _app = QApplication.instance() or QApplication(sys.argv)

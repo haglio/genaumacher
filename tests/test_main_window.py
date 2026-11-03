@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from PyQt6.QtCore import QPoint, QSize, Qt
-from PyQt6.QtGui import QFont, QFontDatabase, QKeyEvent
+from PyQt6.QtGui import QColor, QFont, QFontDatabase, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QPushButton, QWidget
 from shared_ui.colors import dress_application
 from shared_ui.fonts import FONT_UI
@@ -492,3 +492,23 @@ class TestFloatingControlsStandAlone:
         center = controls.wrap_btn.x() + controls.wrap_btn.width() // 2
         assert abs(center - scrubber.width() // 2) <= 2
         assert SCRUBBER_BOUNDS.name() in controls.wrap_btn.styleSheet()
+
+
+def test_no_floating_button_is_placed_before_the_scrubber_has_a_width():
+    class _NoWidthYet:
+        def __init__(self) -> None:
+            self.asked: list[int] = []
+
+        def width(self) -> int:
+            return 0
+
+        def x_for_index(self, index: int) -> int:
+            self.asked.append(index)
+            return 0
+
+    scrubber = _NoWidthYet()
+    layout = FloatingControlLayout(scrubber, None, None, None, None)
+
+    layout.place(in_point=1, out_point=2, cursor=1, wrap_from=1, wrap_to=2, wrap_color=QColor())
+
+    assert scrubber.asked == []

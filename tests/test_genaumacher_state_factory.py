@@ -86,3 +86,11 @@ def test_a_payload_with_no_name_of_its_own_takes_the_caller_s():
     state = _load(payload)
 
     assert state.session_name == "the file stem"
+
+
+def test_the_right_edge_is_the_last_frame_the_decoder_produced():
+    frames = {i: np.zeros((2, 2, 3), dtype=np.uint8) for i in range(10, 21)}
+
+    state = _load(_payload(loaded_end=40, active_end=18), frames=frames)
+
+    assert state.right_bound == 20
