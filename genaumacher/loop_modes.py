@@ -1,4 +1,3 @@
-"""How an exported clip's frames are laid out to loop, as the session file spells it."""
 from __future__ import annotations
 
 from enum import StrEnum
@@ -11,13 +10,10 @@ class LoopMode(StrEnum):
     TIP_BASE = "tip-base"
 
 
-# The order the loop button cycles them in.
 LOOP_MODES = tuple(LoopMode)
 
 
 def read_loop_mode(raw: object) -> LoopMode:
-    """The entry *raw* names, or the one a new session starts in for a word this
-    build does not know -- a session file from another build must still open."""
     try:
         return LoopMode(raw)
     except ValueError:

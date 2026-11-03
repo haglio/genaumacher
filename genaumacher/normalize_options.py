@@ -1,4 +1,3 @@
-"""What one run of normalize was asked for, and the defaults it falls back on."""
 from __future__ import annotations
 
 from dataclasses import dataclass

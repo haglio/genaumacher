@@ -1,16 +1,3 @@
-"""Every hotkey, declared once.
-
-Copies of a key table drift: one lists a key nothing is bound to, another
-omits one that is, and nothing catches either.
-
-Here the keys, the action and the hotkey reference wording are one row.  The hotkey reference is
-generated from it, so it cannot advertise a key nothing is bound to or omit one
-that is; the buttons connect to the same callables, so a button and its key
-cannot come to mean different things.
-
-Lives under `gui/` because the rows name Qt key codes and act on the window.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -36,14 +23,10 @@ if TYPE_CHECKING:
 
 Action = Callable[["GenaumacherMainWindow"], None]
 
-# A hotkey reference entry: the hotkeys it covers, how their keycaps are joined, and
-# what it says they do.  One entry can cover two hotkeys -- "adjust left
-# bound" is what `a` and `s` do between them.
 HotkeyReferenceEntry = tuple[tuple[str, ...], str, str]
 
 
 def _edits(fn: Callable[..., None], *args: object) -> Action:
-    """Wrap an editing function as an action on the window that holds a state."""
     def act(window: GenaumacherMainWindow) -> None:
         fn(window.state, *args)
 
@@ -52,14 +35,6 @@ def _edits(fn: Callable[..., None], *args: object) -> Action:
 
 @dataclass(frozen=True)
 class Hotkey:
-    """One action, everything that reaches it, and what the hotkey reference prints.
-
-    `keys` are `event.text()` values; `qt_keys` are the codes for keys that
-    carry no text.  `keycaps` is the subset the hotkey reference prints: the shift
-    variants (`_` for `-`, `9` for `(`, `,` for `<`) are the same physical key
-    and printing both would say there are two ways to do it.
-    """
-
     name: str
     action: Action
     keycaps: tuple[str, ...]
@@ -93,12 +68,6 @@ HOTKEYS: tuple[Hotkey, ...] = (
     Hotkey("quit", lambda window: window.close(), ("q",), keys=("q",)),
 )
 
-# What the hotkey reference says, row by row.  The keycaps are not written here -- they
-# come from the hotkeys named, which is what stops the two disagreeing.
-# Which entry sits in which row is a free choice, and it is made so the rows
-# come out even: the widest has to fit the window's 900 px minimum.
-# Transport and loop; the bounds with the cursor between them and the wrap;
-# the in-out edits together.
 HOTKEY_REFERENCE_ROWS: tuple[tuple[HotkeyReferenceEntry, ...], ...] = (
     (
         (("speed_down", "speed_up"), " or ", "speed"),
@@ -127,12 +96,10 @@ _BY_CODE: dict[int, Hotkey] = {code: s for s in HOTKEYS for code in s.qt_keys}
 
 
 def hotkey_for(key: int, text: str) -> Hotkey | None:
-    """The hotkey a key press reaches, by code first and then by text."""
     return _BY_CODE.get(key) or _BY_TEXT.get(text)
 
 
 def hotkey_reference_rows() -> tuple[tuple[HotkeyReferenceEntry, ...], ...]:
-    """The hotkey reference in the shape the widget paints, keycaps drawn from the table."""
     return tuple(
         tuple(
             (

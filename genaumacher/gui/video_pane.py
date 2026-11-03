@@ -1,5 +1,3 @@
-"""Video frame display widget — shows a single QImage, centered."""
-
 from __future__ import annotations
 
 from PyQt6.QtCore import QRectF
@@ -9,8 +7,6 @@ from shared_ui.colors import BG_SECONDARY, BORDER_SUBTLE
 
 
 class VideoPane(QWidget):
-    """Displays a single video frame as a QImage."""
-
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._image: QImage | None = None
@@ -28,7 +24,6 @@ class VideoPane(QWidget):
         p.fillRect(self.rect(), BG_SECONDARY)
 
         if self._image is not None:
-            # Center the image in the widget
             iw, ih = self._image.width(), self._image.height()
             x = (self.width() - iw) / 2
             y = (self.height() - ih) / 2

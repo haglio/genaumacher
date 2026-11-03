@@ -1,4 +1,3 @@
-"""Tests for genaumacher.wrap_modes — what the cursor wraps within."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -22,21 +21,11 @@ class TestWrapBounds:
         assert wrap_bounds(state) == (20, 40)
 
     def test_the_two_modes_are_the_colors_the_session_file_carries(self):
-        """The session format is unversioned and evolver reads it, so the value
-        stays the color it has always been; only the name says what it means."""
         assert (WrapMode.OVER_BOUNDS, WrapMode.OVER_IN_OUT) == ("blue", "yellow")
 
 
 @pytest.mark.repo_check
 def test_nothing_else_spells_the_wrap_mode_out_as_a_color():
-    """The two constants are the only place `"blue"` and `"yellow"` are written.
-
-    They were the last thing this module was extracted to collect: the loader's
-    default and the dataclass's still spelled the color while the creator next
-    to them used the constant, so `grep WrapMode.OVER_LOADED` did not find every
-    place the default wrap mode is decided.
-    """
-
     package = Path(__file__).resolve().parents[1] / "genaumacher"
     offenders = [
         f"{path.relative_to(package.parent).as_posix()}:{n}"

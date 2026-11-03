@@ -1,11 +1,3 @@
-"""The buttons that follow the scrubber: shift, mark in/out, and wrap.
-
-They are placed by hand in pixels rather than by a layout, because each one
-tracks a position on the scrubber rather than a slot in a row.  That is one of
-the six things `GenaumacherMainWindow` was doing; here it knows nothing about a
-`VideoState` beyond the five indices and the color it is handed.
-"""
-
 from __future__ import annotations
 
 from PyQt6.QtCore import QPoint
@@ -18,8 +10,6 @@ GAP = BUTTON_GAP
 
 
 class FloatingControlLayout:
-    """Places the shift, mark and wrap buttons against scrubber coordinates."""
-
     def __init__(self, scrubber, controls, shift_row: QWidget,
                  mark_row: QWidget, wrap_row) -> None:
         self._scrubber = scrubber
@@ -31,11 +21,6 @@ class FloatingControlLayout:
 
     def place(self, *, in_point: int, out_point: int, cursor: int,
               wrap_from: int, wrap_to: int, wrap_color: QColor) -> None:
-        """Move every floating button to where its index now is.
-
-        Does nothing before the scrubber has a width -- there is nowhere to
-        map an index to yet.
-        """
         if self._scrubber.width() <= 0:
             return
         self._place_shift(in_point, out_point)
@@ -43,11 +28,9 @@ class FloatingControlLayout:
         self._place_wrap(wrap_from, wrap_to, wrap_color)
 
     def _offset_in(self, row: QWidget) -> int:
-        """X offset of the scrubber's origin in `row`'s coordinate system."""
         return row.mapFromGlobal(self._scrubber.mapToGlobal(QPoint(0, 0))).x()
 
     def _place_shift(self, in_point: int, out_point: int) -> None:
-        """Straddling the midpoint of the in-out."""
         tl, tc = self._scrubber, self._controls
         center = self._offset_in(self._shift_row) + (
             tl.x_for_index(in_point) + tl.x_for_index(out_point)
@@ -60,7 +43,6 @@ class FloatingControlLayout:
         tc.shift_right_btn.show()
 
     def _place_marks(self, in_point: int, out_point: int, cursor: int) -> None:
-        """Straddling the cursor inside the range; split around it outside."""
         tl, tc = self._scrubber, self._controls
         offset = self._offset_in(self._mark_row)
         cursor_x = offset + tl.x_for_index(cursor)
@@ -84,7 +66,6 @@ class FloatingControlLayout:
         tc.mark_out_btn.show()
 
     def _place_wrap(self, wrap_from: int, wrap_to: int, color: QColor) -> None:
-        """Centered on the range the cursor wraps within, painted to match it."""
         tl, tc = self._scrubber, self._controls
         offset = self._offset_in(self._wrap_row)
         x1 = offset + tl.x_for_index(wrap_from)

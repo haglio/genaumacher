@@ -1,8 +1,3 @@
-"""Tests for genaumacher.loop_cursor — where the loop preview is, and how fast.
-
-The cursor is handed the clock rather than reading one, so none of this needs
-a patched `time.monotonic`.
-"""
 from __future__ import annotations
 
 from genaumacher.loop_cursor import LoopCursor
@@ -124,12 +119,6 @@ class TestChangeSpeed:
         assert cursor.speed == 1.25
 
     def test_a_running_preview_does_not_jump_when_the_speed_changes(self):
-        """Re-anchoring is what keeps the preview off a different frame.
-
-        Within one frame, not on the same one: the anchor is `now` minus a
-        division, so the elapsed time it implies can land a hair under a whole
-        frame.  Left un-anchored this case shows frame 19 instead of 14.
-        """
         cursor = LoopCursor(anchor=100.0, speed=1.0)
         assert cursor.frame_in(SEQUENCE, FPS, now=100.45) == 14
 

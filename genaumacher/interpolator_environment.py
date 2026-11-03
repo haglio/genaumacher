@@ -1,16 +1,3 @@
-"""What is wrong with this checkout's frame interpolator, if anything.
-
-``normalize_pipeline`` reaches for RIFE on every clip it normalizes
-and, finding none, falls back to its geometric seam without a word -- so
-a checkout that never ran ``tools/fetch_rife.py`` writes visibly worse clips and
-looks fine doing it.  The files are 17 MB this repo deliberately does not track,
-which makes "never fetched" the ordinary state of a fresh clone.
-
-This ran as four pytest tests gated on the interpolator, which meant the merge
-gate -- which fetches it on purpose -- enforced nothing about a machine that had
-not, and the suite stayed four skips short of green.  It belongs where failing
-is useful: on the way up, on the machine that makes the clips.
-"""
 from __future__ import annotations
 
 import shutil
@@ -27,12 +14,6 @@ _FALLBACK = "normalizing falls back to its geometric seam"
 
 
 def _find_exe() -> Path | None:
-    """The interpolator this checkout will use, or None if it has none.
-
-    The fetched copy first and whatever is on PATH second, so a machine with a
-    system-wide build still interpolates and a checkout that fetched its own is
-    not overridden by one.
-    """
     on_path = shutil.which(VENDORED_EXE.stem)
     candidates = (PROJECT_DIR / VENDORED_EXE, Path(on_path) if on_path else None)
     for candidate in candidates:
@@ -42,20 +23,12 @@ def _find_exe() -> Path | None:
 
 
 def _missing_weights(exe: Path) -> list[str]:
-    """The model files the interpolator needs and this checkout has not got.
-
-    Empty counts as absent: an interrupted extract, or a restored cache, leaves
-    a file that exists and holds nothing.
-    """
     model_dir = exe.parent / MODEL_DIR_NAME
     return [name for name in MODEL_FILES
             if not (model_dir / name).is_file() or (model_dir / name).stat().st_size == 0]
 
 
 def locate() -> tuple[Path, Path] | None:
-    """The interpolator and the models beside it, or None when normalizing has
-    to do without.  Asked before a clip is normalized, and asked again by
-    :func:`complaints` on the way up so the answer is not a surprise."""
     exe = _find_exe()
     if exe is None or _missing_weights(exe):
         return None
@@ -63,7 +36,6 @@ def locate() -> tuple[Path, Path] | None:
 
 
 def complaints() -> list[str]:
-    """What this machine's interpolator setup costs normalizing, if anything."""
     exe = _find_exe()
     if exe is None:
         return [f"there is none in this checkout, so {_FALLBACK}; {_FETCH}"]

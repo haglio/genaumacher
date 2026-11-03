@@ -26,19 +26,6 @@ def _make_textured_frame(w: int = 128, h: int = 128, seed: int = 42) -> np.ndarr
 
 @pytest.fixture
 def interpolator(tmp_path: Path, monkeypatch) -> None:
-    """A checkout that has fetched the interpolator, and a stand-in for the
-    binary: it reads the two frames the app wrote and writes a blend of them
-    where the app will look for one.
-
-    Everything either side of the process boundary therefore runs for real --
-    the PNGs written and read back, the timesteps, which frames get replaced --
-    and only the neural network is invented.  These four ran nowhere but a
-    machine that had fetched 17 MB of Windows binary and owned a Vulkan device,
-    which is neither the merge gate nor most of the machines here.  A flag the
-    real binary would reject still reds them, since the stand-in reads the same
-    five by name; that it turns them into a frame is asserted by the gate's own
-    ``python tools/fetch_rife.py --require``.
-    """
     exe = tmp_path / interpolator_environment.VENDORED_EXE
     exe.parent.mkdir(parents=True)
     exe.write_bytes(b"MZ")
@@ -76,8 +63,8 @@ class TestDecomposeComposeSimilarity:
         tx, ty, angle, scale = decompose_similarity(M, center)
         assert abs(tx - 5.5) < 1e-6
         assert abs(ty - (-3.2)) < 1e-6
-        assert abs(angle) < 1e-9        # a translation turns nothing
-        assert abs(scale - 1.0) < 1e-9  # and resizes nothing
+        assert abs(angle) < 1e-9
+        assert abs(scale - 1.0) < 1e-9
 
     def test_roundtrip_known_transform(self):
         center = (64.0, 64.0)
@@ -95,7 +82,6 @@ class TestFractionalSimilarity:
         center = (64.0, 64.0)
         M = compose_similarity(10.0, -5.0, 0.2, 1.1, center)
         M_frac = fractional_similarity(M, 0.0, center)
-        # Should be identity
         assert abs(M_frac[0, 0] - 1.0) < 1e-6
         assert abs(M_frac[1, 1] - 1.0) < 1e-6
         assert abs(M_frac[0, 1]) < 1e-6
@@ -113,14 +99,12 @@ class TestFractionalSimilarity:
         center = (64.0, 64.0)
         M = compose_similarity(10.0, 0.0, 0.0, 1.0, center)
         M_half = fractional_similarity(M, 0.5, center)
-        # For pure translation, halfway should give half the translation
         assert abs(M_half[0, 2] - 5.0) < 1e-6
 
 
 class TestEstimateAlignment:
     def test_recovers_known_shift(self):
         frame = _make_textured_frame(128, 128, seed=7)
-        # Shift by 5 pixels right and 3 pixels down
         M_shift = np.array([[1, 0, 5], [0, 1, 3]], dtype=np.float32)
         shifted = cv2.warpAffine(frame, M_shift, (128, 128), borderMode=cv2.BORDER_REFLECT)
         M = estimate_alignment(frame, shifted)
@@ -154,7 +138,6 @@ class TestBuildRegisteredSeam:
         frames = [np.full((64, 64, 3), 128, dtype=np.uint8) for _ in range(6)]
         result, ok = build_registered_seam(frames, seam_frames=2)
         assert ok is False
-        # Frames should be returned unchanged
         for orig, out in zip(frames, result, strict=True):
             np.testing.assert_array_equal(orig, out)
 
@@ -189,7 +172,6 @@ class TestRifeBridge:
         result = build_rife_bridge(frame_a, frame_b, 1)
         assert result is not None
         mid = result[0]
-        # The interpolated frame should not be identical to either endpoint
         assert not np.array_equal(mid, frame_a)
         assert not np.array_equal(mid, frame_b)
 
@@ -213,8 +195,6 @@ class TestRifeSeam:
         frames = [_make_textured_frame(128, 128, seed=i) for i in range(10)]
         result = build_rife_seam(frames, 3)
         assert result is not None
-        # Frames nearest the seam should differ from originals
         assert not np.array_equal(result[0], frames[0])
         assert not np.array_equal(result[-1], frames[-1])
-        # Middle frames should be unchanged (outside seam zone)
         assert np.array_equal(result[5], frames[5])

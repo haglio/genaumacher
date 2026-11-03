@@ -29,12 +29,6 @@ def open_the_loading_screen(preview: Preview | None):
 
 
 def _set_windows_app_user_model_id(preview: Preview | None) -> None:
-    """Claim the identity the pinned shortcut carries, and stamp the pin with it,
-    before any window exists.
-
-    Cosmetic: a window under the interpreter's icon is still a window, so a
-    refusal is logged and the launch goes on.
-    """
     if sys.platform != "win32":
         return
     try:
@@ -54,22 +48,11 @@ def _init_logger() -> logging.Logger:
 
 
 def _report_interpolator_environment(logger: logging.Logger) -> None:
-    """Say on the way up when this checkout's frame interpolator cannot be used.
-
-    Here rather than in the suite: the merge gate fetches the interpolator on
-    purpose, so a test of this could only ever pass there, while the machine
-    that makes the clips -- which may never have fetched -- got the geometric
-    seam and no word.  It lands in ``state/genaumacher.log``.
-    """
     for said in complaints():
         logger.warning("Frame interpolator: %s", said)
 
 
 def _name_this_process() -> None:
-    """Leave ``launch_genaumacher.vbs`` an interpreter that says "Genaumacher" next
-    time.  The console interpreter, because that is the one the launcher runs --
-    it redirects the app's output into its log.  Why it is one launch late, and
-    why it can never cost the launch: :meth:`ProcessNamer.name_this_process`."""
     ProcessNamer("Genaumacher", icon=PROJECT_DIR / "genaumacher.ico").name_this_process(
         "Genaumacher", interpreter="python.exe")
 
@@ -81,12 +64,10 @@ def main() -> int:
     logger = _init_logger()
     _report_interpolator_environment(logger)
     try:
-        # Local: the toolkit loads when a window is wanted, and the handler
-        # below is what turns a failure to load it into a readable message.
+        # Qt loads here, so a failure to load it reaches the handler below.
         from PyQt6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
 
         _app = QApplication.instance() or QApplication(sys.argv)
-        # Set icon early so the launcher dialog inherits it.
         _app.setWindowIcon(app_icon(genaumacher_icon_path(), preview))
         from shared_ui.loading_window import Loading, LoadingCanceled  # noqa: PLC0415
 
@@ -101,8 +82,6 @@ def main() -> int:
         if state is None:
             return 0
 
-        # Local: the editor window, and the toolkit under it, only once the
-        # launcher has said there is a session to open.
         from .gui.app import GenaumacherApp  # noqa: PLC0415
 
         genaumacher_app = GenaumacherApp(state, preview=preview)
@@ -110,8 +89,7 @@ def main() -> int:
     except Exception as exc:
         logger.exception("Genaumacher crashed")
         try:
-            # Local: this is the handler for a failure that may BE the
-            # toolkit's import, so it asks for it rather than assuming it.
+        # What failed may be the import of Qt itself.
             from PyQt6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
 
             _app = QApplication.instance() or QApplication(sys.argv)

@@ -1,11 +1,3 @@
-"""What the launcher prefills from: the suite's Main Funestra.
-
-Fun Time's `;` already pushes the video and the playhead into
-``genaumacher.create_session`` without asking genaumacher anything.  This is the pull
-side, for opening genaumacher on its own, and it reads the same two fields out of
-the same file, so the two ways of starting a session cannot disagree about what
-was playing.
-"""
 from __future__ import annotations
 
 import ast
@@ -20,8 +12,6 @@ from genaumacher.create_session import build_session_payload
 from genaumacher.main_funestra_prefill import SessionPrefill, detect_main_funestra_session_prefill
 from genaumacher.paths import PROJECT_DIR
 
-# The Main Funestra publishes `key=value` lines. Fabricated values throughout: what matters
-# is the shape, and a real one would name the library.
 _PLAYING = {
     "video": "S:/library/main/alpha clip.mp4",
     "position_ms": "72500",
@@ -48,27 +38,17 @@ class TestWhatItReads:
         assert prefill.video_file == "S:/library/main/alpha clip.mp4"
 
     def test_the_timestamp_is_the_playhead(self, tmp_path: Path):
-        """72500 ms is 00:01:12.500, and the launcher's field wants that shape."""
         prefill = detect_main_funestra_session_prefill(_status(tmp_path))
 
         assert prefill.timestamp == "00:01:12.500"
 
     def test_the_session_is_named_the_way_the_push_side_names_it(self, tmp_path: Path):
-        """Pressing `;` and opening genaumacher by hand must agree on the name.
-
-        create_session defaults it to ``sanitize_name(stem)``; anything else
-        here means the same video makes two differently-named sessions
-        depending on how the session was started.
-        """
-
         prefill = detect_main_funestra_session_prefill(_status(tmp_path))
         pushed = build_session_payload(prefill.video_file, 0.0, fps=30.0, total_frames=100)
 
         assert prefill.session_name == pushed["session_name"]
 
 class TestWhenThereIsNothingToPrefill:
-    """Every one of these is a normal state, not an error: no prefill, blank form."""
-
     def test_a_machine_that_has_not_named_the_status_file(self, monkeypatch):
         monkeypatch.setattr(main_funestra_prefill, "main_funestra_status_file", lambda: None)
 
@@ -78,7 +58,6 @@ class TestWhenThereIsNothingToPrefill:
         assert detect_main_funestra_session_prefill(tmp_path / "main_player_status.txt") is None
 
     def test_the_main_funestra_is_running_with_nothing_playing(self, tmp_path: Path):
-        """The empty `video` is the Main Funestra's own way of saying so, and what `;` checks."""
         assert detect_main_funestra_session_prefill(_status(tmp_path, video="")) is None
 
     def test_a_status_file_caught_mid_write(self, tmp_path: Path):
@@ -88,7 +67,6 @@ class TestWhenThereIsNothingToPrefill:
         assert detect_main_funestra_session_prefill(path) is None
 
     def test_a_playhead_that_is_not_a_number(self, tmp_path: Path):
-        """Rather than lose the video over it, the session starts at zero."""
         prefill = detect_main_funestra_session_prefill(_status(tmp_path, position_ms="  "))
 
         assert prefill.timestamp == "00:00:00.000"
@@ -98,25 +76,8 @@ class TestWhenThereIsNothingToPrefill:
 
 
 class TestTheContractWithTheMainFunestra:
-    """The two field names genaumacher depends on, checked against their producer.
-
-    The Main Funestra publishes these; fun_time and genaumacher both read them. This is the check
-    that fires by itself on a machine that has the fun_time checkout, so a rename
-    on the Main Funestra's side reds genaumacher's suite instead of quietly emptying the launcher.
-    """
-
     @staticmethod
     def _status_sources() -> list[Path]:
-        """The two files the Main Funestra's status lines come from, beside the
-        primary checkout: ``funestra``'s ``status.py`` (in a folder still named
-        ``player_core`` on a machine that has not moved it) for the lines every
-        Funestra publishes, and ``fun_time/main_funestra/status.py`` for the Main
-        Funestra's own on top of them.  Empty where the checkouts are not there.
-
-        Resolved through the primary rather than from here, because everything
-        runs in a worktree and a worktree's neighbors are other worktrees.
-        """
-
         siblings = primary_checkout_of(PROJECT_DIR).parent
         sources = (siblings / "funestra" / "funestra" / "status.py",
                    siblings / "player_core" / "funestra" / "status.py",
@@ -125,11 +86,6 @@ class TestTheContractWithTheMainFunestra:
 
     @staticmethod
     def _keys_genaumacher_reads() -> set[str]:
-        """Every field name the reader asks the status file for, off its own tree.
-
-        Read rather than declared, so there is no second list of these names to
-        fall out of step with the ``values.get`` calls that are the real ones.
-        """
         source = inspect.getsource(main_funestra_prefill.detect_main_funestra_session_prefill)
         tree = ast.parse(textwrap.dedent(source))
         return {
@@ -145,7 +101,6 @@ class TestTheContractWithTheMainFunestra:
 
     @staticmethod
     def _keys_the_main_funestra_publishes(source: Path) -> set[str]:
-        """The dict keys ``status_fields`` returns, off its syntax tree."""
         tree = ast.parse(source.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef) and node.name == "status_fields":
@@ -159,9 +114,6 @@ class TestTheContractWithTheMainFunestra:
         return set()
 
     def test_the_main_funestra_still_publishes_both_fields_genaumacher_reads(self):
-        """Asserted, not skipped, when genau is absent: a checkout without the
-        sibling has nothing to disagree with, and saying so in the assertion
-        keeps this a test that always runs and always means something."""
         wanted = self._keys_genaumacher_reads()
         sources = self._status_sources()
         published = set().union(*map(self._keys_the_main_funestra_publishes, sources)) if sources else wanted
@@ -172,7 +124,6 @@ class TestTheContractWithTheMainFunestra:
         assert wanted <= published, uncovered
 
     def test_the_prefill_reads_a_payload_the_main_funestra_itself_produced(self, tmp_path: Path):
-        """Not a fixture in our own shape: the writer's key set, whatever it holds."""
         sources = self._status_sources()
         keys = set().union(*map(self._keys_the_main_funestra_publishes, sources)) if sources else set(_PLAYING)
         payload = {key: _PLAYING.get(key, "0") for key in sorted(keys)}

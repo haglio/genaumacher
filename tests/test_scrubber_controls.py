@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.scrubber_controls — scrubber manipulation buttons."""
-
 from __future__ import annotations
 
 import pytest
@@ -12,9 +10,6 @@ def ctl():
     return ScrubberControls()
 
 
-# Every button on the row and the signal it must emit. Ten copies of the same
-# three lines before; a button added without a row here is a button whose wiring
-# nothing checks.
 _BUTTONS = [
     ("extend_left", "extend_left_btn", "extend_left_clicked"),
     ("contract_left", "contract_left_btn", "contract_left_clicked"),
@@ -47,7 +42,6 @@ class TestSignals:
         [pytest.param(b, sig, id=label) for label, b, sig in _BUTTONS],
     )
     def test_no_other_button_emits_it(self, ctl, button, signal):
-        """A signal wired to two buttons would pass the test above twice over."""
         fired = []
         getattr(ctl, signal).connect(lambda: fired.append(1))
 

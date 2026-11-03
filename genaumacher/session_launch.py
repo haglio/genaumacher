@@ -29,10 +29,9 @@ def _load_state_from_session_file(session_path: Path) -> VideoState:
 
 
 def build_clip_whole_state(video_file: str) -> VideoState:
-    """Build a lightweight VideoState for whole-video export (no frame loading)."""
     fps, total_frames = ffprobe_video_metadata(video_file)
     session_name = sanitize_name(Path(video_file).stem)
-    end_idx = total_frames - 2  # drop duplicate last frame
+    end_idx = total_frames - 2
     cap = cv2.VideoCapture(video_file)
     return VideoState(
         cap=cap,
@@ -56,7 +55,6 @@ def build_clip_whole_state(video_file: str) -> VideoState:
 
 
 def build_state(choice: LoadSession | NewSession) -> VideoState:
-    """Open what the launcher was asked for, and remember it for next time."""
     if isinstance(choice, LoadSession):
         session_path = Path(choice.session_json)
     else:
@@ -74,9 +72,7 @@ def build_state(choice: LoadSession | NewSession) -> VideoState:
 
 
 def _run_clip_whole_export(video_file: str) -> None:
-    """Run the export pipeline for a whole video (no editor UI)."""
-    # Local: both are Qt, and genaumacher.app imports this module before it has
-    # decided whether a window is wanted at all.
+    # Qt: genaumacher.app imports this module before it knows a window is wanted.
     from .gui.export_dialog import ExportDialog  # noqa: PLC0415
     from .gui.export_worker import connect_export  # noqa: PLC0415
 
@@ -90,15 +86,6 @@ def _run_clip_whole_export(video_file: str) -> None:
 
 
 def launch_state() -> VideoState | None:
-    """The session the user chose, or None if there is no editor to open.
-
-    None covers both of the two ways that happens -- the launcher was
-    canceled, or a whole video was exported without an editor.  Cancel used to
-    raise `SystemExit(0)` out of a function annotated `-> VideoState | None`,
-    so it had three outcomes and its type said two, and `app.main` carried an
-    `except SystemExit: raise` for it that never did anything (SystemExit is
-    not an Exception, so it was never being caught).
-    """
     ensure_runtime_dirs()
     last_session = LAST_SESSION_FILE.read_text(encoding="utf-8").strip() if LAST_SESSION_FILE.exists() else ""
     dialog = LauncherDialog(last_session=last_session)

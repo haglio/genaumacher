@@ -1,5 +1,3 @@
-"""Reading and writing the session file, and the format it is written in."""
-
 from __future__ import annotations
 
 import json
@@ -17,12 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 def safe_atomic_write_json(path: Path, payload: dict[str, Any]) -> tuple[bool, str]:
-    """Write `payload` to `path` whole, and say whether it landed.
-
-    The autosave warning the user sees is built from nothing but this return
-    value, so a failure reported as a success is a session that silently stops
-    being written. A sessions folder that has moved is a failure, never made again.
-    """
     if not path.parent.is_dir():
         return False, f"{path.parent} is not there, so {path.name} was not saved"
     try:
@@ -44,9 +36,6 @@ def read_json(path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
-#: Which shape a session file is.  Evolver rewrites only a version it was
-#: written for, so this number going up is how a change here reaches it as a
-#: refusal rather than as a wrong rewrite.
 SESSION_FORMAT_VERSION = 1
 
 
@@ -67,20 +56,6 @@ def session_payload(
     speed: float,
     vr: bool,
 ) -> dict:
-    """The on-disk session format, in one place.
-
-    It was three hand-written dict literals -- one that creates a session, one
-    that rewrites it on every edit, and one in the state factory that had
-    already drifted (fourteen keys, no `vr`).  Evolver enumerates this
-    directory and rewrites `video_path` in it, so the key set and its order are
-    a contract with another repo, not an implementation detail.
-
-    Four of these keys are that repo's and not ours to rename quietly:
-    `version` says which shape it is reading, `video_path` is the reference it
-    repoints when it moves a video, and `fps` with `total_frames` are how it
-    recognizes the same footage under a name it no longer has.
-    `tests/test_genaumacher_session_persistence.py` holds all four.
-    """
     return {
         "version": SESSION_FORMAT_VERSION,
         "session_name": session_name,
@@ -101,7 +76,6 @@ def session_payload(
 
 
 def current_payload(state) -> dict:
-    """The session as it stands now, ready to be written back."""
     return session_payload(
         session_name=state.session_name,
         video_path=state.path,

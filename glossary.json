@@ -133,7 +133,7 @@
       "thing": "words the code uses for things no screen shows or names, each its own meaning",
       "screen": null,
       "his_word": null,
-      "code_today": ["sheet", "map", "strip", "slot", "banner", "console"],
+      "code_today": ["sheet", "map", "strip", "banner", "console"],
       "code_word": null,
       "status": "kept"
     }

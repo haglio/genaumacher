@@ -41,20 +41,12 @@ class TestNormalizeLoopMode:
 
 
 class TestTheDefaultsHaveOneHome:
-    """The record holds them; the parser reads them off it.
-
-    A default written in the parser and again in the pipeline's getattr
-    fallback is two places to change it, and the two would have gone apart the
-    first time either moved.
-    """
-
     def test_a_command_line_with_no_flags_is_the_records_own_defaults(self):
         parsed = parse_options(["clip in.mp4", "-o", "clip out.mp4"])
 
         assert parsed == NormalizeOptions(input="clip in.mp4", output="clip out.mp4")
 
     def test_every_flag_the_parser_takes_reaches_the_pipeline(self):
-        """A flag the record has no field for cannot be constructed at all."""
         parsed = parse_options([
             "clip in.mp4", "-o", "clip out.mp4", "--loop-mode", "base-tip",
             "--bridge-ms", "120", "--bridge-frames", "4", "--mode", "flow",
@@ -71,7 +63,6 @@ class TestTheDefaultsHaveOneHome:
         )
 
     def test_the_help_text_quotes_the_default_rather_than_repeating_it(self, capsys):
-        """--seam-ms's stated default is the record's, not a third copy."""
         with pytest.raises(SystemExit):
             parse_options(["--help"])
 
@@ -95,12 +86,6 @@ def test_the_normalize_command_runs_as_a_script():
 
 @pytest.fixture
 def cli_run(tmp_path, frames_of, capsys):
-    """One real invocation of the script, and what it printed.
-
-    ffmpeg and the decoder are stubbed; everything between them -- argument
-    parsing, loop normalization, the bridge, the size loop, the progress it
-    reports and the summary the user reads -- runs for real.
-    """
     output = tmp_path / "cli_out.mp4"
 
     def fake_encode(frames, fps, out_path, *args, **kwargs):
@@ -127,9 +112,6 @@ def cli_run(tmp_path, frames_of, capsys):
 
 
 def test_the_cli_says_how_far_it_has_got_as_it_goes(cli_run):
-    """The caller drives this as a subprocess and reads these lines to move a
-    bar it used to invent; a person running it by hand sees them too.
-    """
     printed = cli_run()
 
     said = [fraction_in(line) for line in printed.splitlines()]

@@ -1,15 +1,3 @@
-"""The session file evolver rewrites, loaded and saved back byte for byte.
-
-``VideoState``'s field names *are* the version-1 session-JSON keys, and
-``evolver/util/reference_stores.py`` enumerates this directory and rewrites
-``video_path`` in place.  So every extraction out of ``VideoState`` has to go
-through the payload builder and leave the file alone: same keys, same order,
-same spellings, same trailing newline.
-
-The golden text below is a literal, not something the code produced -- a test
-that compares the app's output against the app's own output cannot see the two
-drifting together.
-"""
 from __future__ import annotations
 
 import json
@@ -29,8 +17,6 @@ from genaumacher.launch_choice import LoadSession
 from genaumacher.session_launch import build_state
 from genaumacher.session_persistence import current_payload
 
-# A fabricated session, in the byte layout safe_atomic_write_json produces:
-# json.dump(payload, indent=2) followed by one newline.
 GOLDEN_SESSION = """{
   "version": 1,
   "session_name": "beta rehearsal",
@@ -52,12 +38,6 @@ GOLDEN_SESSION = """{
 
 
 class _StubCapture:
-    """The slice of cv2.VideoCapture the session loader reaches for.
-
-    Wider than conftest's ``_FakeCapture``: ``load_video_state`` asks the
-    capture for its own fps and frame count before it reads a frame.
-    """
-
     def __init__(self, fps: float, total_frames: int):
         self._fps = fps
         self._total = total_frames
@@ -67,7 +47,6 @@ class _StubCapture:
         return True
 
     def get(self, prop):
-
         return {cv2.CAP_PROP_FPS: self._fps,
                 cv2.CAP_PROP_FRAME_COUNT: float(self._total)}[prop]
 
@@ -94,8 +73,6 @@ def session_file(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def load_session(session_file):
-    """Open the golden session through the launcher's own load path."""
-
     def load():
         golden = json.loads(GOLDEN_SESSION)
         capture = _StubCapture(golden["fps"], golden["total_frames"])
@@ -106,14 +83,6 @@ def load_session(session_file):
 
 
 def test_the_two_writers_of_this_format_agree_on_it(make_state):
-    """One builder makes the file, another rewrites it on every edit.
-
-    They were two hand-written dict literals with no test comparing them, and
-    a third copy had already drifted -- `state_factory`'s, which omitted `vr`,
-    the key that decides which directory the clip is exported to.  An added key
-    or a moved one now has to be made in both, or this fails.
-    """
-
     created = build_session_payload(
         "D:/media/example/beta rehearsal.mp4", 2.0, 30.0, 480,
         session_name="beta rehearsal", seconds=5.0, loop_mode="base-tip", vr=True,
@@ -132,10 +101,8 @@ def test_a_session_file_survives_a_load_and_a_save_byte_for_byte(session_file, l
 
 
 def test_an_edit_rewrites_the_values_and_nothing_else(session_file, load_session):
-    """An edited session keeps every key, in order -- only the values move."""
-
     state = load_session()
-    set_mark_in(state)  # current (120) becomes the new in_point (was 90)
+    set_mark_in(state)
 
     saved = json.loads(session_file.read_text(encoding="utf-8"))
     golden = json.loads(GOLDEN_SESSION)
@@ -151,7 +118,7 @@ def test_closing_an_edited_session_asks_nothing_and_loses_nothing(load_session):
     state = load_session()
     window = GenaumacherMainWindow(state)
     window.show()
-    set_mark_in(state)  # current (120) becomes the new in_point (was 90)
+    set_mark_in(state)
 
     boxes_it_put_up: list[str] = []
 

@@ -1,5 +1,3 @@
-"""Scrubber manipulation buttons — extend, contract, shift, mark, wrap, loop mode."""
-
 from __future__ import annotations
 
 from PyQt6.QtCore import pyqtSignal
@@ -9,8 +7,6 @@ from genaumacher.loop_modes import LoopMode
 
 
 class ScrubberControls(QWidget):
-    """Collection of buttons for manipulating scrubber bounds and marks."""
-
     extend_left_clicked = pyqtSignal()
     contract_left_clicked = pyqtSignal()
     extend_right_clicked = pyqtSignal()
@@ -25,25 +21,20 @@ class ScrubberControls(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
-        # Bound adjustment buttons
         self.extend_left_btn = QPushButton("<")
         self.contract_left_btn = QPushButton(">")
         self.contract_right_btn = QPushButton("<")
         self.extend_right_btn = QPushButton(">")
 
-        # Shift buttons
         self.shift_left_btn = QPushButton("<")
         self.shift_right_btn = QPushButton(">")
 
-        # Mark buttons
         self.mark_in_btn = QPushButton("[")
         self.mark_out_btn = QPushButton("]")
 
-        # Wrap and loop mode
         self.wrap_btn = QPushButton("wrap")
         self.loop_mode_btn = QPushButton("base-tip-base")
 
-        # Wire signals
         self.extend_left_btn.clicked.connect(self.extend_left_clicked)
         self.contract_left_btn.clicked.connect(self.contract_left_clicked)
         self.extend_right_btn.clicked.connect(self.extend_right_clicked)
@@ -55,7 +46,6 @@ class ScrubberControls(QWidget):
         self.wrap_btn.clicked.connect(self.wrap_clicked)
         self.loop_mode_btn.clicked.connect(self.loop_mode_clicked)
 
-        # Layout
         bounds_row = QHBoxLayout()
         bounds_row.addWidget(self.extend_left_btn)
         bounds_row.addWidget(self.contract_left_btn)

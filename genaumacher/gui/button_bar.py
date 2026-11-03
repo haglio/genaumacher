@@ -1,5 +1,3 @@
-"""Transport control buttons — speed, play/pause, export."""
-
 from __future__ import annotations
 
 from PyQt6.QtCore import pyqtSignal
@@ -8,13 +6,10 @@ from shared_ui.colors import TEXT_PRIMARY
 from shared_ui.icon_button import fill_square_with_icon
 from shared_ui.icons import qt_icon
 
-# The chrome's own text color, so a symbol on a button matches the label beside it.
 _ICON_COLOR = TEXT_PRIMARY
 
 
 class ButtonBar(QWidget):
-    """Horizontal row of transport control buttons."""
-
     speed_down_clicked = pyqtSignal()
     speed_up_clicked = pyqtSignal()
     play_pause_clicked = pyqtSignal()
@@ -23,8 +18,6 @@ class ButtonBar(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
-        # The family's own transport marks: Fun Time's bar and Evolver's Run Now
-        # draw these same two, and all three apps are open together.
         self._icon_play = qt_icon("play", color=_ICON_COLOR)
         self._icon_pause = qt_icon("pause", color=_ICON_COLOR)
 

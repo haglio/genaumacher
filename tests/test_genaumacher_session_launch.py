@@ -1,13 +1,3 @@
-"""How the launcher's answer becomes a VideoState.
-
-The three cases below used to patch `parse_timestamp` (pure string arithmetic),
-`read_json`, `create_session` and `load_video_state` -- the function the caller
-exists to call -- and then assert `create_session` had been handed a particular
-argument tuple. That pins the call, not the session: it stays green if the
-session written is wrong, and it goes red on an argument reshuffle that changes
-nothing. Here only ffprobe and the decoder are stubbed; the JSON is written and
-read back for real.
-"""
 from __future__ import annotations
 
 import json
@@ -30,7 +20,6 @@ from genaumacher.session_launch import build_clip_whole_state, build_state, laun
 
 @pytest.fixture
 def library(tmp_path: Path, monkeypatch):
-    """A sessions folder, a stubbed ffprobe and a decoder that answers."""
     sessions = tmp_path / "sessions"
     sessions.mkdir()
     pointer = tmp_path / ".last_session.txt"
@@ -132,8 +121,8 @@ class TestCreatingANewSession:
         state = build_state(self._new())
 
         written = json.loads((library.sessions / "second pass.json").read_text(encoding="utf-8"))
-        assert written["active_start"] == 375  # 12.5s at 30fps
-        assert written["active_end"] == 524  # plus five seconds, inclusive
+        assert written["active_start"] == 375
+        assert written["active_end"] == 524
         assert written["loop_mode"] == "tip-base"
         assert written["vr"] is False
         assert (state.in_point, state.out_point) == (375, 524)
@@ -168,8 +157,6 @@ class TestCreatingANewSession:
 
 
 class TestBuildClipWholeState:
-    """The lightweight state backing "Clip whole vid...": no frames, no editor."""
-
     @pytest.fixture
     def whole(self):
         with patch("genaumacher.session_launch.ffprobe_video_metadata", return_value=(30.0, 300)), \
@@ -200,9 +187,8 @@ class TestBuildClipWholeState:
 
 
 def test_a_canceled_launcher_gives_no_state_to_open():
-    """Cancel used to raise `SystemExit(0)` out of a `-> VideoState | None`."""
     mock_dialog = MagicMock()
-    mock_dialog.exec.return_value = 0  # QDialog.DialogCode.Rejected
+    mock_dialog.exec.return_value = 0
 
     with patch("genaumacher.session_launch.ensure_runtime_dirs"), \
          patch("genaumacher.session_launch.LAST_SESSION_FILE", MagicMock(exists=MagicMock(return_value=False))), \
@@ -213,7 +199,7 @@ def test_a_canceled_launcher_gives_no_state_to_open():
 
 def test_choosing_a_whole_video_exports_it_and_opens_no_editor():
     mock_dialog = MagicMock()
-    mock_dialog.exec.return_value = 1  # Accepted
+    mock_dialog.exec.return_value = 1
     mock_dialog.build_result.return_value = ClipWholeVideo(video_file="/path/to/loop.mp4")
 
     with patch("genaumacher.session_launch.ensure_runtime_dirs"), \
@@ -229,7 +215,7 @@ def test_choosing_a_whole_video_exports_it_and_opens_no_editor():
 
 def test_launch_state_builds_state_from_launcher_info():
     mock_dialog = MagicMock()
-    mock_dialog.exec.return_value = 1  # QDialog.DialogCode.Accepted
+    mock_dialog.exec.return_value = 1
     chosen = LoadSession(session_json="/sessions/seaside walk.json")
     mock_dialog.build_result.return_value = chosen
     built_state = object()

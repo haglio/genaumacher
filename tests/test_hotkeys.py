@@ -1,8 +1,3 @@
-"""Tests for genaumacher.gui.hotkeys — the one keymap.
-
-It was written out four times in three modules and the copies had drifted; the
-tests here are the guards that stop that happening again.
-"""
 from __future__ import annotations
 
 import pytest
@@ -36,20 +31,17 @@ class TestTheTableIsWellFormed:
             assert hotkey.keys or hotkey.qt_keys, hotkey.name
 
     def test_every_printed_keycap_is_a_key_that_reaches_the_action(self):
-        """The hotkey reference cannot advertise a key the handler does not accept."""
         for hotkey in HOTKEYS:
             for keycap in hotkey.keycaps:
                 assert keycap in hotkey.keys or keycap in _named_codes(hotkey), hotkey.name
 
 
 def _named_codes(hotkey) -> set[str]:
-    """Keycaps for the keys that carry no text: `left`, `space`, `enter`."""
     return {code.name.removeprefix("Key_").lower() for code in hotkey.qt_keys}
 
 
 class TestTheLegendComesFromTheTable:
     def test_every_shortcut_appears_in_exactly_one_legend_entry(self):
-        """The drift this closes: `q` was bound and the hotkey reference never said so."""
         listed = [name for row in HOTKEY_REFERENCE_ROWS for names, _, _ in row for name in names]
 
         assert sorted(listed) == sorted(s.name for s in HOTKEYS)
@@ -92,7 +84,6 @@ class TestLookup:
         assert found.name == name
 
     def test_a_key_code_finds_its_shortcut(self):
-
         found = hotkey_for(Qt.Key.Key_Left, "")
 
         assert found is not None

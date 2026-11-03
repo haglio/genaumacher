@@ -1,11 +1,3 @@
-"""Tests for genaumacher.gui.export_worker — the QThread that runs an export.
-
-What the export itself does -- the order of the steps, where each output lands,
-what a failed one means -- is `tests/test_export_pipeline.py`, which drives it
-with no thread and no window.  What is left here is the worker's own job: run
-that off the Qt thread and turn what it answers into signals.
-"""
-
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -26,10 +18,6 @@ def state(make_state):
 
 
 class _Step:
-    """A stand-in for an export step: reports progress the way the real step
-    does, and answers that it worked.
-    """
-
     def __init__(self, *, stage: str, reports: str):
         self.stage_text = stage
         self.reports = reports
@@ -43,8 +31,6 @@ class _Step:
 
 @pytest.fixture
 def steps(library):
-    """The three export steps, stubbed at the module they are called through,
-    exporting into a library of the test's own."""
     with patch("genaumacher.export_steps.export_raw_clip",
                _Step(stage="clipping", reports="clip")), \
          patch("genaumacher.export_steps.run_normalize",
@@ -55,7 +41,6 @@ def steps(library):
 
 
 def _recorded(worker: ExportWorker) -> dict[str, list]:
-    """Connect every signal the worker declares and collect what arrives."""
     seen: dict[str, list] = {}
     for name in ("stage_changed", "clip_progress", "normalize_progress",
                  "audio_progress", "export_finished"):
@@ -67,20 +52,12 @@ def _recorded(worker: ExportWorker) -> dict[str, list]:
 
 
 class TestSignals:
-    """Every signal is connected and emitted during a run.
-
-    The old test asserted the five names were keys of `ExportWorker.__dict__`,
-    which a declaration satisfies and a run that never emits also satisfies.
-    """
-
     def test_a_run_emits_every_signal_the_worker_declares(self, state, steps):
         worker = ExportWorker(state)
         seen = _recorded(worker)
 
         worker.run()
 
-        # A run starts every bar from zero, so each progress signal carries
-        # 0.0 and then the 1.0 its step reports.
         assert seen["stage_changed"] == [
             "preparing export", "clipping", "normalizing", "pulling audio",
         ]
@@ -91,8 +68,6 @@ class TestSignals:
 
 
 class TestWhatTheRunAnswers:
-    """The worker's whole job at the end: say what the export said."""
-
     @pytest.mark.parametrize("answer", [
         (True, "Done: clip.mp4"),
         (False, "ffmpeg not found on PATH"),
@@ -109,18 +84,10 @@ class TestWhatTheRunAnswers:
 
 
 class TestConnectExport:
-    """One wiring, shared by the window and the whole-video path that has none.
-
-    The nine lines were written out twice, lambda included; a signal wired in
-    one copy and forgotten in the other would have shown as a progress bar that
-    never moved on one route only.
-    """
-
     def test_every_signal_the_worker_emits_reaches_the_dialog(self, state, steps):
-
         dialog = ExportDialog()
         worker = connect_export(state, dialog)
 
-        worker.run()  # in this thread, so the queued signals are direct
+        worker.run()
 
         assert dialog.stage_label.text() == "Export complete."

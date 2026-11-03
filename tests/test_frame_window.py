@@ -1,4 +1,3 @@
-"""Tests for genaumacher.frame_window — the loaded stretch and the cursor in it."""
 from __future__ import annotations
 
 from genaumacher.frame_window import FrameWindow
@@ -20,8 +19,6 @@ class TestCount:
 
 
 class TestHoldWithin:
-    """The cursor is pulled back into whatever range it is told to stay in."""
-
     def test_a_cursor_below_the_range_is_pulled_up_to_the_floor(self):
         window = _window(cursor=5)
 
@@ -45,8 +42,6 @@ class TestHoldWithin:
 
 
 class TestContractLeft:
-    """One step off the left, never eating into the in-out."""
-
     def test_it_takes_one_step_off_the_left(self):
         window = _window(left_bound=10, base_step=5)
 
@@ -74,8 +69,6 @@ class TestContractLeft:
 
 
 class TestContractRight:
-    """The mirror of the left contraction."""
-
     def test_it_takes_one_step_off_the_right(self):
         window = _window(right_bound=99, base_step=5)
 
@@ -97,8 +90,6 @@ class TestContractRight:
 
 
 class TestStepOut:
-    """Where one step further out would land, stopped by the video's own ends."""
-
     def test_a_step_out_to_the_left_is_one_base_step(self):
         assert _window(left_bound=20, base_step=5).step_out_left() == 15
 
@@ -113,12 +104,6 @@ class TestStepOut:
 
 
 class TestWiden:
-    """The two writes the frame loader makes once the frames are actually in.
-
-    They only ever widen: a loader that came back with less than it was asked
-    for cannot narrow the window out from under the cursor.
-    """
-
     def test_it_moves_the_left_edge_out(self):
         window = _window(left_bound=20)
 
@@ -149,21 +134,11 @@ class TestWiden:
 
 
 class TestTheEdgeIsOnlyEverWidenedToAFrame:
-    """No move can put the edge past a frame nothing decoded: the
-    only way the right edge moves out is `widen_right_to`, called with the
-    last frame the loader produced."""
-
     def test_nothing_reaches_the_edge_to_a_bare_number(self):
         assert not hasattr(_window(right_bound=60), "reach_right_to")
 
 
 class TestStepCursor:
-    """One frame at a time, wrapping round the ends of the range it is given.
-
-    The range is not always the loaded one -- in the active wrap mode the
-    cursor is confined to the clip -- so both ends are passed in.
-    """
-
     def test_stepping_back_moves_one_frame(self):
         window = _window(cursor=30)
 

@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.playback_timer — QTimer-driven playback loop."""
-
 from __future__ import annotations
 
 import pytest
@@ -14,13 +12,6 @@ def timer():
 
 
 class TestTicking:
-    """The whole animation loop hangs off this signal.
-
-    Its old test connected a slot, disconnected it and asserted nothing, and
-    start/stop were read off the private QTimer -- so a timer that never fired,
-    or whose interval had grown to five seconds, passed either way.
-    """
-
     def test_a_new_timer_does_not_tick(self, timer, ticked_within):
         assert ticked_within(timer.tick, 100) is False
 
@@ -36,7 +27,7 @@ class TestTicking:
         assert ticked_within(timer.tick, 2000) is True
 
         timer.stop()
-        QApplication.processEvents()  # drain a tick already on its way
+        QApplication.processEvents()
 
         assert ticked_within(timer.tick, 100) is False
 

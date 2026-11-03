@@ -24,19 +24,13 @@ logger = logging.getLogger(__name__)
 NORMALIZE_METHOD = "clip_postprocess"
 NORMALIZE_VERSION = "1"
 
-# How far along each finished step leaves the run. Coarse, and true at the
-# moment it is said: the step it names has completed. Finer would mean knowing
-# the total work, which nothing here does -- and a bar invented to look finer
-# than that is what these replaced. The values are roughly what decoding and
-# building the frames cost against the encode, on a clip the length genaumacher
-# exports. Nothing says 1.0: returning is what says the run is over.
 _DECODED = 0.2
 _FRAMES_BUILT = 0.6
 _SHORTEST_CLIP = 3
 
 
 def _nobody_listening(_fraction: float) -> None:
-    """What the progress goes to when the run was started by hand."""
+    pass
 
 
 def compute_bridge_frames(*, fps: float, bridge_ms: float, bridge_frames: int | None, normalized_frame_count: int) -> int:
@@ -55,11 +49,6 @@ def compute_seam_frames(*, fps: float, seam_ms: float, normalized_frame_count: i
 
 
 def _softly_blended(work_frames: list, symmetric_blend: int, normalized_n: int) -> list:
-    """Pull the first and last frames toward each other, if --symmetric-blend asked.
-
-    The width is the flag, capped at a quarter of the clip.  Both bridge paths
-    below reach this, which is why it is not written out twice.
-    """
     if symmetric_blend <= 0:
         return work_frames
     blend_frames = min(symmetric_blend, max(1, normalized_n // 4))
@@ -67,7 +56,6 @@ def _softly_blended(work_frames: list, symmetric_blend: int, normalized_n: int) 
 
 
 def _with_bridge(work_frames: list, bridge: list, bridge_frames: int, keep_length: bool) -> list:
-    """The clip with the bridge on the end: in place of the tail, or after it."""
     if not keep_length:
         return work_frames + bridge
     if bridge_frames >= len(work_frames):
@@ -83,12 +71,6 @@ def _registered_seam(
     symmetric_blend: int,
     seam_frames: int,
 ) -> list | None:
-    """The finished clip a keypoint-aligned seam gives, or None when the ends
-    could not be aligned and the caller should bridge them instead.
-
-    ``build_registered_seam`` hands the frames straight back when it cannot
-    align them, so the caller's list is untouched on the None.
-    """
     normalized_n = len(work_frames)
     seam_region = min(
         symmetric_blend if symmetric_blend > 0 else max(1, normalized_n // 3),
@@ -99,15 +81,12 @@ def _registered_seam(
         return None
 
     if seam_frames > 0:
-        # Nudge the frames either side of the seam together; where that
-        # converges it handles the transition and no bridge is wanted.
         converged = build_rife_seam(registered, seam_frames)
         if converged is not None:
             return list(converged)
 
     rife_bridge = build_rife_bridge(registered[-1], registered[0], bridge_frames)
     if rife_bridge is None:
-        # No interpolator on this machine: the geometric correction stands alone.
         return list(registered)
     return _with_bridge(registered, rife_bridge, bridge_frames, keep_length)
 
@@ -137,9 +116,6 @@ def build_output_frames(
             return registered, normalized_n
         bridge_mode = "flow"
     else:
-        # seam_frames is not read here: --seam-ms drives RIFE seam convergence,
-        # which only the register path runs.  The blend width comes from
-        # --symmetric-blend, and reusing the parameter's name for it hid that.
         bridge_mode = mode
 
     work_frames = _softly_blended(work_frames, symmetric_blend, normalized_n)

@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.app — application wiring."""
-
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -55,8 +53,6 @@ class TestConstruction:
         assert app.window.session_label.text() == mock_state.session_name
 
     def test_the_application_wears_the_familys_palette_under_its_sheet(self, mock_state):
-        # What the sheet does not paint -- a selection's highlight first --
-        # comes from the palette, which was Windows' own until this.
         palette_before = QApplication.instance().palette()
         try:
             GenaumacherApp(mock_state)
@@ -78,7 +74,6 @@ class TestConstruction:
         assert app.window.windowTitle() == "Genaumacher — preview of the new loop"
 
 
-# The state _on_tick is driven against: a real one, with frames it can decode.
 _TICK_STATE = {
     "total_frames": 100, "left_bound": 10, "right_bound": 60,
     "in_point": 20, "out_point": 40, "cursor": 33, "base_step": 5,
@@ -88,7 +83,6 @@ _TICK_STATE = {
 
 @pytest.fixture
 def live_app(make_state):
-    """A GenaumacherApp over a real VideoState, with visible frames to draw."""
     state = make_state(**_TICK_STATE)
     for idx in state.frames:
         state.frames[idx] = np.full((8, 8, 3), 200, dtype=np.uint8)
@@ -108,13 +102,6 @@ def _is_blank(pane, rendered) -> bool:
 
 
 class TestOnTick:
-    """The whole visible application, sixty times a second.
-
-    Nothing exercised it: making it feed the scrubber zeros instead of reading
-    the state left the whole suite at baseline, and gui/app.py sat at 30%
-    covered with 51 of its 73 statements never run.
-    """
-
     def test_it_hands_the_scrubber_the_state_it_is_looking_at(self, live_app):
         state = live_app._state
 
@@ -158,7 +145,6 @@ class TestOnTick:
     def test_it_writes_the_cursor_position_and_timestamp(self, live_app):
         live_app._on_tick()
 
-        # frame 33 is the 23rd of the 51 loaded, at 25 fps
         assert live_app.window.cursor_label.text() == "cursor: 23/50 @ 00:00:01.320"
 
     def test_it_writes_the_loop_length_and_the_speed(self, live_app):
@@ -191,12 +177,6 @@ class TestOnTick:
         assert live_app.window.scrubber_controls.loop_mode_btn.text() == "tip-base"
 
     def test_a_frame_that_cannot_be_decoded_does_not_stop_the_rest(self, live_app, rendered):
-        """The panes go without, but the scrubber and labels still update.
-
-        Patched where the window binds it, not where it is defined: the window
-        imports the name at module level, so patching `genaumacher.frame_store`
-        would leave this test drawing real frames and asserting nothing.
-        """
         with patch("genaumacher.gui.main_window.safe_frame", side_effect=KeyError("gone")):
             live_app._on_tick()
 
@@ -228,20 +208,12 @@ class TestRun:
         assert ticked_within(live_app.playback_timer.tick, 2000) is True
 
         live_app.window.close()
-        QApplication.processEvents()  # drain a tick already on its way
+        QApplication.processEvents()
 
         assert ticked_within(live_app.playback_timer.tick, 200) is False
 
 
 def test_a_frame_the_decoder_will_not_give_up_does_not_take_the_window_with_it(live_app, rendered):
-    """`safe_frame` raises RuntimeError, which the tick used not to catch.
-
-    The docstring on `_draw_frames` already said a frame that will not decode
-    costs its pane and nothing else, but the catch listed only KeyError and
-    IndexError -- and the one exception `safe_frame` actually raises is
-    RuntimeError. A truncated video reaches it through `extend_right`, and an
-    exception out of a Qt slot aborts the process rather than being reported.
-    """
     with patch("genaumacher.gui.main_window.safe_frame",
                side_effect=RuntimeError("Could not load frame 211")):
         live_app._on_tick()

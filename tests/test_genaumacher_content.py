@@ -1,4 +1,3 @@
-"""The content overlay: this machine's own file when it has one, else the committed example."""
 from __future__ import annotations
 
 import json
@@ -11,7 +10,6 @@ _EXAMPLES = "C:/path/to/main_player_status.txt"
 
 
 def _overlay(tmp_path: Path) -> tuple[Path, Path]:
-    """A local overlay and the committed example beside it, both fabricated."""
     local = tmp_path / "content.local.json"
     local.write_text(json.dumps({"main_player_status_file": _OURS}), encoding="utf-8")
     example = tmp_path / "content.example.json"

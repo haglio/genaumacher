@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 def _mark_moved(state: VideoState) -> None:
-    """What every accepted mark does after the clip range has taken it."""
     state.reset_loop_anchor()
     update_loop_suggestions(state)
     state.save_edit()

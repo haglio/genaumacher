@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.scrubber_widget — scrubber bar display."""
-
 from __future__ import annotations
 
 import pytest
@@ -117,12 +115,6 @@ class TestClickSignal:
 
 
 class TestPainting:
-    """The bands and lines the user actually reads the scrubber by.
-
-    Nothing asserted a painted pixel, so replacing ``paintEvent``'s body with
-    ``return`` was caught only by the dead-code guard.
-    """
-
     @pytest.fixture
     def painted(self, widget, rendered):
         widget.set_bounds(0, 100)
@@ -133,7 +125,6 @@ class TestPainting:
         return rendered(widget)
 
     def _band(self, image, x):
-        """The color mid-height, clear of the tick dots along both edges."""
         return image.pixelColor(x, 12).name()
 
     def test_the_loaded_range_is_drawn_outside_the_active_one(self, painted):

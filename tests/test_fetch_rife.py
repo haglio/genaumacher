@@ -1,12 +1,3 @@
-"""The fetch step that stands in for 17 MB of binary this repo stopped tracking.
-
-Two things have to hold or the move is worse than the tracking was. The files
-must land where ``genaumacher.interpolator_environment`` looks, or the fetch is
-green and normalizing falls back to its geometric seam anyway; and "the binary
-is here" has to mean "the binary runs here", or ``--require`` passes on a
-machine that cannot interpolate -- and that one step is the only place anything
-asks the real binary for a frame.
-"""
 from __future__ import annotations
 
 import hashlib
@@ -24,11 +15,6 @@ _RELEASE_BYTES = b"pretend release"
 
 
 def _release_zip(path: Path) -> Path:
-    """A stand-in for the upstream asset: the six files, and a model to leave.
-
-    Contents are invented -- the point is which names come out, not what is in
-    them.
-    """
     with zipfile.ZipFile(path, "w") as zf:
         for name in fetch_rife.FILES:
             zf.writestr(
@@ -47,18 +33,11 @@ def _never_called(*_args, **_kwargs):
 
 
 class TestWhereItLands:
-    """Each of these spells a path for itself, and the app falls back forever
-    and silently if the two ever stop agreeing. These are the tests that red."""
-
     def test_the_app_looks_where_the_fetch_step_extracts(self):
         assert (fetch_rife.RIFE_EXE.relative_to(fetch_rife.TOOLS_DIR.parent)
                 == interpolator_environment.VENDORED_EXE)
 
     def test_the_fetch_step_brings_the_weights_the_app_asks_for(self):
-        """The model directory is named twice over -- once in the list of files
-        to extract, once in the app's lookup -- and a release that renamed it
-        would leave a fetch that reported success and an app that never
-        interpolated again."""
         wanted = {f"{interpolator_environment.MODEL_DIR_NAME}/{name}"
                   for name in interpolator_environment.MODEL_FILES}
 
@@ -77,7 +56,6 @@ class TestExtract:
         assert written == sorted(fetch_rife.FILES)
 
     def test_it_leaves_the_models_the_code_never_opens(self, tmp_path: Path):
-        """One model directory is asked for by name; the other ten stay in the zip."""
         dest = tmp_path / "out"
 
         fetch_rife.extract(_release_zip(tmp_path / "release.zip"), dest)
@@ -118,23 +96,10 @@ def _bridge_returning(result):
 
 
 class TestRuns:
-    """Presence is not runnability, and starting is not interpolating.
-
-    A spawn probe answers yes on a Windows machine with no Vulkan device -- upstream
-    prints its usage and exits before touching Vulkan when called with no
-    arguments -- so the four seam-bridge tests would run and fail there instead
-    of the gate saying why. The predicate asks for a frame.
-    """
-
     @pytest.fixture
     def extracted(self, tmp_path: Path, monkeypatch) -> Path:
         monkeypatch.setattr(fetch_rife, "DEST", tmp_path)
         monkeypatch.setattr(fetch_rife, "RIFE_EXE", tmp_path / "rife-ncnn-vulkan.exe")
-        # runs() interpolates through normalize_transforms, which resolves
-        # the binary with interpolator_environment -- not fetch_rife.RIFE_EXE.
-        # Point that seam at the extracted fake too, or the Windows runner finds
-        # the real fetched exe, produces a frame, and runs() answers True where
-        # the whole point is that a present-but-unrunnable file answers False.
         monkeypatch.setattr(
             "genaumacher.interpolator_environment._find_exe",
             lambda: fetch_rife.RIFE_EXE,
@@ -148,7 +113,6 @@ class TestRuns:
         assert fetch_rife.runs() is False
 
     def test_a_file_this_machine_cannot_execute_does_not_run(self, extracted: Path):
-        """What every non-Windows machine sees: the file is there and refuses."""
         assert fetch_rife.runs() is False
 
     def test_a_bridge_frame_coming_back_is_what_running_means(
@@ -164,7 +128,6 @@ class TestRuns:
     def test_a_binary_that_starts_and_interpolates_nothing_does_not_run(
         self, extracted: Path, monkeypatch
     ):
-        """The Vulkan-less case: the process runs, the bridge comes back empty."""
         monkeypatch.setattr(
             "genaumacher.normalize_transforms.build_rife_bridge",
             _bridge_returning(None),
@@ -182,11 +145,8 @@ class TestRuns:
 
 
 class TestMain:
-    """The entry point the merge gate runs, and the flag it runs it with."""
-
     @pytest.fixture
     def fetched(self, tmp_path: Path, monkeypatch) -> Path:
-        """A checkout that already has the files, so main() does not download."""
         monkeypatch.setattr(fetch_rife, "DEST", tmp_path)
         fetch_rife.extract(_release_zip(tmp_path / "release.zip"), tmp_path)
         return tmp_path
@@ -201,13 +161,11 @@ class TestMain:
         assert fetch_rife.main(["--require"]) == 0
 
     def test_a_binary_that_does_not_run_is_fine_without_require(self, fetched, monkeypatch):
-        """A developer machine fetches the Windows release and cannot use it."""
         self._with_runs(monkeypatch, False)
 
         assert fetch_rife.main([]) == 0
 
     def test_a_binary_that_does_not_run_fails_under_require(self, fetched, monkeypatch):
-        """This is the merge gate's whole assertion."""
         self._with_runs(monkeypatch, False)
 
         assert fetch_rife.main(["--require"]) == 1
@@ -228,8 +186,6 @@ class TestMain:
 
 
 class TestDownload:
-    """432 MB for six files, so a re-run must not fetch what it already holds."""
-
     def test_an_intact_copy_already_there_is_reused(self, tmp_path: Path, monkeypatch):
         archive = tmp_path / fetch_rife.ASSET
         archive.write_bytes(_RELEASE_BYTES)

@@ -1,4 +1,3 @@
-"""Tests for genaumacher.state_factory — opening a saved session."""
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -66,8 +65,6 @@ def test_it_raises_when_the_session_interval_yields_no_frames():
 
 
 def test_a_session_written_before_vr_existed_reads_as_not_vr():
-    """`vr` was added to the format after it shipped, so an older file has no
-    such key and must not stop opening."""
     payload = _payload()
     del payload["vr"]
 

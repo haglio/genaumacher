@@ -1,5 +1,3 @@
-"""Launcher dialog — load existing session or create a new one."""
-
 from __future__ import annotations
 
 from pathlib import PureWindowsPath
@@ -23,19 +21,15 @@ from genaumacher.paths import SESSIONS_DIR, vr_video_dir
 
 
 class LauncherDialog(QDialog):
-    """Chooses between loading a saved session and creating a new one."""
-
     def __init__(self, parent=None, *, last_session: str = ""):
         super().__init__(parent)
         self.setWindowTitle("Genaumacher Launcher")
         self.setMinimumWidth(500)
 
-        # Mode selection
         self.load_radio = QRadioButton("Load existing session")
         self.new_radio = QRadioButton("Create new session")
         self.load_radio.setChecked(True)
 
-        # Load mode fields
         self.session_json_edit = QLineEdit(last_session)
         self.session_browse_btn = QPushButton("Browse...")
         self.session_browse_btn.clicked.connect(self._browse_session)
@@ -45,7 +39,6 @@ class LauncherDialog(QDialog):
         load_row.addWidget(self.session_json_edit)
         load_row.addWidget(self.session_browse_btn)
 
-        # New mode fields
         self.session_name_edit = QLineEdit()
         self.video_file_edit = QLineEdit()
         self.video_browse_btn = QPushButton("Browse...")
@@ -63,7 +56,6 @@ class LauncherDialog(QDialog):
         video_row.addWidget(self.video_file_edit)
         video_row.addWidget(self.video_browse_btn)
 
-        # Buttons
         self.clip_whole_btn = QPushButton("Clip whole vid...")
         self.clip_whole_btn.clicked.connect(self._browse_clip_whole)
         self.open_btn = QPushButton("Open")
@@ -79,7 +71,6 @@ class LauncherDialog(QDialog):
         btn_row.addWidget(self.open_btn)
         btn_row.addWidget(self.cancel_btn)
 
-        # Layout
         layout = QVBoxLayout(self)
         layout.addWidget(self.load_radio)
         layout.addLayout(load_row)
@@ -97,17 +88,12 @@ class LauncherDialog(QDialog):
         layout.addLayout(btn_row)
 
     def prefill(self, session_name: str, video_file: str, timestamp: str) -> None:
-        """Fill the new-session form in from what is already playing.
-
-        A method, so the caller stops naming four of this dialog's widgets.
-        """
         self.session_name_edit.setText(session_name)
         self.video_file_edit.setText(video_file)
         self.timestamp_edit.setText(timestamp)
         self.new_radio.setChecked(True)
 
     def build_result(self) -> LaunchChoice:
-        """What the caller launches from -- one of the three shapes it can be."""
         if self._clip_whole_file:
             return ClipWholeVideo(video_file=self._clip_whole_file)
         if self.load_radio.isChecked():

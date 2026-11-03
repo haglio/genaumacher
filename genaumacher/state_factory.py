@@ -22,18 +22,6 @@ def _normalized_speed(speed: float) -> float:
 
 
 def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
-    """Open the video a saved session names, and rebuild the state from it.
-
-    `session_name` is the caller's fallback -- the session file's own stem --
-    for a payload that does not carry one.
-
-    This was `make_video_state`, six parameters branching on whether a payload
-    was supplied.  Nothing outside the tests reached the other branch: a new
-    session is `create_session` writing the file and this reading it back, so
-    the only production caller has always had a payload.  That branch was also
-    the fourth copy of the version-1 payload literal, and the drifted one -- it
-    omitted `vr`, so the two representations of "a new session" disagreed.
-    """
     video_path = payload["video_path"]
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():

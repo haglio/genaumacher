@@ -1,51 +1,26 @@
-"""What an export step tells whoever is watching it.
-
-Four calls, so an export step says what it means at the point it means it,
-and what reaches the dialog is decided where the reporting happens rather than
-by what a field is named.
-
-No Qt here: the export steps run off the GUI thread and are kept Qt-free.
-"""
-
 from __future__ import annotations
 
 from typing import Protocol
 
 
 class ExportProgress(Protocol):
-    """The progress an export reports, as calls rather than as field writes."""
+    def stage(self, text: str) -> None: ...
 
-    def stage(self, text: str) -> None:
-        """Say which of the three steps is running."""
+    def clip(self, fraction: float) -> None: ...
 
-    def clip(self, fraction: float) -> None:
-        """How far the raw clip export has got, 0.0 to 1.0."""
+    def normalize(self, fraction: float) -> None: ...
 
-    def normalize(self, fraction: float) -> None:
-        """How far normalizing has got, 0.0 to 1.0."""
-
-    def audio(self, fraction: float) -> None:
-        """How far the audio extraction has got, 0.0 to 1.0."""
+    def audio(self, fraction: float) -> None: ...
 
 
-# Normalizing runs as a subprocess, so the only way it can say how far it
-# has got is to print it.  Written and read here, both: a parent and a child
-# that each spell the format out is a bar that stops moving the day one of them
-# is edited, and silently, because the line just stops matching.
 _PROGRESS_PREFIX = "normalize-progress"
 
 
 def progress_line(fraction: float) -> str:
-    """How normalizing says it has finished *fraction* of its work."""
     return f"{_PROGRESS_PREFIX} {fraction:.4f}"
 
 
 def fraction_in(line: str) -> float | None:
-    """The fraction that line carries, or None -- it is a line for a person.
-
-    Everything else the script prints is its summary or an error, which the
-    caller keeps for the message it shows when the run fails.
-    """
     prefix, _, rest = line.partition(" ")
     if prefix != _PROGRESS_PREFIX:
         return None

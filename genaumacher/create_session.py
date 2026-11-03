@@ -1,9 +1,3 @@
-"""Create a Genaumacher session JSON from a video path and timestamp.
-
-This module is the single source of truth for headless session creation.
-Genaumacher's own launcher uses it for new sessions, and external tools
-(e.g. fun_time) invoke it via the CLI entry point.
-"""
 from __future__ import annotations
 
 import argparse
@@ -26,13 +20,6 @@ DEFAULT_LOOP_MODE = LoopMode.BASE_TIP_BASE
 
 
 def ffprobe_video_metadata(video_path: str) -> tuple[float, int]:
-    """Return (fps, total_frames) via ffprobe.  Raises on failure.
-
-    Public because `session_launch` imports it: a name another module reaches
-    for is part of this one's surface whether the underscore says so or not,
-    and the underscore was the strongest available signal that this module's
-    published surface was missing a name.
-    """
     kwargs = hidden_subprocess_kwargs()
 
     def _probe(show_entries: str) -> str:
@@ -87,7 +74,6 @@ def build_session_payload(
     loop_mode: LoopMode = DEFAULT_LOOP_MODE,
     vr: bool = False,
 ) -> dict:
-    """Build the session payload dict without touching the filesystem."""
     session_name = sanitize_name(session_name or Path(video_path).stem)
 
     base_step = max(1, int(round(fps)))
@@ -123,23 +109,12 @@ def create_session(
     vr: bool = False,
     sessions_dir: Path | None = None,
 ) -> Path:
-    """Create a Genaumacher session JSON and return the file path.
-
-    If a session file with the same name already exists, returns its path
-    without overwriting.
-
-    ``sessions_dir`` is a seam only the tests supply, and deliberately so: it
-    is the one argument that keeps this function from writing into the real
-    ``sessions/`` while it is being exercised.
-    """
     if sessions_dir is None:
         sessions_dir = SESSIONS_DIR
     sessions_dir.mkdir(parents=True, exist_ok=True)
 
     fps, total_frames = ffprobe_video_metadata(video_path)
 
-    # A supplied name is sanitized like a derived one: every path the rest of
-    # the app builds from a session name is built from the sanitized form.
     session_name = sanitize_name(session_name or Path(video_path).stem)
 
     session_path = sessions_dir / f"{session_name}.json"

@@ -1,4 +1,3 @@
-"""Tests for genaumacher.suggestions — the marks the app offers, and what it compares against."""
 from __future__ import annotations
 
 from genaumacher.suggestions import Suggestions

@@ -1,5 +1,3 @@
-"""Export progress dialog — a bar per stage, and a Close that waits for the end."""
-
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt

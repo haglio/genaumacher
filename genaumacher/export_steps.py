@@ -18,7 +18,6 @@ _SMALLEST_VIDEO_BYTES = 2048
 
 
 def find_tool(name: str) -> str | None:
-    """Where `name` is on PATH, if it is anywhere.  Only this module asks."""
     return shutil.which(name)
 
 
@@ -101,8 +100,7 @@ def export_raw_clip(state: VideoState, out_path: Path, progress: ExportProgress)
     clip_duration = max(1.0 / state.fps, (state.out_point - state.in_point + 1) / state.fps)
     start_sec = state.in_point / state.fps
     end_sec = (state.out_point + 1) / state.fps
-    # Seek near the target so ffmpeg jumps to a nearby keyframe. Then trim using
-    # timestamps relative to the seeked input segment.
+        # ffmpeg seeks to a nearby keyframe; the trim's times are relative to that seek.
     seek_sec = max(0.0, start_sec - 5.0)
     trim_start_rel = max(0.0, start_sec - seek_sec)
     trim_end_rel = trim_start_rel + max(1.0 / state.fps, end_sec - start_sec)
@@ -130,9 +128,6 @@ def run_normalize(state: VideoState, raw_path: Path, out_path: Path, progress: E
                                 text=True, bufsize=1, **hidden_subprocess_kwargs())
     except Exception as exc:
         return False, str(exc)
-    # Read as it goes, the way the ffmpeg steps above do. The script says how
-    # far it has got on its own stdout; every other line is for a person, and
-    # is kept for the message shown if the run fails.
     lines: list[str] = []
     try:
         for raw in proc.stdout or ():
@@ -156,7 +151,7 @@ def run_normalize(state: VideoState, raw_path: Path, out_path: Path, progress: E
 def _has_audio_stream(video_path: str) -> bool:
     ffprobe = find_tool("ffprobe")
     if not ffprobe:
-        return True  # assume yes if ffprobe unavailable; let ffmpeg decide
+        return True
     try:
         proc = subprocess.Popen(
             [ffprobe, "-v", "quiet", "-select_streams", "a",
@@ -167,7 +162,7 @@ def _has_audio_stream(video_path: str) -> bool:
         stdout, _ = proc.communicate(timeout=10)
         return bool(stdout.strip())
     except Exception:
-        return True  # assume yes on probe failure; let ffmpeg decide
+        return True
 
 
 def export_full_audio_mp3(state: VideoState, out_path: Path, progress: ExportProgress) -> tuple[bool, str]:

@@ -1,10 +1,3 @@
-"""The three steps an export runs, and where each one writes.
-
-Off the Qt thread and with no Qt in it, so the sequence, the output paths and
-what a failed step means can all be asked without building a QThread.  The
-worker calls this and turns the answer into its finished signal.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -17,11 +10,6 @@ from .state import VideoState
 
 
 def _output_paths(state: VideoState) -> tuple[Path, Path, Path]:
-    """The raw clip, the finished clip and the mp3, all named for the session.
-
-    The clip goes to genau's VR folder or its flat one, which is what the
-    launcher's checkbox decided when the session was made.
-    """
     session_base = sanitize_name(state.session_name)
     flick_folder = vr_flicks_dir() if state.vr else flicks_dir()
     return (
@@ -32,12 +20,6 @@ def _output_paths(state: VideoState) -> tuple[Path, Path, Path]:
 
 
 def run_export(state: VideoState, progress: ExportProgress) -> tuple[bool, str]:
-    """Cut the clip, smooth its loop and pull the audio, saying how each goes.
-
-    Answers the way each step does: whether it worked, and the clip it wrote or
-    the reason it did not.  A step that raises answers the same way, since the
-    caller is a thread and an exception out of it reaches nobody.
-    """
     progress.stage("preparing export")
     progress.clip(0.0)
     progress.normalize(0.0)
