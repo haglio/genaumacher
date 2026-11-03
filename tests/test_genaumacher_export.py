@@ -50,7 +50,7 @@ _FFMPEG_CLOCKS = [
 
 
 class TestParseFfmpegClock:
-    @pytest.mark.parametrize("printed, seconds", _FFMPEG_CLOCKS)
+    @pytest.mark.parametrize(("printed", "seconds"), _FFMPEG_CLOCKS)
     def test_it_reads_the_clock_ffmpeg_prints(self, printed, seconds):
         assert _parse_ffmpeg_clock(printed) == pytest.approx(seconds)
 

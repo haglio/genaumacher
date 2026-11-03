@@ -26,7 +26,7 @@ _BUTTONS = [
 
 class TestSignals:
     @pytest.mark.parametrize(
-        "button, signal",
+        ("button", "signal"),
         [pytest.param(b, sig, id=label) for label, b, sig in _BUTTONS],
     )
     def test_clicking_a_button_emits_its_signal(self, ctl, button, signal):
@@ -38,7 +38,7 @@ class TestSignals:
         assert fired == [1]
 
     @pytest.mark.parametrize(
-        "button, signal",
+        ("button", "signal"),
         [pytest.param(b, sig, id=label) for label, b, sig in _BUTTONS],
     )
     def test_no_other_button_emits_it(self, ctl, button, signal):

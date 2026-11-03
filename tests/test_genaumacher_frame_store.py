@@ -128,9 +128,9 @@ def test_safe_frame_raises_when_on_demand_load_still_fails(make_state):
     state = make_state()
     state.frames.pop(35, None)
 
-    with patch("genaumacher.frame_store.ensure_loaded"):
-        with pytest.raises(RuntimeError, match="Could not load frame 35"):
-            safe_frame(state, 35)
+    with patch("genaumacher.frame_store.ensure_loaded"), \
+         pytest.raises(RuntimeError, match="Could not load frame 35"):
+        safe_frame(state, 35)
 
 
 def test_signature_for_index_caches_processed_signature(make_state):

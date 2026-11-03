@@ -288,7 +288,7 @@ def test_normalize_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path, 
     assert "minimum allowed resolution" in caplog.text
 
 
-@pytest.mark.parametrize("copy_audio, expected_audio", [(True, "input"), (False, None)])
+@pytest.mark.parametrize(("copy_audio", "expected_audio"), [(True, "input"), (False, None)])
 def test_normalize_clip_keeps_the_input_audio_only_when_asked(
     tmp_path, run_pipeline, copy_audio, expected_audio
 ):

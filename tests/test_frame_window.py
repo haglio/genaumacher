@@ -4,8 +4,8 @@ from genaumacher.frame_window import FrameWindow
 
 
 def _window(**overrides) -> FrameWindow:
-    kwargs = dict(total_frames=100, left_bound=10, right_bound=60,
-                  cursor=30, base_step=5)
+    kwargs = {"total_frames": 100, "left_bound": 10, "right_bound": 60,
+              "cursor": 30, "base_step": 5}
     kwargs.update(overrides)
     return FrameWindow(**kwargs)
 

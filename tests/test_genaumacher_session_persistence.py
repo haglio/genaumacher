@@ -15,25 +15,25 @@ from genaumacher.session_persistence import (
 
 
 def _state(**overrides):
-    defaults = dict(
-        session_name="demo",
-        path="/video.mp4",
-        fps=30.0,
-        total_frames=120,
-        left_bound=10,
-        right_bound=40,
-        in_point=12,
-        out_point=30,
-        cursor=18,
-        base_step=30,
-        loop_mode="base-tip-base",
-        wrap_mode="blue",
-        speed=1.25,
-        vr=False,
-        session_path="C:\\demo.json",
-        session_warning="",
-        last_saved_payload=None,
-    )
+    defaults = {
+        "session_name": "demo",
+        "path": "/video.mp4",
+        "fps": 30.0,
+        "total_frames": 120,
+        "left_bound": 10,
+        "right_bound": 40,
+        "in_point": 12,
+        "out_point": 30,
+        "cursor": 18,
+        "base_step": 30,
+        "loop_mode": "base-tip-base",
+        "wrap_mode": "blue",
+        "speed": 1.25,
+        "vr": False,
+        "session_path": "C:\\demo.json",
+        "session_warning": "",
+        "last_saved_payload": None,
+    }
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
 

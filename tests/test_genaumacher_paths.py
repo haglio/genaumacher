@@ -128,7 +128,7 @@ class TestWhereTheLibraryFoldersAre:
         with pytest.raises(LookupError, match=settings.name):
             library_root()
 
-    @pytest.mark.parametrize("missing, asked", [("genau_dir", flicks_dir), ("genau_audio_dir", audio_dir)])
+    @pytest.mark.parametrize(("missing", "asked"), [("genau_dir", flicks_dir), ("genau_audio_dir", audio_dir)])
     def test_settings_with_no_genau_place_say_which_and_name_their_file(
         self, shared_settings, missing, asked
     ):

@@ -27,8 +27,7 @@ def test_no_color_is_spelled_out_in_a_stylesheet():
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                for match in _HEX.findall(node.value):
-                    offenders.append(f"{path.name}:{node.lineno} {match}")
+                offenders.extend(f"{path.name}:{node.lineno} {match}" for match in _HEX.findall(node.value))
     assert not offenders, (
         "colors written in place instead of taken from shared_ui.colors: "
         + ", ".join(offenders)

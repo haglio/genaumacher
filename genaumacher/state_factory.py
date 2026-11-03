@@ -27,7 +27,7 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
     if not cap.isOpened():
         raise RuntimeError(f"Could not open video: {video_path}")
     fps = cap.get(cv2.CAP_PROP_FPS)
-    total_frames = int(round(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+    total_frames = round(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     if not fps or fps <= 0:
         raise RuntimeError("Invalid FPS metadata")
     if total_frames <= 0:
@@ -56,7 +56,7 @@ def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
             left_bound=left_bound,
             right_bound=max(frames.keys()),
             cursor=cursor,
-            base_step=max(1, int(round(fps))),
+            base_step=max(1, round(fps)),
         ),
         clip=ClipRange(
             start=in_point,

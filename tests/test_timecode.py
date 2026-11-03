@@ -15,7 +15,7 @@ _CLOCKS = [
 
 
 class TestParseTimestamp:
-    @pytest.mark.parametrize("clock, seconds", _CLOCKS)
+    @pytest.mark.parametrize(("clock", "seconds"), _CLOCKS)
     def test_it_reads_a_clock_as_seconds(self, clock, seconds):
         assert parse_timestamp(clock) == pytest.approx(seconds)
 

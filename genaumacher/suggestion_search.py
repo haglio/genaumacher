@@ -57,7 +57,7 @@ def candidate_similarity_curve(
     if len(scores) < _FEWEST_SCORES:
         return None
 
-    smooth_radius = max(1, int(round(state.fps * 0.03)))
+    smooth_radius = max(1, round(state.fps * 0.03))
     smoothed = smooth_1d(scores, smooth_radius)
     return candidates, smoothed
 
@@ -72,11 +72,11 @@ def find_similarity_dip(
     if curve is None:
         return None
     candidates, smoothed = curve
-    skip = min(len(smoothed) - 1, max(1, int(round(state.fps * 0.12))))
-    baseline_end = min(len(smoothed), max(skip + 1, int(round(state.fps * 0.18))))
+    skip = min(len(smoothed) - 1, max(1, round(state.fps * 0.12)))
+    baseline_end = min(len(smoothed), max(skip + 1, round(state.fps * 0.18)))
     baseline = float(np.max(smoothed[:baseline_end]))
     slope = np.diff(smoothed)
-    run = max(2, int(round(state.fps * 0.05)))
+    run = max(2, round(state.fps * 0.05))
     dip_idx: int | None = None
 
     for i in range(max(skip + run, run), len(smoothed) - run - 1):
