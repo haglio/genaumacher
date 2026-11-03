@@ -36,7 +36,7 @@ def _nobody_listening(_fraction: float) -> None:
 def compute_bridge_frames(*, fps: float, bridge_ms: float, bridge_frames: int | None, normalized_frame_count: int) -> int:
     frames = bridge_frames
     if frames is None:
-        frames = max(1, int(round(fps * (bridge_ms / 1000.0))))
+        frames = max(1, round(fps * (bridge_ms / 1000.0)))
     max_bridge = max(1, normalized_frame_count // 3)
     return max(1, min(frames, max_bridge))
 
@@ -44,7 +44,7 @@ def compute_bridge_frames(*, fps: float, bridge_ms: float, bridge_frames: int | 
 def compute_seam_frames(*, fps: float, seam_ms: float, normalized_frame_count: int) -> int:
     if seam_ms <= 0:
         return 0
-    frames = max(0, int(round(fps * (seam_ms / 1000.0))))
+    frames = max(0, round(fps * (seam_ms / 1000.0)))
     return min(frames, normalized_frame_count // 3)
 
 

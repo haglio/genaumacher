@@ -408,7 +408,7 @@ _EDITS_THAT_REFUSE = [
 
 class TestAnEditIsSaved:
     @pytest.mark.parametrize(
-        "kwargs, prepare, act",
+        ("kwargs", "prepare", "act"),
         [pytest.param(k, p, a, id=label) for label, k, p, a in _EDITS_THAT_CHANGE_THE_CLIP],
     )
     def test_an_edit_redraws_and_saves_the_session(self, kwargs, prepare, act, make_state):
@@ -420,7 +420,7 @@ class TestAnEditIsSaved:
         assert s.persist_session.calls == 1
 
     @pytest.mark.parametrize(
-        "kwargs, prepare, act",
+        ("kwargs", "prepare", "act"),
         [pytest.param(k, p, a, id=label) for label, k, p, a in _EDITS_THAT_REFUSE],
     )
     def test_a_refused_edit_saves_nothing(self, kwargs, prepare, act, make_state):
@@ -518,9 +518,9 @@ class TestShiftActiveRange:
             state.window.widen_left_to(want_start)
             state.window.widen_right_to(want_end)
 
-        with patch("genaumacher.editing.ensure_loaded", side_effect=fake_ensure_loaded):
-            with patch("genaumacher.editing.update_loop_suggestions"):
-                shift_in_out(s, 1)
+        with patch("genaumacher.editing.ensure_loaded", side_effect=fake_ensure_loaded), \
+             patch("genaumacher.editing.update_loop_suggestions"):
+            shift_in_out(s, 1)
         assert s.right_bound == 35
         assert s.in_point == 20
         assert s.out_point == 30
@@ -532,9 +532,9 @@ class TestShiftActiveRange:
             state.window.widen_left_to(want_start)
             state.window.widen_right_to(want_end)
 
-        with patch("genaumacher.editing.ensure_loaded", side_effect=fake_ensure_loaded):
-            with patch("genaumacher.editing.update_loop_suggestions"):
-                shift_in_out(s, -1)
+        with patch("genaumacher.editing.ensure_loaded", side_effect=fake_ensure_loaded), \
+             patch("genaumacher.editing.update_loop_suggestions"):
+            shift_in_out(s, -1)
         assert s.left_bound == 5
         assert s.in_point == 10
         assert s.out_point == 20
@@ -653,7 +653,7 @@ class TestLoopSuggestions:
 
         assert (s.suggested_in, s.suggested_out) == first_pair
 
-    @pytest.mark.parametrize("loop_mode, initial, turning_points, expected", [
+    @pytest.mark.parametrize(("loop_mode", "initial", "turning_points", "expected"), [
         pytest.param("base-tip", (0, 60), [37], (None, 37), id="base-tip suggests the out point"),
         pytest.param("tip-base", (10, 79), [33], (33, None), id="tip-base suggests the in point"),
         pytest.param("base-tip", (0, 79), [35, 24], (24, 35), id="both marks moved"),

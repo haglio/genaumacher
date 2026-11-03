@@ -47,8 +47,7 @@ def mock_state():
 
 @pytest.fixture
 def window(mock_state):
-    w = GenaumacherMainWindow(mock_state)
-    return w
+    return GenaumacherMainWindow(mock_state)
 
 
 class TestConstruction:
@@ -227,7 +226,7 @@ _KEY_BINDINGS = [
 
 class TestKeyDispatch:
     @pytest.mark.parametrize(
-        "key, text, prepare, observe, expected",
+        ("key", "text", "prepare", "observe", "expected"),
         [pytest.param(k, t, p, o, e, id=label) for label, k, t, p, o, e in _KEY_BINDINGS],
     )
     def test_a_key_makes_its_edit(self, make_state, key, text, prepare, observe, expected):

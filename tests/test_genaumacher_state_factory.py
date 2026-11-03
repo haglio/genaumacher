@@ -42,9 +42,9 @@ def _load(payload: dict, *, frames: dict | None = None, capture=None):
     if frames is None:
         frames = {i: np.zeros((2, 2, 3), dtype=np.uint8) for i in range(10, 41)}
     with patch("genaumacher.state_factory.cv2.VideoCapture",
-               return_value=capture or _build_capture()):
-        with patch("genaumacher.state_factory.load_range", return_value=frames):
-            return load_video_state(payload, "the file stem")
+               return_value=capture or _build_capture()), \
+         patch("genaumacher.state_factory.load_range", return_value=frames):
+        return load_video_state(payload, "the file stem")
 
 
 def test_a_loop_mode_the_app_does_not_have_falls_back_to_the_default():

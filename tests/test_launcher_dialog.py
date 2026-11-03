@@ -102,7 +102,7 @@ class TestVrAutoDetect:
     def _fabricated_library(self, shared_settings):
         shared_settings({"library_root": "D:/example-suite"})
 
-    @pytest.mark.parametrize("typed, is_vr", [
+    @pytest.mark.parametrize(("typed", "is_vr"), [
         (r"D:\example-suite\videos\videos\VR\seaside walk.mp4", True),
         ("D:/example-suite/videos/videos/VR/seaside walk.mp4", True),
         (r"D:\example-suite\videos\videos\VR\second pass\seaside walk.mp4", True),

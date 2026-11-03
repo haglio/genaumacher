@@ -69,7 +69,7 @@ class TestTheLegendComesFromTheTable:
 
 
 class TestLookup:
-    @pytest.mark.parametrize("text, name", [
+    @pytest.mark.parametrize(("text", "name"), [
         ("a", "extend_left"),
         ("[", "mark_in"),
         ("_", "speed_down"),

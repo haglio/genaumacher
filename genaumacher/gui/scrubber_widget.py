@@ -59,13 +59,13 @@ class ScrubberWidget(QWidget):
     def x_for_index(self, idx: int) -> int:
         count = max(1, self.right_bound - self.left_bound)
         frac = (idx - self.left_bound) / count
-        return int(round(frac * self.width()))
+        return round(frac * self.width())
 
     def index_for_x(self, x: int) -> int:
         x = max(0, min(self.width(), x))
         count = max(1, self.right_bound - self.left_bound)
         frac = x / self.width() if self.width() > 0 else 0.0
-        idx = self.left_bound + int(round(frac * count))
+        idx = self.left_bound + round(frac * count)
         return max(self.left_bound, min(self.right_bound, idx))
 
     def mousePressEvent(self, event) -> None:

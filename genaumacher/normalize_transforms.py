@@ -119,11 +119,10 @@ def compose_similarity(tx: float, ty: float, angle: float, scale: float, center:
     cx, cy = center
     cos_a = math.cos(angle) * scale
     sin_a = math.sin(angle) * scale
-    M = np.array([
+    return np.array([
         [cos_a, -sin_a, cx - cos_a * cx + sin_a * cy + tx],
         [sin_a,  cos_a, cy - sin_a * cx - cos_a * cy + ty],
     ], dtype=np.float64)
-    return M
 
 
 def fractional_similarity(M: np.ndarray, t: float, center: tuple[float, float]) -> np.ndarray:
@@ -153,10 +152,8 @@ def estimate_alignment(frame_a: np.ndarray, frame_b: np.ndarray) -> np.ndarray |
         return None
     bf = cv2.BFMatcher(cv2.NORM_HAMMING)
     raw_matches = bf.knnMatch(desc_a, desc_b, k=_NEIGHBORS)
-    good = []
-    for m_pair in raw_matches:
-        if len(m_pair) == _NEIGHBORS and m_pair[0].distance < 0.75 * m_pair[1].distance:
-            good.append(m_pair[0])
+    good = [m_pair[0] for m_pair in raw_matches
+            if len(m_pair) == _NEIGHBORS and m_pair[0].distance < 0.75 * m_pair[1].distance]
     if len(good) < _FEWEST_POINTS:
         return None
     pts_a = np.array([kp_a[m.queryIdx].pt for m in good], dtype=np.float32)
@@ -301,8 +298,8 @@ def resize_frames(frames: list[np.ndarray], scale: float) -> list[np.ndarray]:
         return frames
 
     h, w = frames[0].shape[:2]
-    new_w = max(2, int(round(w * scale)))
-    new_h = max(2, int(round(h * scale)))
+    new_w = max(2, round(w * scale))
+    new_h = max(2, round(h * scale))
 
     if new_w % 2:
         new_w -= 1

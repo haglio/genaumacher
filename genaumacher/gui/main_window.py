@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 from typing import TYPE_CHECKING
 
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
     from genaumacher.state import VideoState
 
 _UNDECODABLE = (KeyError, IndexError, RuntimeError)
+
 
 class _WrapRow(QWidget):
     def __init__(self, parent: QWidget | None = None):
@@ -274,15 +276,11 @@ class GenaumacherMainWindow(QMainWindow):
 
     def _draw_frames(self, state: VideoState) -> int:
         loop_idx = state.in_point
-        try:
+        with contextlib.suppress(*_UNDECODABLE):
             loop_idx = current_loop_frame_index(state)
             self._fill(self.loop_preview_pane, safe_frame(state, loop_idx))
-        except _UNDECODABLE:
-            pass
-        try:
+        with contextlib.suppress(*_UNDECODABLE):
             self._fill(self.frame_at_cursor_pane, safe_frame(state, state.cursor))
-        except _UNDECODABLE:
-            pass
         return loop_idx
 
     def _fill(self, pane: VideoPane, frame) -> None:

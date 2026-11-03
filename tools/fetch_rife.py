@@ -62,9 +62,8 @@ def download(target: Path = ZIP_PATH) -> Path:
         return target
     target.parent.mkdir(parents=True, exist_ok=True)
     print(f"fetching {URL}")
-    with urllib.request.urlopen(URL, timeout=_DOWNLOAD_TIMEOUT) as response:  # noqa: S310
-        with target.open("wb") as handle:
-            shutil.copyfileobj(response, handle)
+    with urllib.request.urlopen(URL, timeout=_DOWNLOAD_TIMEOUT) as response, target.open("wb") as handle:  # noqa: S310
+        shutil.copyfileobj(response, handle)
     actual = sha256_of(target)
     if actual != SHA256:
         target.unlink(missing_ok=True)

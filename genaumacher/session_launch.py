@@ -42,7 +42,7 @@ def build_clip_whole_state(video_file: str) -> VideoState:
             left_bound=0,
             right_bound=end_idx,
             cursor=0,
-            base_step=max(1, int(round(fps))),
+            base_step=max(1, round(fps)),
         ),
         clip=ClipRange(start=0, end=end_idx),
         frames={},

@@ -9,7 +9,7 @@ import cv2
 
 
 def _run_checked(cmd: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+    return subprocess.run(cmd, capture_output=True, text=True, check=True)
 
 
 def ffprobe_video(path: str) -> dict[str, float | int | None]:

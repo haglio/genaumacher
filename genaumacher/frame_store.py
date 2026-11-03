@@ -72,7 +72,7 @@ def safe_frame(state: VideoState, idx: int) -> np.ndarray:
 def preprocess_frame_signature(frame: np.ndarray, width: int = 96) -> np.ndarray:
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     h, w = gray.shape[:2]
-    new_h = max(1, int(round(h * (width / max(1, w)))))
+    new_h = max(1, round(h * (width / max(1, w))))
     gray = cv2.resize(gray, (width, new_h), interpolation=cv2.INTER_AREA)
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
     return gray.astype(np.float32) / 255.0

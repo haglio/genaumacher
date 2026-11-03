@@ -54,7 +54,7 @@ def ffprobe_video_metadata(video_path: str) -> tuple[float, int]:
         duration_raw = _probe("format=duration")
         if not duration_raw:
             raise RuntimeError(f"ffprobe returned no frame count or duration for {video_path}")
-        total_frames = max(1, int(round(float(duration_raw) * fps)))
+        total_frames = max(1, round(float(duration_raw) * fps))
     else:
         total_frames = int(frames_raw)
     if total_frames <= 0:
@@ -76,9 +76,9 @@ def build_session_payload(
 ) -> dict:
     session_name = sanitize_name(session_name or Path(video_path).stem)
 
-    base_step = max(1, int(round(fps)))
-    start_idx = max(0, min(total_frames - 1, int(round(start_time_s * fps))))
-    duration_frames = max(1, int(round(seconds * fps)))
+    base_step = max(1, round(fps))
+    start_idx = max(0, min(total_frames - 1, round(start_time_s * fps)))
+    duration_frames = max(1, round(seconds * fps))
     end_idx = min(total_frames - 1, start_idx + duration_frames - 1)
 
     return session_payload(
