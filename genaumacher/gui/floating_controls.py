@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from PyQt6.QtCore import QPoint
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget
@@ -7,6 +9,16 @@ from shared_ui.colors import BORDER_SUBTLE
 from shared_ui.spacing import BUTTON_GAP
 
 GAP = BUTTON_GAP
+
+
+@dataclass(frozen=True)
+class FloatingMarks:
+    in_point: int
+    out_point: int
+    cursor: int
+    wrap_from: int
+    wrap_to: int
+    wrap_color: QColor
 
 
 class FloatingControlLayout:
@@ -19,13 +31,12 @@ class FloatingControlLayout:
         self._wrap_row = wrap_row
         self._wrap_color: QColor | None = None
 
-    def place(self, *, in_point: int, out_point: int, cursor: int,
-              wrap_from: int, wrap_to: int, wrap_color: QColor) -> None:
+    def place(self, marks: FloatingMarks) -> None:
         if self._scrubber.width() <= 0:
             return
-        self._place_shift(in_point, out_point)
-        self._place_marks(in_point, out_point, cursor)
-        self._place_wrap(wrap_from, wrap_to, wrap_color)
+        self._place_shift(marks.in_point, marks.out_point)
+        self._place_marks(marks.in_point, marks.out_point, marks.cursor)
+        self._place_wrap(marks.wrap_from, marks.wrap_to, marks.wrap_color)
 
     def _offset_in(self, row: QWidget) -> int:
         return row.mapFromGlobal(self._scrubber.mapToGlobal(QPoint(0, 0))).x()

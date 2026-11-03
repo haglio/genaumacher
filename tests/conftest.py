@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
@@ -170,75 +171,72 @@ def values_of():
     return factory
 
 
+@dataclass
+class _StateFields:
+    total_frames: int = 100
+    left_bound: int = 0
+    right_bound: int | None = None
+    in_point: int = 10
+    out_point: int | None = None
+    cursor: int = 20
+    base_step: int = 5
+    fps: float = 30.0
+    speed: float = 1.0
+    wrap_mode: str = "blue"
+    loop_mode: str = "base-tip-base"
+    session_name: str = "test_session"
+    path: str = "/fake/video.mp4"
+    session_path: str = "/fake/sessions/test_session.json"
+    initial_in_point: int | None = None
+    initial_out_point: int | None = None
+    loop_anchor: float | None = None
+    loop_paused: bool = False
+    paused_loop_idx: int | None = None
+    paused_loop_pos: int | None = None
+
+
 @pytest.fixture
 def make_state():
-    def factory(
-        *,
-        total_frames: int = 100,
-        left_bound: int = 0,
-        right_bound: int | None = None,
-        in_point: int = 10,
-        out_point: int | None = None,
-        cursor: int = 20,
-        base_step: int = 5,
-        fps: float = 30.0,
-        speed: float = 1.0,
-        wrap_mode: str = "blue",
-        loop_mode: str = "base-tip-base",
-        session_name: str = "test_session",
-        path: str = "/fake/video.mp4",
-        session_path: str = "/fake/sessions/test_session.json",
-        initial_in_point: int | None = None,
-        initial_out_point: int | None = None,
-        loop_anchor: float | None = None,
-        loop_paused: bool = False,
-        paused_loop_idx: int | None = None,
-        paused_loop_pos: int | None = None,
-    ) -> VideoState:
-        if right_bound is None:
-            right_bound = total_frames - 1
-        if out_point is None:
-            out_point = total_frames - 10
+    def factory(**fields) -> VideoState:
+        f = _StateFields(**fields)
+        right_bound = f.total_frames - 1 if f.right_bound is None else f.right_bound
+        out_point = f.total_frames - 10 if f.out_point is None else f.out_point
         return VideoState(
-            cap=_FakeCapture(total_frames),
-            path=path,
-            fps=fps,
+            cap=_FakeCapture(f.total_frames),
+            path=f.path,
+            fps=f.fps,
             window=FrameWindow(
-                total_frames=total_frames,
-                left_bound=left_bound,
+                total_frames=f.total_frames,
+                left_bound=f.left_bound,
                 right_bound=right_bound,
-                cursor=cursor,
-                base_step=base_step,
+                cursor=f.cursor,
+                base_step=f.base_step,
             ),
             clip=ClipRange(
-                start=in_point,
+                start=f.in_point,
                 end=out_point,
-                anchor_in=in_point,
+                anchor_in=f.in_point,
                 anchor_out=out_point,
             ),
             frames={
                 i: np.zeros((2, 2, 3), dtype=np.uint8)
-                for i in range(left_bound, right_bound + 1)
+                for i in range(f.left_bound, right_bound + 1)
             },
             loop=LoopCursor(
-                anchor=time.monotonic() if loop_anchor is None else loop_anchor,
-                speed=speed,
-                paused=loop_paused,
-                paused_idx=paused_loop_idx,
-                paused_pos=paused_loop_pos,
+                anchor=time.monotonic() if f.loop_anchor is None else f.loop_anchor,
+                speed=f.speed,
+                paused=f.loop_paused,
+                paused_idx=f.paused_loop_idx,
+                paused_pos=f.paused_loop_pos,
             ),
             suggestions=Suggestions(
-                initial_start=(
-                    in_point if initial_in_point is None else initial_in_point
-                ),
-                initial_end=(
-                    out_point if initial_out_point is None else initial_out_point
-                ),
+                initial_start=f.in_point if f.initial_in_point is None else f.initial_in_point,
+                initial_end=out_point if f.initial_out_point is None else f.initial_out_point,
             ),
-            session_name=session_name,
-            session_path=session_path,
-            loop_mode=read_loop_mode(loop_mode),
-            wrap_mode=read_wrap_mode(wrap_mode),
+            session_name=f.session_name,
+            session_path=f.session_path,
+            loop_mode=read_loop_mode(f.loop_mode),
+            wrap_mode=read_wrap_mode(f.wrap_mode),
             persist_session=_FakeAutosave(),
         )
 

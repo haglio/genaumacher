@@ -30,46 +30,9 @@ class LauncherDialog(QDialog):
         self.new_radio = QRadioButton("Create new session")
         self.load_radio.setChecked(True)
 
-        self.session_json_edit = QLineEdit(last_session)
-        self.session_browse_btn = QPushButton("Browse...")
-        self.session_browse_btn.clicked.connect(self._browse_session)
-
-        load_row = QHBoxLayout()
-        load_row.addWidget(QLabel("Session JSON:"))
-        load_row.addWidget(self.session_json_edit)
-        load_row.addWidget(self.session_browse_btn)
-
-        self.session_name_edit = QLineEdit()
-        self.video_file_edit = QLineEdit()
-        self.video_browse_btn = QPushButton("Browse...")
-        self.video_browse_btn.clicked.connect(self._browse_video)
-        self.timestamp_edit = QLineEdit("00:00:00")
-        self.seconds_edit = QLineEdit("5")
-        self.loop_mode_combo = QComboBox()
-        for mode in LOOP_MODES:
-            self.loop_mode_combo.addItem(mode)
-        self.vr_checkbox = QCheckBox("VR")
-        self.video_file_edit.textChanged.connect(self._on_video_path_changed)
-
-        video_row = QHBoxLayout()
-        video_row.addWidget(QLabel("Video file:"))
-        video_row.addWidget(self.video_file_edit)
-        video_row.addWidget(self.video_browse_btn)
-
-        self.clip_whole_btn = QPushButton("Clip whole vid...")
-        self.clip_whole_btn.clicked.connect(self._browse_clip_whole)
-        self.open_btn = QPushButton("Open")
-        self.cancel_btn = QPushButton("Cancel")
-        self.open_btn.clicked.connect(self.accept)
-        self.cancel_btn.clicked.connect(self.reject)
-
-        self._clip_whole_file: str = ""
-
-        btn_row = QHBoxLayout()
-        btn_row.addWidget(self.clip_whole_btn)
-        btn_row.addStretch()
-        btn_row.addWidget(self.open_btn)
-        btn_row.addWidget(self.cancel_btn)
+        load_row = self._load_row(last_session)
+        video_row = self._new_session_fields()
+        btn_row = self._button_row()
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.load_radio)
@@ -86,6 +49,53 @@ class LauncherDialog(QDialog):
         layout.addWidget(self.loop_mode_combo)
         layout.addWidget(self.vr_checkbox)
         layout.addLayout(btn_row)
+
+    def _load_row(self, last_session: str) -> QHBoxLayout:
+        self.session_json_edit = QLineEdit(last_session)
+        self.session_browse_btn = QPushButton("Browse...")
+        self.session_browse_btn.clicked.connect(self._browse_session)
+
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Session JSON:"))
+        row.addWidget(self.session_json_edit)
+        row.addWidget(self.session_browse_btn)
+        return row
+
+    def _new_session_fields(self) -> QHBoxLayout:
+        self.session_name_edit = QLineEdit()
+        self.video_file_edit = QLineEdit()
+        self.video_browse_btn = QPushButton("Browse...")
+        self.video_browse_btn.clicked.connect(self._browse_video)
+        self.timestamp_edit = QLineEdit("00:00:00")
+        self.seconds_edit = QLineEdit("5")
+        self.loop_mode_combo = QComboBox()
+        for mode in LOOP_MODES:
+            self.loop_mode_combo.addItem(mode)
+        self.vr_checkbox = QCheckBox("VR")
+        self.video_file_edit.textChanged.connect(self._on_video_path_changed)
+
+        video_row = QHBoxLayout()
+        video_row.addWidget(QLabel("Video file:"))
+        video_row.addWidget(self.video_file_edit)
+        video_row.addWidget(self.video_browse_btn)
+        return video_row
+
+    def _button_row(self) -> QHBoxLayout:
+        self.clip_whole_btn = QPushButton("Clip whole vid...")
+        self.clip_whole_btn.clicked.connect(self._browse_clip_whole)
+        self.open_btn = QPushButton("Open")
+        self.cancel_btn = QPushButton("Cancel")
+        self.open_btn.clicked.connect(self.accept)
+        self.cancel_btn.clicked.connect(self.reject)
+
+        self._clip_whole_file: str = ""
+
+        row = QHBoxLayout()
+        row.addWidget(self.clip_whole_btn)
+        row.addStretch()
+        row.addWidget(self.open_btn)
+        row.addWidget(self.cancel_btn)
+        return row
 
     def prefill(self, session_name: str, video_file: str, timestamp: str) -> None:
         self.session_name_edit.setText(session_name)
