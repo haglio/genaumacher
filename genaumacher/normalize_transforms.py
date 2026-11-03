@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
@@ -136,12 +137,7 @@ def warp_affine(frame: np.ndarray, M: np.ndarray) -> np.ndarray:
     return cv2.warpAffine(frame, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
 
-def estimate_alignment(frame_a: np.ndarray, frame_b: np.ndarray) -> np.ndarray | None:
-    h, w = frame_a.shape[:2]
-    if h < _SMALLEST_ALIGNABLE or w < _SMALLEST_ALIGNABLE:
-        return None
-    gray_a = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
-    gray_b = cv2.cvtColor(frame_b, cv2.COLOR_BGR2GRAY)
+def _matched_points(gray_a: np.ndarray, gray_b: np.ndarray) -> tuple[np.ndarray, np.ndarray] | None:
     orb = cv2.ORB_create(nfeatures=2000)
     try:
         kp_a, desc_a = orb.detectAndCompute(gray_a, None)
@@ -150,18 +146,25 @@ def estimate_alignment(frame_a: np.ndarray, frame_b: np.ndarray) -> np.ndarray |
         return None
     if desc_a is None or desc_b is None or len(kp_a) < _FEWEST_POINTS or len(kp_b) < _FEWEST_POINTS:
         return None
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING)
-    raw_matches = bf.knnMatch(desc_a, desc_b, k=_NEIGHBORS)
+    raw_matches = cv2.BFMatcher(cv2.NORM_HAMMING).knnMatch(desc_a, desc_b, k=_NEIGHBORS)
     good = [m_pair[0] for m_pair in raw_matches
             if len(m_pair) == _NEIGHBORS and m_pair[0].distance < 0.75 * m_pair[1].distance]
     if len(good) < _FEWEST_POINTS:
         return None
-    pts_a = np.array([kp_a[m.queryIdx].pt for m in good], dtype=np.float32)
-    pts_b = np.array([kp_b[m.trainIdx].pt for m in good], dtype=np.float32)
-    M, inliers = cv2.estimateAffinePartial2D(pts_a, pts_b, method=cv2.RANSAC, ransacReprojThreshold=3.0)
-    if M is None or inliers is None:
+    return (np.array([kp_a[m.queryIdx].pt for m in good], dtype=np.float32),
+            np.array([kp_b[m.trainIdx].pt for m in good], dtype=np.float32))
+
+
+def estimate_alignment(frame_a: np.ndarray, frame_b: np.ndarray) -> np.ndarray | None:
+    h, w = frame_a.shape[:2]
+    if h < _SMALLEST_ALIGNABLE or w < _SMALLEST_ALIGNABLE:
         return None
-    if float(inliers.sum()) / len(good) < _INLIER_SHARE:
+    matched = _matched_points(cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY), cv2.cvtColor(frame_b, cv2.COLOR_BGR2GRAY))
+    if matched is None:
+        return None
+    pts_a, pts_b = matched
+    M, inliers = cv2.estimateAffinePartial2D(pts_a, pts_b, method=cv2.RANSAC, ransacReprojThreshold=3.0)
+    if M is None or inliers is None or float(inliers.sum()) / len(pts_a) < _INLIER_SHARE:
         return None
     return M
 
@@ -190,35 +193,33 @@ def build_registered_seam(
     return out, True
 
 
-def _rife_interpolate_frame(
-    rife_exe: Path,
-    model_dir: Path,
-    frame_a: np.ndarray,
-    frame_b: np.ndarray,
-    timestep: float,
-    tmpdir: str,
-    tag: str = "0",
-) -> np.ndarray | None:
-    input0 = os.path.join(tmpdir, f"in0_{tag}.png")
-    input1 = os.path.join(tmpdir, f"in1_{tag}.png")
-    out_path = os.path.join(tmpdir, f"out_{tag}.png")
-    cv2.imwrite(input0, frame_a)
-    cv2.imwrite(input1, frame_b)
-    cmd = [
-        str(rife_exe), "-0", input0, "-1", input1, "-o", out_path,
-        "-s", str(timestep), "-m", str(model_dir),
-    ]
-    try:
-        subprocess.run(cmd, check=True, capture_output=True, timeout=30)
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
-        return None
-    frame = cv2.imread(out_path, cv2.IMREAD_COLOR)
-    if frame is None:
-        return None
-    h, w = frame_a.shape[:2]
-    if frame.shape[:2] != (h, w):
-        frame = cv2.resize(frame, (w, h), interpolation=cv2.INTER_LINEAR)
-    return frame
+@dataclass(frozen=True)
+class _Rife:
+    exe: Path
+    model_dir: Path
+    tmpdir: str
+
+    def interpolate(self, frame_a: np.ndarray, frame_b: np.ndarray, timestep: float, tag: str) -> np.ndarray | None:
+        input0 = os.path.join(self.tmpdir, f"in0_{tag}.png")
+        input1 = os.path.join(self.tmpdir, f"in1_{tag}.png")
+        out_path = os.path.join(self.tmpdir, f"out_{tag}.png")
+        cv2.imwrite(input0, frame_a)
+        cv2.imwrite(input1, frame_b)
+        cmd = [
+            str(self.exe), "-0", input0, "-1", input1, "-o", out_path,
+            "-s", str(timestep), "-m", str(self.model_dir),
+        ]
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, timeout=30)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
+            return None
+        frame = cv2.imread(out_path, cv2.IMREAD_COLOR)
+        if frame is None:
+            return None
+        h, w = frame_a.shape[:2]
+        if frame.shape[:2] != (h, w):
+            frame = cv2.resize(frame, (w, h), interpolation=cv2.INTER_LINEAR)
+        return frame
 
 
 def build_rife_bridge(
@@ -229,16 +230,14 @@ def build_rife_bridge(
     found = locate()
     if found is None:
         return None
-    rife_exe, model_dir = found
 
     tmpdir = tempfile.mkdtemp(prefix="rife_bridge_")
+    rife = _Rife(*found, tmpdir)
     try:
         results: list[np.ndarray] = []
         for i in range(bridge_frames):
             t = (i + 1) / (bridge_frames + 1)
-            frame = _rife_interpolate_frame(
-                rife_exe, model_dir, last_frame, first_frame, t, tmpdir, tag=f"b{i}"
-            )
+            frame = rife.interpolate(last_frame, first_frame, t, f"b{i}")
             if frame is None:
                 return None
             results.append(frame)
@@ -257,10 +256,10 @@ def build_rife_seam(
     found = locate()
     if found is None:
         return None
-    rife_exe, model_dir = found
 
     out = list(frames)
     tmpdir = tempfile.mkdtemp(prefix="rife_seam_")
+    rife = _Rife(*found, tmpdir)
     try:
         for i in range(1, seam_frames + 1):
             tail_idx = n - i
@@ -270,20 +269,12 @@ def build_rife_seam(
             if timestep < _SMALLEST_STEP:
                 continue
 
-            new_tail = _rife_interpolate_frame(
-                rife_exe, model_dir,
-                frames[tail_idx], frames[head_idx],
-                timestep, tmpdir, tag=f"t{i}",
-            )
+            new_tail = rife.interpolate(frames[tail_idx], frames[head_idx], timestep, f"t{i}")
             if new_tail is None:
                 return None
             out[tail_idx] = new_tail
 
-            new_head = _rife_interpolate_frame(
-                rife_exe, model_dir,
-                frames[head_idx], frames[tail_idx],
-                timestep, tmpdir, tag=f"h{i}",
-            )
+            new_head = rife.interpolate(frames[head_idx], frames[tail_idx], timestep, f"h{i}")
             if new_head is None:
                 return None
             out[head_idx] = new_head

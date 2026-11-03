@@ -90,8 +90,8 @@ def test_the_normalize_command_runs_as_a_script():
 def cli_run(tmp_path, frames_of, capsys):
     output = tmp_path / "cli_out.mp4"
 
-    def fake_encode(frames, fps, out_path, *args, **kwargs):
-        Path(out_path).write_bytes(b"\0" * 32)
+    def fake_encode(_frames, _fps, options, **_kwargs):
+        Path(options.output).write_bytes(b"\0" * 32)
 
     def run() -> str:
         argv = [

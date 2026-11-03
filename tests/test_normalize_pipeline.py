@@ -33,8 +33,15 @@ def test_compute_bridge_frames_caps_to_one_third_of_normalized_frames():
     assert result == 3
 
 
+def _output_frames(frames, *, bridge_frames, seam_frames=0, **options) -> tuple[list, int]:
+    return build_output_frames(
+        frames, NormalizeOptions(input="in.mp4", output="out.mp4", **options),
+        bridge_frames=bridge_frames, seam_frames=seam_frames,
+    )
+
+
 def test_build_output_frames_keep_length_replaces_tail_with_bridge(frames_of, values_of):
-    out_frames, normalized_n = build_output_frames(
+    out_frames, normalized_n = _output_frames(
         frames_of([1, 2, 3, 4]),
         loop_mode=LoopMode.BASE_TIP_BASE,
         bridge_frames=1,
@@ -48,7 +55,7 @@ def test_build_output_frames_keep_length_replaces_tail_with_bridge(frames_of, va
 
 
 def test_build_output_frames_append_keeps_original_and_adds_bridge(frames_of, values_of):
-    out_frames, normalized_n = build_output_frames(
+    out_frames, normalized_n = _output_frames(
         frames_of([1, 2, 3, 4]),
         loop_mode=LoopMode.BASE_TIP_BASE,
         bridge_frames=2,
@@ -62,7 +69,7 @@ def test_build_output_frames_append_keeps_original_and_adds_bridge(frames_of, va
 
 
 def test_build_output_frames_register_mode_falls_back_on_tiny_frames(frames_of):
-    out_frames, normalized_n = build_output_frames(
+    out_frames, normalized_n = _output_frames(
         frames_of([10, 20, 30, 40, 50, 60]),
         loop_mode=LoopMode.BASE_TIP_BASE,
         bridge_frames=1,
@@ -76,7 +83,7 @@ def test_build_output_frames_register_mode_falls_back_on_tiny_frames(frames_of):
 
 class TestTheRegisteredSeam:
     def _built(self, frames, **overrides):
-        return build_output_frames(
+        return _output_frames(
             frames,
             **{"loop_mode": LoopMode.BASE_TIP_BASE, "bridge_frames": 2, "mode": "register",
                "keep_length": True, "symmetric_blend": 0, "seam_frames": 3,
@@ -147,7 +154,7 @@ class TestTheRegisteredSeam:
 
 def test_build_output_frames_rejects_keep_length_when_bridge_is_too_long(frames_of):
     with pytest.raises(RuntimeError, match="--keep-length bridge is too long"):
-        build_output_frames(
+        _output_frames(
             frames_of([1, 2, 3]),
             loop_mode=LoopMode.BASE_TIP_BASE,
             bridge_frames=3,
@@ -174,18 +181,18 @@ class _RecordingEncoder:
         self.sizes = list(sizes) or [16]
         self.calls: list[dict] = []
 
-    def __call__(self, frames, fps, out_path, crf, preset, pix_fmt, input_audio_path=None):
+    def __call__(self, frames, fps, options, input_audio_path=None):
         self.calls.append({
             "frame_count": len(frames),
             "shape": frames[0].shape[:2],
             "fps": fps,
-            "crf": crf,
-            "preset": preset,
-            "pix_fmt": pix_fmt,
+            "crf": options.crf,
+            "preset": options.preset,
+            "pix_fmt": options.pix_fmt,
             "input_audio_path": input_audio_path,
         })
         size = self.sizes.pop(0) if len(self.sizes) > 1 else self.sizes[0]
-        Path(out_path).write_bytes(b"\0" * size)
+        Path(options.output).write_bytes(b"\0" * size)
 
 
 def _options(tmp_path: Path, **overrides) -> NormalizeOptions:
@@ -198,7 +205,8 @@ def _options(tmp_path: Path, **overrides) -> NormalizeOptions:
 
 @pytest.fixture
 def run_pipeline(frames_of):
-    def run(options, *, values=(10, 20, 30, 40), size=8, fps=24.0, encoder=None, report=None):
+    def run(options, *, values=(10, 20, 30, 40), size=8, encoder=None, report=None):
+        fps = 24.0
         encoder = encoder or _RecordingEncoder()
         with patch("genaumacher.normalize_pipeline.ffprobe_video",
                    return_value={"fps": fps, "width": size, "height": size,
@@ -336,7 +344,7 @@ _BLEND_SOURCE = list(range(10, 170, 10))
 
 
 def _blend_run(frames_of, values_of, symmetric_blend):
-    out, normalized_n = build_output_frames(
+    out, normalized_n = _output_frames(
         frames_of(_BLEND_SOURCE), loop_mode=LoopMode.BASE_TIP_BASE, bridge_frames=1,
         mode="blend", keep_length=False, symmetric_blend=symmetric_blend,
     )
@@ -376,7 +384,7 @@ def test_a_blend_wider_than_a_quarter_of_the_clip_is_capped_there(frames_of, val
 def test_the_register_fallback_blends_the_same_way(frames_of, values_of):
     blended, n = _blend_run(frames_of, values_of, 2)
 
-    out, registered_n = build_output_frames(
+    out, registered_n = _output_frames(
         frames_of(_BLEND_SOURCE), loop_mode=LoopMode.BASE_TIP_BASE, bridge_frames=1,
         mode="register", keep_length=False, symmetric_blend=2,
     )
@@ -392,9 +400,9 @@ class TestSayingHowFarItHasGot:
             trace.append("decoded")
             return frames_of([10, 20, 30, 40], size=8)
 
-        def encode(_frames, _fps, out_path, *_args, **_kwargs):
+        def encode(_frames, _fps, options, **_kwargs):
             trace.append("encoded")
-            Path(out_path).write_bytes(b"\0" * 16)
+            Path(options.output).write_bytes(b"\0" * 16)
 
         with patch("genaumacher.normalize_pipeline.ffprobe_video",
                    return_value={"fps": 24.0, "width": 8, "height": 8,
@@ -426,7 +434,7 @@ def test_when_the_two_ends_will_not_align_the_register_mode_bridges_by_optical_f
                           for seed in range(6)]
 
     def last_frame_in(mode: str) -> np.ndarray:
-        out, _ = build_output_frames(
+        out, _ = _output_frames(
             too_small_to_align,
             loop_mode=LoopMode.BASE_TIP_BASE,
             bridge_frames=1,
