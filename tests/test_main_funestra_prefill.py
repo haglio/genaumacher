@@ -8,7 +8,7 @@ from pathlib import Path
 from app_support.siblings import primary_checkout_of
 
 from genaumacher import main_funestra_prefill
-from genaumacher.create_session import build_session_payload
+from genaumacher.create_session import SessionAsk, build_session_payload
 from genaumacher.main_funestra_prefill import SessionPrefill, detect_main_funestra_session_prefill
 from genaumacher.paths import PROJECT_DIR
 
@@ -44,7 +44,7 @@ class TestWhatItReads:
 
     def test_the_session_is_named_the_way_the_push_side_names_it(self, tmp_path: Path):
         prefill = detect_main_funestra_session_prefill(_status(tmp_path))
-        pushed = build_session_payload(prefill.video_file, 0.0, fps=30.0, total_frames=100)
+        pushed = build_session_payload(SessionAsk(prefill.video_file, 0.0), fps=30.0, total_frames=100)
 
         assert prefill.session_name == pushed["session_name"]
 

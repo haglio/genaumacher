@@ -4,13 +4,14 @@ import argparse
 import logging
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from app_support.subprocess_utils import hidden_subprocess_kwargs
 
 from .loop_modes import LoopMode
 from .paths import SESSIONS_DIR, sanitize_name
-from .session_persistence import remember_last_session, safe_atomic_write_json, session_payload
+from .session_persistence import SessionRecord, remember_last_session, safe_atomic_write_json
 from .wrap_modes import WrapMode
 
 logger = logging.getLogger(__name__)
@@ -63,27 +64,29 @@ def ffprobe_video_metadata(video_path: str) -> tuple[float, int]:
     return fps, total_frames
 
 
-def build_session_payload(
-    video_path: str,
-    start_time_s: float,
-    fps: float,
-    total_frames: int,
-    *,
-    session_name: str = "",
-    seconds: float = DEFAULT_SECONDS,
-    loop_mode: LoopMode = DEFAULT_LOOP_MODE,
-    vr: bool = False,
-) -> dict:
-    session_name = sanitize_name(session_name or Path(video_path).stem)
+@dataclass(frozen=True)
+class SessionAsk:
+    video_path: str
+    start_time_s: float
+    session_name: str = ""
+    seconds: float = DEFAULT_SECONDS
+    loop_mode: LoopMode = DEFAULT_LOOP_MODE
+    vr: bool = False
 
+    @property
+    def sanitized_name(self) -> str:
+        return sanitize_name(self.session_name or Path(self.video_path).stem)
+
+
+def build_session_payload(ask: SessionAsk, fps: float, total_frames: int) -> dict:
     base_step = max(1, round(fps))
-    start_idx = max(0, min(total_frames - 1, round(start_time_s * fps)))
-    duration_frames = max(1, round(seconds * fps))
+    start_idx = max(0, min(total_frames - 1, round(ask.start_time_s * fps)))
+    duration_frames = max(1, round(ask.seconds * fps))
     end_idx = min(total_frames - 1, start_idx + duration_frames - 1)
 
-    return session_payload(
-        session_name=session_name,
-        video_path=video_path,
+    return SessionRecord(
+        session_name=ask.sanitized_name,
+        video_path=ask.video_path,
         fps=fps,
         total_frames=total_frames,
         left_bound=start_idx,
@@ -92,49 +95,27 @@ def build_session_payload(
         out_point=end_idx,
         cursor=start_idx,
         seconds_per_step=base_step / fps,
-        loop_mode=loop_mode,
+        loop_mode=ask.loop_mode,
         wrap_mode=WrapMode.OVER_BOUNDS,
         speed=1.0,
-        vr=vr,
-    )
+        vr=ask.vr,
+    ).as_payload()
 
 
-def create_session(
-    video_path: str,
-    start_time_s: float,
-    *,
-    session_name: str = "",
-    seconds: float = DEFAULT_SECONDS,
-    loop_mode: LoopMode = DEFAULT_LOOP_MODE,
-    vr: bool = False,
-    sessions_dir: Path | None = None,
-) -> Path:
+def create_session(ask: SessionAsk, *, sessions_dir: Path | None = None) -> Path:
     if sessions_dir is None:
         sessions_dir = SESSIONS_DIR
     sessions_dir.mkdir(parents=True, exist_ok=True)
 
-    fps, total_frames = ffprobe_video_metadata(video_path)
+    fps, total_frames = ffprobe_video_metadata(ask.video_path)
 
-    session_name = sanitize_name(session_name or Path(video_path).stem)
-
-    session_path = sessions_dir / f"{session_name}.json"
+    session_path = sessions_dir / f"{ask.sanitized_name}.json"
     if session_path.exists():
         logger.info("Session already exists: %s", session_path)
         remember_last_session(session_path)
         return session_path
 
-    payload = build_session_payload(
-        video_path,
-        start_time_s,
-        fps,
-        total_frames,
-        session_name=session_name,
-        seconds=seconds,
-        loop_mode=loop_mode,
-        vr=vr,
-    )
-
-    ok, detail = safe_atomic_write_json(session_path, payload)
+    ok, detail = safe_atomic_write_json(session_path, build_session_payload(ask, fps, total_frames))
     if not ok:
         raise RuntimeError(f"Could not write {session_path}: {detail}")
 
@@ -153,10 +134,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         session_path = create_session(
-            args.video,
-            args.time,
-            session_name=args.name,
-            seconds=args.seconds,
+            SessionAsk(args.video, args.time, session_name=args.name, seconds=args.seconds)
         )
         print(str(session_path))
         return 0
