@@ -10,7 +10,7 @@ import pytest
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QApplication
 
-from genaumacher.create_session import build_session_payload
+from genaumacher.create_session import SessionAsk, build_session_payload
 from genaumacher.editing import set_mark_in
 from genaumacher.gui.main_window import GenaumacherMainWindow
 from genaumacher.launch_choice import LoadSession
@@ -84,8 +84,9 @@ def load_session(session_file):
 
 def test_the_two_writers_of_this_format_agree_on_it(make_state):
     created = build_session_payload(
-        "D:/media/example/beta rehearsal.mp4", 2.0, 30.0, 480,
-        session_name="beta rehearsal", seconds=5.0, loop_mode="base-tip", vr=True,
+        SessionAsk("D:/media/example/beta rehearsal.mp4", 2.0, session_name="beta rehearsal",
+                   seconds=5.0, loop_mode="base-tip", vr=True),
+        30.0, 480,
     )
     saved = current_payload(make_state())
 

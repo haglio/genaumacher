@@ -10,12 +10,21 @@ from unittest.mock import patch
 import pytest
 
 from genaumacher.create_session import (
+    SessionAsk,
     build_session_payload,
     create_session,
     main,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _payload(video_path, start_time_s, fps, total_frames, **ask) -> dict:
+    return build_session_payload(SessionAsk(video_path, start_time_s, **ask), fps, total_frames)
+
+
+def _create(video_path, start_time_s, *, sessions_dir=None, **ask) -> Path:
+    return create_session(SessionAsk(video_path, start_time_s, **ask), sessions_dir=sessions_dir)
 
 
 def test_create_session_importable_without_cv2():
@@ -32,7 +41,7 @@ def test_create_session_importable_without_cv2():
 
 
 def test_build_session_payload_basic():
-    payload = build_session_payload(
+    payload = _payload(
         r"C:\videos\Demo Video.mp4",
         10.0,
         30.0,
@@ -57,35 +66,35 @@ def test_build_session_payload_basic():
 
 
 def test_build_session_payload_defaults_session_name_from_stem():
-    payload = build_session_payload(r"C:\videos\My Cool Video.mp4", 0.0, 24.0, 240)
+    payload = _payload(r"C:\videos\My Cool Video.mp4", 0.0, 24.0, 240)
     assert payload["session_name"] == "My Cool Video"
 
 
 def test_build_session_payload_clamps_at_video_end():
-    payload = build_session_payload("video.mp4", 100.0, 30.0, 100)
+    payload = _payload("video.mp4", 100.0, 30.0, 100)
     assert payload["loaded_start"] == 99
     assert payload["loaded_end"] == 99
     assert payload["current"] == 99
 
 
 def test_build_session_payload_clamps_at_video_start():
-    payload = build_session_payload("video.mp4", -5.0, 30.0, 900)
+    payload = _payload("video.mp4", -5.0, 30.0, 900)
     assert payload["loaded_start"] == 0
     assert payload["current"] == 0
 
 
 def test_build_session_payload_end_clamps_to_total_frames():
-    payload = build_session_payload("video.mp4", 0.0, 30.0, 50, seconds=5.0)
+    payload = _payload("video.mp4", 0.0, 30.0, 50, seconds=5.0)
     assert payload["loaded_end"] == 49
 
 
 def test_build_session_payload_vr_defaults_false():
-    payload = build_session_payload("video.mp4", 0.0, 30.0, 900)
+    payload = _payload("video.mp4", 0.0, 30.0, 900)
     assert payload["vr"] is False
 
 
 def test_build_session_payload_vr_true():
-    payload = build_session_payload("video.mp4", 0.0, 30.0, 900, vr=True)
+    payload = _payload("video.mp4", 0.0, 30.0, 900, vr=True)
     assert payload["vr"] is True
 
 
@@ -98,7 +107,7 @@ def _mock_ffprobe(fps: float = 30.0, total_frames: int = 900):
 
 def test_create_session_writes_json(tmp_path):
     with _mock_ffprobe():
-        result = create_session(
+        result = _create(
             r"C:\videos\TestVideo.mp4",
             10.0,
             sessions_dir=tmp_path,
@@ -118,7 +127,7 @@ def test_a_write_that_fails_says_which_file_it_was(tmp_path):
         "genaumacher.create_session.safe_atomic_write_json",
         return_value=(False, "no space left on device"),
     ), pytest.raises(RuntimeError, match="no space left on device") as failure:
-        create_session("D:/media/example/beta rehearsal.mp4", 10.0, sessions_dir=tmp_path)
+        _create("D:/media/example/beta rehearsal.mp4", 10.0, sessions_dir=tmp_path)
 
     assert "beta rehearsal.json" in str(failure.value)
 
@@ -128,7 +137,7 @@ def test_create_session_skips_existing(tmp_path):
     existing.write_text('{"existing": true}', encoding="utf-8")
 
     with _mock_ffprobe():
-        result = create_session(
+        result = _create(
             r"C:\videos\TestVideo.mp4",
             10.0,
             sessions_dir=tmp_path,
@@ -140,7 +149,7 @@ def test_create_session_skips_existing(tmp_path):
 
 def test_create_session_custom_name(tmp_path):
     with _mock_ffprobe():
-        result = create_session(
+        result = _create(
             r"C:\videos\SomeLongFilename_v2.mp4",
             0.0,
             session_name="Short Name",
@@ -154,7 +163,7 @@ def test_create_session_custom_name(tmp_path):
 
 def test_create_session_sanitizes_name(tmp_path):
     with _mock_ffprobe():
-        result = create_session(
+        result = _create(
             r"C:\videos\Bad<>Name.mp4",
             0.0,
             sessions_dir=tmp_path,
@@ -165,7 +174,7 @@ def test_create_session_sanitizes_name(tmp_path):
 
 def test_create_session_sanitizes_a_supplied_name_too(tmp_path):
     with _mock_ffprobe():
-        result = create_session(
+        result = _create(
             r"C:\videos\SomeLongFilename_v2.mp4",
             0.0,
             session_name="Take: two?",
@@ -181,7 +190,7 @@ def test_create_session_updates_last_session_file(tmp_path):
     last_session = tmp_path / ".last_session.txt"
     with _mock_ffprobe(), \
          patch("genaumacher.session_persistence.LAST_SESSION_FILE", last_session):
-        result = create_session(
+        result = _create(
             r"C:\videos\TestVideo.mp4",
             10.0,
             sessions_dir=tmp_path,
@@ -198,7 +207,7 @@ def test_create_session_updates_last_session_even_when_existing(tmp_path):
 
     with _mock_ffprobe(), \
          patch("genaumacher.session_persistence.LAST_SESSION_FILE", last_session):
-        result = create_session(
+        result = _create(
             r"C:\videos\TestVideo.mp4",
             10.0,
             sessions_dir=tmp_path,
@@ -212,7 +221,7 @@ def test_create_session_ffprobe_failure(tmp_path):
         "genaumacher.create_session.ffprobe_video_metadata",
         side_effect=RuntimeError("ffprobe failed"),
     ), pytest.raises(RuntimeError, match="ffprobe failed"):
-        create_session("nonexistent.mp4", 0.0, sessions_dir=tmp_path)
+        _create("nonexistent.mp4", 0.0, sessions_dir=tmp_path)
 
 
 def test_cli_success(tmp_path, capsys):

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -39,44 +40,45 @@ def read_json(path: Path) -> dict[str, Any]:
 SESSION_FORMAT_VERSION = 1
 
 
-def session_payload(
-    *,
-    session_name: str,
-    video_path: str,
-    fps: float,
-    total_frames: int,
-    left_bound: int,
-    right_bound: int,
-    in_point: int,
-    out_point: int,
-    cursor: int,
-    seconds_per_step: float,
-    loop_mode: LoopMode,
-    wrap_mode: WrapMode,
-    speed: float,
-    vr: bool,
-) -> dict:
-    return {
-        "version": SESSION_FORMAT_VERSION,
-        "session_name": session_name,
-        "video_path": video_path,
-        "fps": fps,
-        "total_frames": total_frames,
-        "loaded_start": left_bound,
-        "loaded_end": right_bound,
-        "active_start": in_point,
-        "active_end": out_point,
-        "current": cursor,
-        "seconds_per_step": seconds_per_step,
-        "loop_mode": loop_mode,
-        "wrap_mode": wrap_mode,
-        "speed": speed,
-        "vr": vr,
-    }
+@dataclass(frozen=True)
+class SessionRecord:
+    session_name: str
+    video_path: str
+    fps: float
+    total_frames: int
+    left_bound: int
+    right_bound: int
+    in_point: int
+    out_point: int
+    cursor: int
+    seconds_per_step: float
+    loop_mode: LoopMode
+    wrap_mode: WrapMode
+    speed: float
+    vr: bool
+
+    def as_payload(self) -> dict:
+        return {
+            "version": SESSION_FORMAT_VERSION,
+            "session_name": self.session_name,
+            "video_path": self.video_path,
+            "fps": self.fps,
+            "total_frames": self.total_frames,
+            "loaded_start": self.left_bound,
+            "loaded_end": self.right_bound,
+            "active_start": self.in_point,
+            "active_end": self.out_point,
+            "current": self.cursor,
+            "seconds_per_step": self.seconds_per_step,
+            "loop_mode": self.loop_mode,
+            "wrap_mode": self.wrap_mode,
+            "speed": self.speed,
+            "vr": self.vr,
+        }
 
 
 def current_payload(state) -> dict:
-    return session_payload(
+    return SessionRecord(
         session_name=state.session_name,
         video_path=state.path,
         fps=state.fps,
@@ -91,7 +93,7 @@ def current_payload(state) -> dict:
         wrap_mode=state.wrap_mode,
         speed=state.speed,
         vr=state.vr,
-    )
+    ).as_payload()
 
 
 def autosave_session(state) -> None:

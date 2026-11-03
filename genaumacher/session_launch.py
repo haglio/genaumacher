@@ -7,7 +7,7 @@ import cv2
 from PyQt6.QtWidgets import QDialog
 
 from .clip_range import ClipRange
-from .create_session import create_session, ffprobe_video_metadata
+from .create_session import SessionAsk, create_session, ffprobe_video_metadata
 from .frame_window import FrameWindow
 from .gui.launcher_dialog import LauncherDialog
 from .launch_choice import ClipWholeVideo, LaunchChoice, LoadSession, NewSession
@@ -58,14 +58,14 @@ def build_state(choice: LoadSession | NewSession) -> VideoState:
     if isinstance(choice, LoadSession):
         session_path = Path(choice.session_json)
     else:
-        session_path = create_session(
+        session_path = create_session(SessionAsk(
             choice.video_file,
             parse_timestamp(choice.timestamp),
             session_name=choice.session_name,
             seconds=choice.seconds,
             loop_mode=choice.loop_mode,
             vr=choice.vr,
-        )
+        ))
     state = _load_state_from_session_file(session_path)
     remember_last_session(state.session_path)
     return state
