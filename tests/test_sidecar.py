@@ -53,8 +53,6 @@ def test_what_other_apps_recorded_about_the_clip_is_kept(genau_sidecar):
 
 
 def test_an_export_replaces_what_was_recorded_as_making_the_file_it_overwrote(genau_sidecar):
-    """An export writes a new file at that path, so no act recorded for the one
-    it replaced describes what is there now."""
     sidecar = genau_sidecar("scene one")
     sidecar.parent.mkdir(parents=True)
     sidecar.write_text(json.dumps({"provenance": {"generation": {"app": "another app"}}}),

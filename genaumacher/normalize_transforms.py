@@ -185,9 +185,6 @@ def build_registered_seam(
 
     out = [frame.copy() for frame in frames]
 
-    # Distribute the geometric correction across ALL frames so no single
-    # transition has a perceptible shift.  Frame 0 stays at identity;
-    # each subsequent frame is warped by an increasing fraction of M.
     for i in range(1, n):
         t = i / n
         warp_M = fractional_similarity(M, t, center)
@@ -205,7 +202,6 @@ def _rife_interpolate_frame(
     tmpdir: str,
     tag: str = "0",
 ) -> np.ndarray | None:
-    """Call RIFE to generate one interpolated frame at *timestep* between a and b."""
     input0 = os.path.join(tmpdir, f"in0_{tag}.png")
     input1 = os.path.join(tmpdir, f"in1_{tag}.png")
     out_path = os.path.join(tmpdir, f"out_{tag}.png")
@@ -231,7 +227,6 @@ def _rife_interpolate_frame(
 def build_rife_bridge(
     last_frame: np.ndarray, first_frame: np.ndarray, bridge_frames: int
 ) -> list[np.ndarray] | None:
-    """Generate bridge frames using RIFE neural frame interpolation."""
     if bridge_frames <= 0:
         return None
     found = locate()
@@ -258,34 +253,23 @@ def build_rife_bridge(
 def build_rife_seam(
     frames: list[np.ndarray], seam_frames: int
 ) -> list[np.ndarray] | None:
-    """Gradually converge frames near the seam using RIFE interpolation.
-
-    For each pair (frames[N-i], frames[i-1]), generates RIFE-interpolated
-    versions that subtly shift each toward its partner.  Influence is highest
-    at the seam and fades to zero at the edges.  Every modified frame is a
-    single RIFE output — no alpha compositing.
-
-    Returns the modified frame list, or None if RIFE is unavailable.
-    """
     n = len(frames)
     if seam_frames <= 0 or n < _SHORTEST_SEAMED:
         return None
-    # Ensure we don't overlap the two sides (each pair uses one from each side)
     seam_frames = min(seam_frames, n // 2)
     found = locate()
     if found is None:
         return None
     rife_exe, model_dir = found
 
-    out = list(frames)  # shallow copy; we replace individual elements
+    out = list(frames)
     tmpdir = tempfile.mkdtemp(prefix="rife_seam_")
     try:
         for i in range(1, seam_frames + 1):
             tail_idx = n - i
             head_idx = i - 1
-            # Influence: 1.0 nearest the seam, fading toward 0.0 at the edge
             influence = smoothstep01((seam_frames - i + 1) / seam_frames)
-            timestep = influence * 0.5  # max halfway toward partner
+            timestep = influence * 0.5
             if timestep < _SMALLEST_STEP:
                 continue
 

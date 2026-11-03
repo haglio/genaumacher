@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.main_window — main application window."""
-
 from __future__ import annotations
 
 import os
@@ -79,8 +77,6 @@ class TestConstruction:
         assert window.windowTitle() == "Genaumacher — preview of the new loop"
 
     def test_the_compact_controls_all_come_out_the_same_size(self, window):
-        """The bound, shift and mark buttons are one metric, so a row of them
-        lines up; the two that carry a whole word are wider than that."""
         tc, bb = window.scrubber_controls, window.button_bar
         compact = {
             (btn.width(), btn.height())
@@ -102,8 +98,6 @@ class TestConstruction:
             assert button.size() == QSize(BUTTON_SIZE, BUTTON_SIZE)
 
     def test_all_buttons_have_no_focus_policy(self, window):
-        """Buttons must not steal focus — arrow/space/enter must reach keyPressEvent."""
-
         buttons = window.findChildren(QPushButton)
         assert len(buttons) > 0
         for btn in buttons:
@@ -182,8 +176,6 @@ class TestExportWiring:
         mock_worker.start.assert_called_once()
 
 
-# The state every dispatch case starts from: room on both sides of the loaded
-# range to contract into, and room outside it to extend into.
 _DISPATCH_STATE = {
     "total_frames": 100, "left_bound": 10, "right_bound": 60,
     "in_point": 20, "out_point": 40, "cursor": 30, "base_step": 5,
@@ -204,11 +196,6 @@ def _with_suggestions(state):
     state.suggestions.offer(25, 35)
 
 
-# (label, Qt key, event text, prepare, what to read afterwards, what it must be)
-# -- every key the hotkey table binds, read off a real VideoState.  Six of
-# these used to be `patch(...); assert_called_once_with(state)`, which pins the
-# import name rather than the edit: swapping the handlers under s/d and w/l,
-# and flipping the sign of both change_speed steps, shipped green.
 _KEY_BINDINGS = [
     ("left", Qt.Key.Key_Left, "", _no_prep, lambda s: s.cursor, 29),
     ("right", Qt.Key.Key_Right, "", _no_prep, lambda s: s.cursor, 31),
@@ -239,8 +226,6 @@ _KEY_BINDINGS = [
 
 
 class TestKeyDispatch:
-    """Every keyboard binding, against a real VideoState."""
-
     @pytest.mark.parametrize(
         "key, text, prepare, observe, expected",
         [pytest.param(k, t, p, o, e, id=label) for label, k, t, p, o, e in _KEY_BINDINGS],
@@ -255,16 +240,8 @@ class TestKeyDispatch:
         assert observe(state) == expected
 
     def test_every_key_the_table_binds_has_a_case(self):
-        """A key added to the hotkey table without a case here fails this.
-
-        Fourteen of the twenty went unpinned for exactly as long as nothing
-        counted them.  This used to read the literals out of `keyPressEvent`'s
-        syntax tree; now that the dispatch is a lookup there is a table to
-        count instead, which also covers the keys reached by code rather than
-        by text.
-        """
         exercised = {text or key for _, key, text, *_ in _KEY_BINDINGS}
-        exercised |= {Qt.Key.Key_Return, Qt.Key.Key_Enter, "q"}  # the cases below
+        exercised |= {Qt.Key.Key_Return, Qt.Key.Key_Enter, "q"}
 
         bound = {key for s in HOTKEYS for key in s.keys}
         bound |= {code for s in HOTKEYS for code in s.qt_keys}
@@ -308,7 +285,6 @@ class TestKeyDispatch:
 
 
 def _brace_ink(row, rendered) -> list[int]:
-    """The x columns the wrap brace paints, read off the row it is drawn on."""
     image = rendered(row)
     background = image.pixelColor(row.width() - 2, 1).name()
     mid = row.height() // 2
@@ -322,7 +298,6 @@ def _brace_width(window, rendered) -> int:
 
 @pytest.fixture
 def shown_window(mock_state):
-    """Window that has been shown so geometry is computed."""
     w = GenaumacherMainWindow(mock_state)
     w.resize(1520, 960)
     w.show()
@@ -332,8 +307,6 @@ def shown_window(mock_state):
 
 
 class TestDynamicPositioning:
-    """Shift/mark/wrap buttons must track scrubber positions each tick."""
-
     def test_shift_buttons_center_on_in_out(self, shown_window, mock_state):
         w = shown_window
         mock_state.in_point = 20
@@ -362,7 +335,6 @@ class TestDynamicPositioning:
         tc = w.scrubber_controls
         tl.set_bounds(0, 100)
 
-        # Position with in-out at left
         mock_state.in_point = 0
         mock_state.out_point = 20
         tl.set_in_out(0, 20)
@@ -370,7 +342,6 @@ class TestDynamicPositioning:
         w.update_button_positions()
         left_pos = tc.shift_left_btn.mapToGlobal(QPoint(0, 0)).x()
 
-        # Move in-out to right
         mock_state.in_point = 60
         mock_state.out_point = 80
         tl.set_in_out(60, 80)
@@ -396,7 +367,6 @@ class TestDynamicPositioning:
         ).x()
         out_left = tc.mark_out_btn.mapToGlobal(QPoint(0, 0)).x()
 
-        # [ ] should be adjacent (gap < 20px), with [ on the left
         assert out_left >= in_right
         assert out_left - in_right < 20
 
@@ -404,23 +374,22 @@ class TestDynamicPositioning:
         w = shown_window
         mock_state.in_point = 40
         mock_state.out_point = 60
-        mock_state.cursor = 10  # left of in-out
+        mock_state.cursor = 10
         w.scrubber.set_bounds(0, 100)
         w.scrubber.set_in_out(40, 60)
         QApplication.processEvents()
         w.update_button_positions()
 
         tc = w.scrubber_controls
-        # mark_in follows cursor (x=10), mark_out follows in_point (x=40)
         in_x = tc.mark_in_btn.mapToGlobal(QPoint(0, 0)).x()
         out_x = tc.mark_out_btn.mapToGlobal(QPoint(0, 0)).x()
-        assert out_x > in_x + 50  # should be visibly separated
+        assert out_x > in_x + 50
 
     def test_mark_in_disabled_at_active_end(self, shown_window, mock_state):
         w = shown_window
         mock_state.in_point = 20
         mock_state.out_point = 80
-        mock_state.cursor = 80  # at out_point
+        mock_state.cursor = 80
         w.scrubber.set_bounds(0, 100)
         QApplication.processEvents()
         w.update_button_positions()
@@ -466,7 +435,6 @@ class TestDynamicPositioning:
         QApplication.processEvents()
         w.update_button_positions()
 
-        # Brace should span full scrubber width (bounds)
         assert _brace_width(w, rendered) > w.scrubber.width() * 0.8
 
     def test_wrap_brace_narrows_to_in_out_in_yellow_mode(self, shown_window, mock_state, rendered):
@@ -481,14 +449,11 @@ class TestDynamicPositioning:
         QApplication.processEvents()
         w.update_button_positions()
 
-        # Brace should be much narrower than scrubber (only 20% of bounds)
         brace_width = _brace_width(w, rendered)
         assert brace_width < w.scrubber.width() * 0.4
 
 
 class TestWrapBrace:
-    """The brace under the scrubber showing what the cursor wraps within."""
-
     def test_it_draws_a_line_across_exactly_the_span_it_was_given(self, rendered):
         row = _WrapRow()
         row.resize(600, 30)
@@ -508,9 +473,6 @@ class TestWrapBrace:
 
 
 class TestFloatingControlsStandAlone:
-    """The layout is a collaborator, not a method: it takes widgets and five
-    indices and knows nothing about a session."""
-
     def test_it_places_the_wrap_button_over_the_range_it_is_given(self):
         host = QWidget()
         host.resize(600, 200)

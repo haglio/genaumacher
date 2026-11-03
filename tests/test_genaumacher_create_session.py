@@ -15,27 +15,10 @@ from genaumacher.create_session import (
     main,
 )
 
-# ---------------------------------------------------------------------------
-# import isolation — create_session must not pull in cv2
-# ---------------------------------------------------------------------------
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_create_session_importable_without_cv2():
-    """create_session must not transitively import cv2 (or numpy).
-
-    In a fresh interpreter, the way `test_launch_smoke.py` runs its import
-    checks. This used to block cv2 by writing None into this process's
-    `sys.modules` and reloading the module in place -- and it never undid the
-    reload, so every module that had already done
-    `from genaumacher.create_session import create_session` went on holding the
-    pre-reload function while the module's own globals were the post-reload
-    ones, and a patch applied to one was invisible to the other. Nothing depends
-    on that today, which is why it never bit; it was a latent order dependence
-    sitting in a session-wide namespace. It also had no assertion, so a reload
-    that produced a broken module passed just the same.
-    """
     probe = (
         "import sys; sys.modules['cv2'] = None; sys.modules['numpy'] = None; "
         "import genaumacher.create_session"
@@ -47,10 +30,6 @@ def test_create_session_importable_without_cv2():
 
     assert result.returncode == 0, result.stderr
 
-
-# ---------------------------------------------------------------------------
-# build_session_payload
-# ---------------------------------------------------------------------------
 
 def test_build_session_payload_basic():
     payload = build_session_payload(
@@ -110,10 +89,6 @@ def test_build_session_payload_vr_true():
     assert payload["vr"] is True
 
 
-# ---------------------------------------------------------------------------
-# create_session
-# ---------------------------------------------------------------------------
-
 def _mock_ffprobe(fps: float = 30.0, total_frames: int = 900):
     return patch(
         "genaumacher.create_session.ffprobe_video_metadata",
@@ -139,13 +114,6 @@ def test_create_session_writes_json(tmp_path):
 
 
 def test_a_write_that_fails_says_which_file_it_was(tmp_path):
-    """The CLI turns this into an `ERROR:` line and a non-zero exit.
-
-    It used to hand-roll the tmp-file-then-replace that `safe_atomic_write_json`
-    already does, and re-raise whatever the filesystem raised; now it goes
-    through the one writer and names the path, so the caller is told which
-    session did not get written.
-    """
     with _mock_ffprobe(), patch(
         "genaumacher.create_session.safe_atomic_write_json",
         return_value=(False, "no space left on device"),
@@ -196,10 +164,6 @@ def test_create_session_sanitizes_name(tmp_path):
 
 
 def test_create_session_sanitizes_a_supplied_name_too(tmp_path):
-    """Only the name derived from the video was sanitized; a `--name` with a
-    forbidden character was written as given, to a file the rest of the app
-    -- which builds every path from the sanitized form -- could never find
-    again."""
     with _mock_ffprobe():
         result = create_session(
             r"C:\videos\SomeLongFilename_v2.mp4",
@@ -251,13 +215,7 @@ def test_create_session_ffprobe_failure(tmp_path):
         create_session("nonexistent.mp4", 0.0, sessions_dir=tmp_path)
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
 def test_cli_success(tmp_path, capsys):
-    """The CLI is what fun_time invokes; its two outputs are the file and the
-    path it prints, and it also moves the pointer the launcher opens next."""
     last_session = tmp_path / ".last_session.txt"
 
     with _mock_ffprobe(), \
@@ -273,14 +231,13 @@ def test_cli_success(tmp_path, capsys):
 
 
 def test_cli_writes_the_window_it_was_asked_for(tmp_path):
-    """A forward-slash path, so this one case reads the same on both platforms."""
     with _mock_ffprobe(), \
          patch("genaumacher.create_session.SESSIONS_DIR", tmp_path):
         main(["--video", "/library/seaside walk.mp4", "--time", "5.0", "--seconds", "3.0"])
 
     payload = json.loads((tmp_path / "seaside walk.json").read_text(encoding="utf-8"))
-    assert payload["active_start"] == 150  # 5s at 30fps
-    assert payload["active_end"] == 239  # plus three seconds, inclusive
+    assert payload["active_start"] == 150
+    assert payload["active_end"] == 239
 
 
 def test_cli_failure(capsys):

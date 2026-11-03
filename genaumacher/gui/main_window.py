@@ -1,5 +1,3 @@
-"""Main application window — assembles all widgets, handles keyboard dispatch."""
-
 from __future__ import annotations
 
 import os
@@ -46,14 +44,9 @@ from .video_pane import VideoPane
 if TYPE_CHECKING:
     from genaumacher.state import VideoState
 
-# What asking for a frame can raise: a missing key or index from the cache, and
-# `safe_frame`'s own RuntimeError when the frame is inside the loaded window but
-# the decoder never produced it.
 _UNDECODABLE = (KeyError, IndexError, RuntimeError)
 
 class _WrapRow(QWidget):
-    """Container that draws wrap-range brace lines and hosts the wrap button."""
-
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._x1 = 0
@@ -78,8 +71,6 @@ class _WrapRow(QWidget):
 
 
 class GenaumacherMainWindow(QMainWindow):
-    """Main Genaumacher window containing all UI widgets."""
-
     closed = pyqtSignal()
 
     def __init__(self, state: VideoState, parent=None, *, preview: Preview | None = None):
@@ -89,19 +80,14 @@ class GenaumacherMainWindow(QMainWindow):
         self.setMinimumSize(900, 600)
         self.resize(1520, 960)
 
-        # Video panes
         self.frame_at_cursor_pane = VideoPane()
         self.loop_preview_pane = VideoPane()
 
-        # Scrubber
         self.scrubber = ScrubberWidget()
 
-        # Controls (created for signal management; buttons placed individually)
         self.button_bar = ButtonBar()
         self.scrubber_controls = ScrubberControls()
         self.hotkey_reference = HotkeyReferenceWidget(hotkey_reference_rows())
-
-        # -- Labels ---------------------------------------------------------------
 
         self.session_label = QLabel(state.session_name)
         self.session_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -131,10 +117,6 @@ class GenaumacherMainWindow(QMainWindow):
         self.warning_label.setStyleSheet(WARNING_STYLE)
         self.warning_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # -- Wire signals ---------------------------------------------------------
-
-        # Each button runs the hotkey of the same name, so a button and its
-        # key cannot come to mean different things.
         for signal, name in (
             (self.button_bar.speed_down_clicked, "speed_down"),
             (self.button_bar.speed_up_clicked, "speed_up"),
@@ -155,12 +137,9 @@ class GenaumacherMainWindow(QMainWindow):
 
         self.scrubber.cursor_jumped.connect(self._on_scrubber_click)
 
-        # -- Layout ---------------------------------------------------------------
-
         central = QWidget()
         self.setCentralWidget(central)
 
-        # Pane headers
         frame_at_cursor_header = QLabel("frame at cursor")
         frame_at_cursor_header.setFont(make_font(FONT_UI, SIZE_HEADING))
         frame_at_cursor_header.setStyleSheet(LABEL_STYLE)
@@ -173,7 +152,6 @@ class GenaumacherMainWindow(QMainWindow):
         loop_preview_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         loop_preview_header.setContentsMargins(0, GAP_MEDIUM, 0, GAP_MEDIUM)
 
-        # Pane columns
         left_col = QVBoxLayout()
         left_col.setSpacing(GAP_SMALL)
         left_col.addWidget(frame_at_cursor_header)
@@ -188,7 +166,6 @@ class GenaumacherMainWindow(QMainWindow):
         panes_row.addLayout(left_col, stretch=1)
         panes_row.addLayout(right_col, stretch=1)
 
-        # Info row: cursor (left, stretch=1) | loop+speed+buttons (right, stretch=1)
         bb = self.button_bar
         tc = self.scrubber_controls
 
@@ -218,13 +195,11 @@ class GenaumacherMainWindow(QMainWindow):
         info_row.addLayout(left_info, stretch=1)
         info_row.addLayout(right_side, stretch=1)
 
-        # Dynamic rows — buttons positioned in _update_button_positions()
         self._shift_row = QWidget()
         self._shift_row.setFixedHeight(32)
         tc.shift_left_btn.setParent(self._shift_row)
         tc.shift_right_btn.setParent(self._shift_row)
 
-        # Scrubber row (extend/contract on sides, static layout)
         scrubber_row = QHBoxLayout()
         scrubber_row.addWidget(tc.extend_left_btn)
         scrubber_row.addWidget(tc.contract_left_btn)
@@ -241,13 +216,11 @@ class GenaumacherMainWindow(QMainWindow):
         self._wrap_row.setFixedHeight(36)
         tc.wrap_btn.setParent(self._wrap_row)
 
-        # Loop mode (centered, static)
         mode_row = QHBoxLayout()
         mode_row.addStretch()
         mode_row.addWidget(tc.loop_mode_btn)
         mode_row.addStretch()
 
-        # Assemble
         main_layout = QVBoxLayout(central)
         main_layout.setContentsMargins(MARGIN_STANDARD, GAP_SMALL, MARGIN_STANDARD, GAP_SMALL)
         main_layout.setSpacing(GAP_SMALL)
@@ -272,13 +245,9 @@ class GenaumacherMainWindow(QMainWindow):
 
     @property
     def state(self) -> VideoState:
-        """The session the window is editing -- what the hotkeys act on."""
         return self._state
 
-    # -- Dynamic button positioning -------------------------------------------
-
     def update_button_positions(self) -> None:
-        """Reposition shift/mark/wrap buttons relative to the scrubber."""
         state = self._state
         wrap_from, wrap_to = wrap_bounds(state)
         self._floating.place(
@@ -294,15 +263,7 @@ class GenaumacherMainWindow(QMainWindow):
             ),
         )
 
-    # -- Drawing the state ------------------------------------------------------
-
     def render(self, state: VideoState) -> None:
-        """Push the state into every widget this window owns.
-
-        Here rather than in the clock's tick, so the thing that knows this
-        window's widget names is this window, and the clock knows only that it
-        has a state to push.
-        """
         loop_idx = self._draw_frames(state)
         self._draw_scrubber(state, loop_idx)
         self._write_labels(state, loop_idx)
@@ -312,14 +273,6 @@ class GenaumacherMainWindow(QMainWindow):
         self.update_button_positions()
 
     def _draw_frames(self, state: VideoState) -> int:
-        """Put the loop frame and the cursor frame in their panes.
-
-        Returns the loop frame's index, which the scrubber and the loop label
-        both want.  A frame that will not decode costs its pane and nothing
-        else -- including the RuntimeError `safe_frame` raises when the window
-        spans a frame the decoder never produced, which out of a Qt slot would
-        be out of the process.
-        """
         loop_idx = state.in_point
         try:
             loop_idx = current_loop_frame_index(state)
@@ -351,9 +304,6 @@ class GenaumacherMainWindow(QMainWindow):
             f" @ {format_seconds(state.cursor / state.fps)}"
         )
 
-        # `_draw_frames` has just asked the loop cursor for its frame, and the
-        # cursor settles its position on every path out of that call, so the
-        # position is set whichever branch answered.
         preview_total = len(loop_preview_indices(state))
         width = max(2, len(str(max(0, preview_total))))
         self.loop_label.setText(
@@ -368,16 +318,12 @@ class GenaumacherMainWindow(QMainWindow):
         super().closeEvent(event)
         self.closed.emit()
 
-    # -- Key dispatch ----------------------------------------------------------
-
     def keyPressEvent(self, event: QKeyEvent) -> None:
         hotkey = hotkey_for(event.key(), event.text().lower())
         if hotkey is None:
             super().keyPressEvent(event)
             return
         hotkey.action(self)
-
-    # -- Export ----------------------------------------------------------------
 
     def start_export(self) -> None:
         dialog = ExportDialog(self)
@@ -386,10 +332,7 @@ class GenaumacherMainWindow(QMainWindow):
         dialog.show()
         worker.start()
 
-    # -- Helpers ---------------------------------------------------------------
-
     def _runs(self, name: str):
-        """A slot that runs the named hotkey against this window."""
         hotkey = BY_NAME[name]
         return lambda: hotkey.action(self)
 

@@ -1,13 +1,3 @@
-"""Genaumacher's chrome takes its colors from the family's palette, not its own.
-
-Most of it always did -- the scrubber, the legend and the video pane all read
-shared_ui tokens.  What was left were the strays: the button fill, its hover and
-pressed shades, two borders and a brace outline, each written as a hex literal
-nobody else in the family used.  Strays like those are why one app ends up
-looking a shade off from the one beside it, so this walks the GUI source and
-fails on any color spelled out in place.
-"""
-
 from __future__ import annotations
 
 import ast
@@ -21,8 +11,6 @@ from shared_ui.colors import dress_application
 
 _GUI = Path(__file__).resolve().parent.parent / "genaumacher" / "gui"
 
-# "#abc" and "#aabbcc" -- how a color reaches a Qt stylesheet when it did not
-# come from a token.
 _HEX = re.compile(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b")
 
 
@@ -34,8 +22,6 @@ def _sources() -> list[Path]:
 
 @pytest.mark.repo_check
 def test_no_color_is_spelled_out_in_a_stylesheet():
-    # Parsed rather than grepped, so a "#" in a comment or a path is not a hit --
-    # only text the app actually hands to Qt.
     offenders = []
     for path in _sources():
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -51,7 +37,6 @@ def test_no_color_is_spelled_out_in_a_stylesheet():
 
 @pytest.mark.repo_check
 def test_no_color_is_built_from_raw_channel_numbers():
-    # QColor(200, 200, 200) is the same stray wearing a constructor.
     offenders = []
     for path in _sources():
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -73,8 +58,6 @@ def test_no_color_is_built_from_raw_channel_numbers():
 
 @pytest.mark.repo_check
 def test_the_chrome_reads_the_family_palette():
-    # The positive side of it: the GUI does import the tokens, so the two checks
-    # above are not passing merely because nothing here draws anything.
     importers = [
         path.name for path in _sources()
         if "shared_ui.colors" in path.read_text(encoding="utf-8")
@@ -90,7 +73,6 @@ _BACKGROUND = re.compile(r"background(?:-color)?\s*:\s*(#[0-9a-fA-F]{3,6})")
 
 
 def _button_backgrounds(sheet: str) -> dict[str, QColor]:
-    """The background each QPushButton state gets, out of an applied sheet."""
     found = {}
     for rule in _PUSHBUTTON_RULE.finditer(sheet):
         color = _BACKGROUND.search(rule.group("body"))
@@ -100,15 +82,6 @@ def _button_backgrounds(sheet: str) -> dict[str, QColor]:
 
 
 def test_a_control_that_is_on_sits_on_a_lighter_ground():
-    """One rule across the family, so a toggled button reads the same whichever
-    app it is in.  Origenerator had it and this did not, until the buttons
-    became the family's.
-
-    Read off the sheet the app installs, not off the library it is built
-    from -- so a sheet that is written and never applied fails here.  It is
-    compared rather than name-matched, so it survives a palette change and
-    still fails an inversion.
-    """
     app = QApplication.instance()
     dress_application(app)
 

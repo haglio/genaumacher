@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.button_bar — transport control buttons."""
-
 from __future__ import annotations
 
 import pytest
@@ -46,9 +44,6 @@ class TestSignals:
 
 
 def test_the_transport_wears_the_familys_marks(bar):
-    """Fun Time's bar and Evolver's Run Now draw these same marks, and all three
-    apps sit open together.  These were an icon font's, at its weight."""
-
     size = QSize(48, 48)
 
     for icon, name in ((bar._icon_play, "play"),
@@ -60,9 +55,6 @@ def test_the_transport_wears_the_familys_marks(bar):
 
 
 def test_the_play_triangle_has_rounded_corners():
-    """Which is what the icon font gave it, and what the family's own drawing
-    lacked until filled shapes took a corner radius."""
-
     triangle = next(s for s in ICONS["play"] if isinstance(s, Polygon))
     assert triangle.round_radius > 0
 

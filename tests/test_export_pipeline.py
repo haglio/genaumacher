@@ -1,11 +1,3 @@
-"""The three steps an export runs, driven without a thread or a window.
-
-These cases used to run through ``ExportWorker.run``, which held the whole
-sequence inside a QThread -- so the order of the steps, where each output goes
-and what happens when one fails could only be asked with Qt in the room.  The
-worker's own tests stay where they are: what it does now is call this and turn
-the answer into a signal.
-"""
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -21,8 +13,6 @@ pytestmark = pytest.mark.usefixtures("library")
 
 
 class _Watcher:
-    """Whoever is watching the export -- here, a list of what it was told."""
-
     def __init__(self) -> None:
         self.stages: list[str] = []
         self.clips: list[float] = []
@@ -43,10 +33,6 @@ class _Watcher:
 
 
 class _Step:
-    """A stand-in for an export step: records its call, reports progress the
-    way the real step does, and answers with whatever it is told to.
-    """
-
     def __init__(self, *, stage: str, reports: str, ok: bool = True, detail: str = ""):
         self.stage_text = stage
         self.reports = reports
@@ -77,7 +63,6 @@ def state(make_state):
 
 @pytest.fixture
 def steps():
-    """The three export steps, stubbed at the module they are called through."""
     stubs = {
         "raw": _Step(stage="clipping", reports="clip", detail="raw.mp4"),
         "normalize": _Step(stage="normalizing", reports="normalize", detail="clip.mp4"),
@@ -209,9 +194,6 @@ class TestVrExportPath:
 
 
 class TestALoopedClipsRecord:
-    """Normalizing stamps the clip from inside its own run, whose code is what
-    made it -- which is not always the code this window was opened on."""
-
     def test_the_export_leaves_the_stamp_normalizing_wrote(
         self, state, steps, watcher, recorded_cut
     ):
@@ -227,8 +209,6 @@ class TestALoopedClipsRecord:
 
 
 class TestSkipNormalize:
-    """A whole-video export is already a loop, so it is not normalized."""
-
     @pytest.fixture(autouse=True)
     def _skipping(self, state):
         state.skip_normalize = True
@@ -260,8 +240,6 @@ class TestSkipNormalize:
     def test_the_clip_says_genaumacher_made_it_without_normalizing(
         self, state, steps, watcher, recorded_cut
     ):
-        """Nothing but the cut touched it, so a sweep for clips made before a
-        change to normalizing finds nothing here to remake."""
         run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)

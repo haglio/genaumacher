@@ -1,4 +1,3 @@
-"""Tests for genaumacher.clip_range — the in and out points of the clip."""
 from __future__ import annotations
 
 from genaumacher.clip_range import ClipRange
@@ -19,7 +18,6 @@ class TestMarkIn:
         assert clip.start == 5
 
     def test_the_anchor_follows_the_mark(self):
-        """What the suggestion search searches around is where the mark was set."""
         clip = ClipRange(start=5, end=50, anchor_in=5)
 
         clip.mark_in(20)

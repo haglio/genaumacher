@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.export_dialog — export progress dialog."""
-
 from __future__ import annotations
 
 import pytest

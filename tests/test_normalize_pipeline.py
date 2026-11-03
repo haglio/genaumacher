@@ -62,7 +62,6 @@ def test_build_output_frames_append_keeps_original_and_adds_bridge(frames_of, va
 
 
 def test_build_output_frames_register_mode_falls_back_on_tiny_frames(frames_of):
-    """Register mode should fall back gracefully on 1x1 frames with no keypoints."""
     out_frames, normalized_n = build_output_frames(
         frames_of([10, 20, 30, 40, 50, 60]),
         loop_mode=LoopMode.BASE_TIP_BASE,
@@ -76,15 +75,6 @@ def test_build_output_frames_register_mode_falls_back_on_tiny_frames(frames_of):
 
 
 class TestTheRegisteredSeam:
-    """What ``--mode register`` does once the two ends actually align.
-
-    Every other case here feeds solid frames, which have no keypoints, so the
-    alignment fails and the blend fallback is what runs -- leaving the three
-    paths the mode exists for pinned by nothing.  The interpolator itself is
-    stubbed at this module's own boundary, since whether it is on the machine
-    is not what these decide.
-    """
-
     def _built(self, frames, **overrides):
         return build_output_frames(
             frames,
@@ -94,7 +84,6 @@ class TestTheRegisteredSeam:
         )
 
     def test_a_converged_seam_is_the_whole_answer(self, textured_frames, frames_of, values_of):
-        """Nudging the frames either side of the seam together needs no bridge."""
         converged = frames_of([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
         with patch("genaumacher.normalize_pipeline.build_rife_seam",
@@ -134,14 +123,6 @@ class TestTheRegisteredSeam:
     def test_with_no_interpolator_the_geometric_correction_stands_alone(
         self, textured_frames
     ):
-        """RIFE is a Windows binary the checkout may not have, and the aligned
-        frames are still closer at the seam than the ones that went in.
-
-        The correction is spread over the whole clip -- the first frame stays
-        put and every one after it is warped by a growing fraction of the drift
-        -- which is what tells this apart from the fallback, where only the
-        last few frames move.
-        """
         frames = textured_frames()
 
         with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
@@ -188,18 +169,7 @@ def test_compute_seam_frames_never_takes_more_than_a_third_of_the_clip():
     assert compute_seam_frames(fps=30.0, seam_ms=250.0, normalized_frame_count=9) == 3
 
 
-# ---------------------------------------------------------------------------
-# normalize_clip, end to end with ffmpeg stubbed at the media boundary
-# ---------------------------------------------------------------------------
-
 class _RecordingEncoder:
-    """Stands in for the ffmpeg pipe: writes a file of a chosen size, remembers
-    everything it was handed.
-
-    Only ``normalize_media``'s three I/O functions are stubbed; every
-    frame the pipeline produces is produced for real.
-    """
-
     def __init__(self, *sizes: int):
         self.sizes = list(sizes) or [16]
         self.calls: list[dict] = []
@@ -219,10 +189,6 @@ class _RecordingEncoder:
 
 
 def _options(tmp_path: Path, **overrides) -> NormalizeOptions:
-    """What one run was asked for: the record's own defaults but for the three
-    a case here needs pinned -- a bridge in frames, the mode that does not need
-    a keypoint match, and no RIFE seam.
-    """
     return NormalizeOptions(
         input=str(tmp_path / "clip_in.mp4"),
         output=str(tmp_path / "clip_out.mp4"),
@@ -232,7 +198,6 @@ def _options(tmp_path: Path, **overrides) -> NormalizeOptions:
 
 @pytest.fixture
 def run_pipeline(frames_of):
-    """Drive normalize_clip with the decode/probe/encode boundary stubbed."""
     def run(options, *, values=(10, 20, 30, 40), size=8, fps=24.0, encoder=None, report=None):
         encoder = encoder or _RecordingEncoder()
         with patch("genaumacher.normalize_pipeline.ffprobe_video",
@@ -273,7 +238,6 @@ def test_normalize_clip_reports_the_clip_it_actually_encoded(tmp_path, run_pipel
 
 
 def test_normalize_clip_normalizes_the_loop_before_bridging(tmp_path, run_pipeline):
-    """base-tip mirrors the four frames back to seven before the bridge lands."""
     summary, encoder = run_pipeline(_options(tmp_path, loop_mode=LoopMode.BASE_TIP))
 
     assert summary["normalized_frames"] == 7
@@ -313,12 +277,6 @@ def test_normalize_clip_shrinks_and_re_encodes_until_the_output_fits(tmp_path, r
 
 
 def test_normalize_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path, run_pipeline, caplog):
-    """It must give up rather than loop forever on a clip that will not fit.
-
-    It says so through the logger rather than `print`.  This module runs as a
-    subprocess, and the parent merges its stderr into the stdout it collects,
-    so the line still reaches the caller either way.
-    """
     encoder = _RecordingEncoder(2 * 1024 * 1024)
 
     with caplog.at_level(logging.WARNING, logger="genaumacher.normalize_pipeline"):
@@ -353,8 +311,6 @@ def test_normalize_clip_passes_the_encoder_settings_through(tmp_path, run_pipeli
 def test_a_clip_it_writes_into_the_library_is_recorded_under_the_name_every_clip_it_made_carries(
     tmp_path, run_pipeline, recorded_cut
 ):
-    """That name is what a sweep for clips made before a change filters
-    on, so it is written out here rather than read back off the module."""
     flicks_dir().mkdir(parents=True)
     options = replace(_options(tmp_path), output=str(flicks_dir() / "scene one.mp4"))
 
@@ -376,16 +332,10 @@ def test_normalize_clip_refuses_a_clip_too_short_to_bridge(tmp_path, run_pipelin
         run_pipeline(_options(tmp_path), values=(10, 20))
 
 
-# --seam-ms's blend sibling. Every case above passes symmetric_blend=0, so the
-# branch that actually blends -- and the cap that decides how wide it gets --
-# had no test at all. Sixteen frames, because the cap is a quarter of the clip
-# and an eight-frame source makes it equal to the width asked for below, which
-# is exactly the coincidence that lets a broken cap pass.
 _BLEND_SOURCE = list(range(10, 170, 10))
 
 
 def _blend_run(frames_of, values_of, symmetric_blend):
-    """The frames the bridge is built from, for one --symmetric-blend width."""
     out, normalized_n = build_output_frames(
         frames_of(_BLEND_SOURCE), loop_mode=LoopMode.BASE_TIP_BASE, bridge_frames=1,
         mode="blend", keep_length=False, symmetric_blend=symmetric_blend,
@@ -424,7 +374,6 @@ def test_a_blend_wider_than_a_quarter_of_the_clip_is_capped_there(frames_of, val
 
 
 def test_the_register_fallback_blends_the_same_way(frames_of, values_of):
-    """Both bridge paths reach the blend; flat frames send register down the fallback."""
     blended, n = _blend_run(frames_of, values_of, 2)
 
     out, registered_n = build_output_frames(
@@ -436,15 +385,7 @@ def test_the_register_fallback_blends_the_same_way(frames_of, values_of):
 
 
 class TestSayingHowFarItHasGot:
-    """The bar for this step used to be invented by the caller -- a hundredth
-    per tenth of a second, stopping short of full so it could not claim to be
-    done, and unrelated to the work.  The run says so itself now.
-    """
-
     def test_each_step_is_reported_as_that_step_finishes(self, tmp_path, frames_of):
-        """Nothing reports 1.0: this returns the summary when it is done, and
-        the caller that drives it as a subprocess has its exit code besides.
-        """
         trace: list = []
 
         def decode(_path):
@@ -465,9 +406,6 @@ class TestSayingHowFarItHasGot:
         assert trace == ["decoded", 0.2, 0.6, "encoded"]
 
     def test_a_re_encode_does_not_claim_the_run_advanced(self, tmp_path, run_pipeline):
-        """Shrinking to fit repeats a step already reported, so the bar holds
-        where it is rather than moving for work that has to be done again.
-        """
         reported: list[float] = []
         encoder = _RecordingEncoder(2 * 1024 * 1024, 4096)
 
@@ -478,9 +416,6 @@ class TestSayingHowFarItHasGot:
         assert reported == [0.2, 0.6]
 
     def test_it_runs_with_nobody_listening(self, tmp_path, run_pipeline):
-        """Nothing else in the app calls this without a caller to tell, but the
-        command line run by hand is exactly that.
-        """
         summary, _ = run_pipeline(_options(tmp_path))
 
         assert summary["output_frames"] == 4

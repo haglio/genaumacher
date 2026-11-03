@@ -1,4 +1,3 @@
-"""Tests for genaumacher.export (pure-logic and lightly-mocked)."""
 from __future__ import annotations
 
 import io
@@ -20,8 +19,6 @@ from genaumacher.loop_modes import LoopMode
 
 
 class _Recorder:
-    """Stands in for whoever is watching the export."""
-
     def __init__(self) -> None:
         self.stages: list[str] = []
         self.clips: list[float] = []
@@ -41,12 +38,6 @@ class _Recorder:
         self.audios.append(fraction)
 
 
-# ---------------------------------------------------------------------------
-# _parse_ffmpeg_clock
-# ---------------------------------------------------------------------------
-
-# What ffmpeg prints on its progress line, and the seconds it means. The eight
-# one-line methods this replaces differed only in these two values.
 _FFMPEG_CLOCKS = [
     ("00:00:00.000000", 0.0),
     ("00:00:30.000000", 30.0),
@@ -64,13 +55,8 @@ class TestParseFfmpegClock:
 
     @pytest.mark.parametrize("printed", ["N/A", "", "not:a:number", "00:00"])
     def test_anything_it_cannot_read_counts_as_no_progress(self, printed):
-        """A progress line it cannot parse must not move the bar backwards."""
         assert _parse_ffmpeg_clock(printed) == 0.0
 
-
-# ---------------------------------------------------------------------------
-# validate_video_file
-# ---------------------------------------------------------------------------
 
 class TestValidateVideoFile:
     def test_an_export_that_wrote_no_file_is_refused(self, tmp_path: Path):
@@ -80,14 +66,14 @@ class TestValidateVideoFile:
 
     def test_a_file_too_small_to_be_a_video_is_refused(self, tmp_path: Path):
         tiny = tmp_path / "tiny.mp4"
-        tiny.write_bytes(b"\x00" * 100)  # less than 2048 bytes
+        tiny.write_bytes(b"\x00" * 100)
         ok, msg = validate_video_file(tiny)
         assert ok is False
         assert "tiny" in msg.lower()
 
     def test_a_file_the_decoder_cannot_open_is_refused(self, tmp_path: Path):
         fake = tmp_path / "fake.mp4"
-        fake.write_bytes(b"\x00" * 4096)  # big enough bytes-wise but invalid video
+        fake.write_bytes(b"\x00" * 4096)
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = False
@@ -154,10 +140,6 @@ class TestValidateVideoFile:
         mock_cap.release.assert_called_once()
 
 
-# ---------------------------------------------------------------------------
-# _run_ffmpeg_with_progress  (mocked subprocess)
-# ---------------------------------------------------------------------------
-
 class TestRunFfmpegWithProgress:
     def _make_proc_mock(self, output_lines: list[str], returncode: int = 0) -> MagicMock:
         proc = MagicMock()
@@ -199,14 +181,12 @@ class TestRunFfmpegWithProgress:
         assert "not found" in err
 
     def test_out_time_line_advances_progress(self):
-        # 5 seconds out of 10 total → 0.5
         proc = self._make_proc_mock(["out_time=00:00:05.000000", "progress=end"])
         recorded: list[float] = []
 
         with patch("subprocess.Popen", return_value=proc):
             _run_ffmpeg_with_progress(["ffmpeg"], 10.0, recorded.append)
 
-        # At some point 0.5 should have been reported
         assert any(abs(v - 0.5) < 0.01 for v in recorded)
 
     def test_nonzero_exit_includes_error_output(self):
@@ -222,7 +202,6 @@ class TestRunFfmpegWithProgress:
         assert "No audio stream found" in err
 
     def test_progress_never_exceeds_1(self):
-        # Simulate an out_time that exceeds total duration
         proc = self._make_proc_mock(["out_time=99:00:00.000000", "progress=end"])
         recorded: list[float] = []
 
@@ -233,13 +212,6 @@ class TestRunFfmpegWithProgress:
 
 
 class TestRunNormalize:
-    """The script runs as a subprocess and says how far it has got on stdout.
-
-    The bar for it used to be invented here -- a hundredth per tenth of a
-    second, capped at 0.95 so it could not claim to be done -- while the loop
-    that drove it read the pipe one line per sleep.
-    """
-
     def _run(self, tmp_path: Path, make_state, printed: list[str], returncode: int = 0):
         progress = _Recorder()
         state = make_state(loop_mode=LoopMode.TIP_BASE)
@@ -279,10 +251,6 @@ class TestRunNormalize:
     def test_the_last_of_it_is_the_run_ending_rather_than_a_line(
         self, tmp_path: Path, make_state
     ):
-        """The script says how far it has got while it runs and never says it
-        is done; what says that is the process exiting cleanly, which is also
-        how the two ffmpeg steps above finish their bars.
-        """
         _ok, _detail, progress, _popen = self._run(
             tmp_path, make_state, ["Input frames: 4", "Wrote: out.mp4"]
         )
@@ -309,12 +277,10 @@ class TestRunNormalize:
 
 class TestExportFullAudioMp3:
     def test_skips_when_no_audio_stream(self, tmp_path: Path, make_state):
-        """Videos without audio should not fail the entire export."""
         progress = _Recorder()
         state = make_state()
         out_path = tmp_path / "out.mp3"
 
-        # ffprobe reports no audio streams
         probe_proc = MagicMock()
         probe_proc.communicate.return_value = ("", "")
         probe_proc.returncode = 0
@@ -327,17 +293,14 @@ class TestExportFullAudioMp3:
         assert "no audio" in detail.lower()
 
     def test_proceeds_when_audio_stream_exists(self, tmp_path: Path, make_state):
-        """Normal videos with audio should go through the ffmpeg path."""
         progress = _Recorder()
         state = make_state()
         out_path = tmp_path / "out.mp3"
 
-        # ffprobe reports an audio stream
         probe_proc = MagicMock()
         probe_proc.communicate.return_value = ("audio\n", "")
         probe_proc.returncode = 0
 
-        # ffmpeg succeeds and creates a file
         ffmpeg_proc = MagicMock()
         ffmpeg_proc.stdout = io.StringIO("progress=end\n")
         ffmpeg_proc.wait.return_value = 0
@@ -348,7 +311,7 @@ class TestExportFullAudioMp3:
                 return probe_proc
             return ffmpeg_proc
 
-        out_path.write_bytes(b"\xff" * 4096)  # pre-create so size check passes
+        out_path.write_bytes(b"\xff" * 4096)
 
         with patch("genaumacher.export_steps.find_tool", side_effect=lambda n: n), \
              patch("subprocess.Popen", side_effect=popen_side_effect):

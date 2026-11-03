@@ -20,7 +20,7 @@ def extend_left(state: VideoState) -> None:
     before = state.left_bound
     ensure_loaded(state, state.window.step_out_left(), state.right_bound)
     if state.left_bound == before:
-        return  # at the start of the video: nothing moved, nothing to save
+        return
     update_loop_suggestions(state)
     state.save_edit()
 
@@ -34,10 +34,8 @@ def contract_right(state: VideoState) -> None:
 
 def extend_right(state: VideoState) -> None:
     before = state.right_bound
-    # The edge is the last frame `ensure_loaded` got: the loader itself gets
-    # past a damaged read, so nothing here has to claim frames it never saw.
     ensure_loaded(state, state.left_bound, state.window.step_out_right())
     if state.right_bound == before:
-        return  # the end of the video, or of what decodes: nothing to save
+        return
     update_loop_suggestions(state)
     state.save_edit()

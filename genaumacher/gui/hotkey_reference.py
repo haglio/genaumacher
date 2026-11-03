@@ -1,5 +1,3 @@
-"""Custom-painted keycap hotkey hotkey reference."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -16,9 +14,6 @@ from .scrubber_colors import TEXT_HOTKEY_REFERENCE_JOIN, TEXT_HOTKEY_REFERENCE_L
 if TYPE_CHECKING:
     from .hotkeys import HotkeyReferenceEntry
 
-# Keycap metrics, named once for the pass that measures a row and the pass
-# that draws it: a size written out in both is a size that can change in one
-# and silently mis-center the row.
 KEYCAP_PADDING = 2 * BUTTON_PAD_H_TIGHT
 KEYCAP_MIN_WIDTH = 24
 KEYCAP_HEIGHT = 22
@@ -28,25 +23,11 @@ LABEL_GAP = GAP_DIALOG
 
 
 class HotkeyReferenceWidget(QWidget):
-    """Paints whatever rows it is given, keycap style.
-
-    It is handed its rows rather than fetching them.  Reaching for
-    `hotkeys.hotkey_reference_rows()` here would bind the whole action layer at import
-    -- `hotkeys` names the editing functions, which reach `frame_store`,
-    which imports cv2 -- so a widget whose only job is drawing keycaps would
-    need the video decoder to be importable at all.  It did not before this
-    table existed and it does not now.
-    """
-
     def __init__(self, rows: tuple[tuple[HotkeyReferenceEntry, ...], ...],
                  parent: QWidget | None = None):
         super().__init__(parent)
         self.hotkey_reference_rows = rows
         self.setMinimumHeight(80)
-
-    # -- Metrics ---------------------------------------------------------------
-    # Each answers "how far along does this move x", and the drawing pass
-    # advances by exactly what the measuring pass counted.
 
     def _keycap_width(self, p: QPainter, key: str, font: QFont) -> int:
         p.setFont(font)
@@ -62,7 +43,6 @@ class HotkeyReferenceWidget(QWidget):
         return p.fontMetrics().horizontalAdvance(f": {label}") + LABEL_GAP
 
     def _row_width(self, p: QPainter, row, key_font, label_font, join_font) -> int:
-        """Pre-calculate the total pixel width of a hotkey reference row."""
         width = 0
         for keys, joiner, label in row:
             for i, key in enumerate(keys):
@@ -72,10 +52,7 @@ class HotkeyReferenceWidget(QWidget):
             width += self._label_width(p, label, label_font)
         return width
 
-    # -- Painting --------------------------------------------------------------
-
     def _draw_keycap(self, p: QPainter, x: int, top: int, key: str, font: QFont) -> int:
-        """Draw one keycap with its symbol centered; returns how far x moves."""
         width = self._keycap_width(p, key, font)
         cap = QRectF(x, top, width, KEYCAP_HEIGHT)
 

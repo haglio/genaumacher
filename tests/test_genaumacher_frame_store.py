@@ -24,8 +24,6 @@ def test_a_backwards_window_loads_no_frames():
 
 
 class _DamagedAt:
-    """A decoder that cannot produce one frame and reads past it fine."""
-
     def __init__(self, bad: int):
         self._bad = bad
         self._pos = 0
@@ -44,8 +42,6 @@ class _DamagedAt:
 
 
 class _EndsAt:
-    """A decoder that gives up for good after a frame, as a truncated file does."""
-
     def __init__(self, last: int):
         self._last = last
         self._pos = 0
@@ -64,9 +60,6 @@ class _EndsAt:
 
 
 def test_load_range_gets_past_a_frame_the_decoder_cannot_produce():
-    """One damaged frame used to end the whole load, and `extend_right` faked
-    the edge past it to force the next seek beyond.  The loader seeks
-    past a failed read itself, so the damaged frame alone is missing."""
     cap = _DamagedAt(62)
 
     result = load_range(cap, 61, 65)
@@ -76,8 +69,6 @@ def test_load_range_gets_past_a_frame_the_decoder_cannot_produce():
 
 
 def test_load_range_gives_up_on_a_file_that_has_ended():
-    """Past a truncation every read fails; the retries are bounded, so the
-    loader answers with what it got rather than seeking forever."""
     cap = _EndsAt(62)
 
     result = load_range(cap, 61, 300)

@@ -1,5 +1,3 @@
-"""Custom-painted scrubber bar showing loaded/in-outs, cursor, and suggestions."""
-
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -20,8 +18,6 @@ from .scrubber_colors import (
 
 
 class ScrubberWidget(QWidget):
-    """Displays loaded/in-outs with cursor, loop position, and suggestions."""
-
     cursor_jumped = pyqtSignal(int)
 
     def __init__(self, parent: QWidget | None = None):
@@ -36,8 +32,6 @@ class ScrubberWidget(QWidget):
         self.suggested_out: int | None = None
         self.setMinimumHeight(24)
         self.setFixedHeight(24)
-
-    # -- Public setters -------------------------------------------------------
 
     def set_bounds(self, start: int, end: int) -> None:
         self.left_bound = start
@@ -62,8 +56,6 @@ class ScrubberWidget(QWidget):
         self.suggested_out = out_idx
         self.update()
 
-    # -- Coordinate mapping ---------------------------------------------------
-
     def x_for_index(self, idx: int) -> int:
         count = max(1, self.right_bound - self.left_bound)
         frac = (idx - self.left_bound) / count
@@ -76,34 +68,26 @@ class ScrubberWidget(QWidget):
         idx = self.left_bound + int(round(frac * count))
         return max(self.left_bound, min(self.right_bound, idx))
 
-    # -- Events ---------------------------------------------------------------
-
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             idx = self.index_for_x(int(event.position().x()))
             self.cursor_jumped.emit(idx)
-
-    # -- Painting -------------------------------------------------------------
 
     def paintEvent(self, event) -> None:
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
 
-        # Background
         p.fillRect(self.rect(), BG_PRIMARY)
 
-        # Loaded range
         lx1 = self.x_for_index(self.left_bound)
         lx2 = self.x_for_index(self.right_bound)
         p.fillRect(lx1, 0, lx2 - lx1, h, SCRUBBER_BOUNDS)
 
-        # In-out
         ax1 = self.x_for_index(self.in_point)
         ax2 = self.x_for_index(self.out_point)
         p.fillRect(ax1, 0, ax2 - ax1, h, SCRUBBER_IN_OUT)
 
-        # Frame tick dots (upper and lower edges)
         tick_pen = QPen(BORDER_TICK, 1)
         p.setPen(tick_pen)
         for i in range(self.left_bound, self.right_bound + 1):
@@ -111,21 +95,17 @@ class ScrubberWidget(QWidget):
             p.drawPoint(tx, 2)
             p.drawPoint(tx, h - 3)
 
-        # Suggested in/out dotted lines
         if self.suggested_in is not None:
             self._draw_dotted_line(p, self.x_for_index(self.suggested_in), h, SCRUBBER_SUGGESTED_IN)
         if self.suggested_out is not None:
             self._draw_dotted_line(p, self.x_for_index(self.suggested_out), h, SCRUBBER_SUGGESTED_OUT)
 
-        # Loop position
         loop_x = self.x_for_index(self.loop_pos)
         p.fillRect(loop_x - 1, 0, 3, h, SCRUBBER_LOOP)
 
-        # Cursor position (on top)
         cur_x = self.x_for_index(self.cursor_pos)
         p.fillRect(cur_x - 1, 0, 3, h, SCRUBBER_CURSOR)
 
-        # Outer border
         pen = QPen(BORDER_SCRUBBER, 1)
         p.setPen(pen)
         p.drawRect(0, 0, w - 1, h - 1)

@@ -19,11 +19,6 @@ else:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """The command line, with every default read off ``NormalizeOptions``.
-
-    Including the ones the help text states: ``%(default)s`` quotes the value
-    argparse was handed, so there is no second copy to go stale.
-    """
     ap = argparse.ArgumentParser(
         description="Normalize clip loop shape, smooth the seam, and shrink the output if needed."
     )
@@ -113,18 +108,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def parse_options(argv: Sequence[str] | None = None) -> NormalizeOptions:
-    """The command line as the record the pipeline works from.
-
-    Every flag is a field, so a flag added without one cannot be constructed.
-    """
     return NormalizeOptions(**vars(build_parser().parse_args(argv)))
 
 
 def _say_how_far(fraction: float) -> None:
-    """Print how far the run has got, for whoever is driving this as a
-    subprocess -- flushed, because the point of it is to arrive while the work
-    is still going.
-    """
     print(progress_line(fraction), flush=True)
 
 

@@ -1,4 +1,3 @@
-"""Genaumacher's window groups under its pinned taskbar shortcut."""
 from __future__ import annotations
 
 import sys

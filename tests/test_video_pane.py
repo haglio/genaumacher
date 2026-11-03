@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.video_pane — video frame display widget."""
-
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -20,12 +18,11 @@ def pane():
 @pytest.fixture
 def sample_frame():
     frame = np.zeros((480, 640, 3), dtype=np.uint8)
-    frame[:] = (50, 100, 150)  # BGR
+    frame[:] = (50, 100, 150)
     return frame
 
 
 def _drawn_rect(image, background: str):
-    """The bounding rect of everything painted over the pane's background."""
     inked = [
         (x, y)
         for x in range(image.width())
@@ -54,17 +51,10 @@ class TestSetFrame:
 
 
 class TestPainting:
-    """What the pane shows, not what it stores.
-
-    Every assertion here used to read `pane._image`, and nothing looked at a
-    painted pixel -- so replacing ``paintEvent``'s body with ``return`` left the
-    whole suite at baseline apart from the dead-code guard.
-    """
-
     @pytest.fixture
     def small_frame(self):
         frame = np.zeros((100, 200, 3), dtype=np.uint8)
-        frame[:] = (50, 100, 150)  # BGR
+        frame[:] = (50, 100, 150)
         return frame
 
     def test_an_empty_pane_is_all_background(self, pane, rendered):
@@ -80,7 +70,7 @@ class TestPainting:
         pane.set_frame(bgr_to_qimage(small_frame))
         image = rendered(pane)
 
-        assert image.pixelColor(200, 150).name() == "#966432"  # the frame, as RGB
+        assert image.pixelColor(200, 150).name() == "#966432"
         assert _drawn_rect(image, BG_SECONDARY.name()) == (100, 100, 299, 199)
 
     def test_a_new_frame_replaces_the_one_before_it(self, pane, rendered, small_frame):

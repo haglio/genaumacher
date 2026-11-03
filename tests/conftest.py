@@ -1,4 +1,3 @@
-"""Shared pytest fixtures for genaumacher tests."""
 from __future__ import annotations
 
 import importlib
@@ -25,13 +24,7 @@ from genaumacher.wrap_modes import read_wrap_mode
 
 os.environ[haglio_settings.SETTINGS_ENV] = haglio_settings.THE_EXAMPLE
 
-# Render Qt offscreen for the whole suite. Agents run these tests on every commit
-# on the machine genaumacher is used from; without this, every test that builds a
-# widget throws a real window onto that screen for a few milliseconds, so a run
-# flashes a burst of them. Must be set before the QApplication below exists, so
-# it goes here rather than in a fixture; the merge gate sets it too, which does
-# nothing for a run started by hand. setdefault lets a developer override it to
-# watch something on a real display.
+# Qt reads this when the QApplication below is built.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt6.QtWidgets import QApplication
@@ -39,72 +32,14 @@ from PyQt6.QtWidgets import QApplication
 
 @pytest.fixture(scope="session", autouse=True)
 def qapp():
-    """The one QApplication the Qt tests build their widgets under.
-
-    Twelve test modules used to carry a byte-identical copy of this, beside a
-    `tests/conftest_qt.py` that looked like the shared version and was never
-    loaded -- pytest only auto-loads files named `conftest.py`, and nothing
-    imported it. So the shared one was dead and the change it exists to make
-    possible had to be made twelve times.
-    """
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
     return app
 
 
-# ---------------------------------------------------------------------------
-# sys.path fix — must run before genaumacher is imported
-# ---------------------------------------------------------------------------
-# pytest inserts ancestor directories of the test root into sys.path.  When
-# the monorepo "projects" directory ends up there, Python resolves "genaumacher"
-# as the *project root* directory (a namespace package) instead of the real
-# genaumacher package installed via editable pip.  That causes genaumacher.state to
-# resolve to the runtime ``state/`` log directory rather than state.py,
-# breaking every import of VideoState.
-#
-# Fix: force-import genaumacher from the editable-install finder before pytest
-# collection triggers a namespace-package resolution.  Once the correct
-# module is in sys.modules the bad path can't win.
-import importlib as _importlib
-
-_spec = _importlib.util.find_spec("genaumacher")
-if _spec is None or _spec.origin is None:
-    # The editable finder lost the race.  Flush the stale entry and retry
-    # by looking up the installed package location directly.
-    sys.modules.pop("genaumacher", None)
-    _importlib.invalidate_caches()
-
-    # Import the editable-install's finder and ask it directly.
-    import __editable___genaumacher_0_1_0_finder as _finder  # type: ignore[import-untyped]
-    _pkg_path = _finder.MAPPING.get("genaumacher")
-    if _pkg_path:
-        _init = Path(_pkg_path) / "__init__.py"
-        if _init.is_file():
-            _new_spec = _importlib.util.spec_from_file_location(
-                "genaumacher", str(_init),
-                submodule_search_locations=[_pkg_path],
-            )
-            if _new_spec and _new_spec.loader:
-                _mod = _importlib.util.module_from_spec(_new_spec)
-                sys.modules["genaumacher"] = _mod
-                _new_spec.loader.exec_module(_mod)
-
-
 @pytest.fixture(autouse=True, scope="session")
 def _the_last_session_pointer_is_never_the_real_one(tmp_path_factory):
-    """Point every module that binds LAST_SESSION_FILE at a scratch file.
-
-    Five tests reached the user's own `.last_session.txt` by omission: they call
-    `create_session` with a `sessions_dir`, and nothing patches the pointer it
-    *also* writes. This used to be met by saving the file before the run and
-    writing it back afterwards -- which never happened when a run was
-    interrupted, timed out or killed, routine on a machine where several agents
-    run suites at once, and which raced itself when two ran in the same
-    checkout. Redirecting the name instead means a test cannot reach the real
-    file by forgetting; the tests that assert on the pointer patch their own.
-    """
-
     scratch = tmp_path_factory.mktemp("pointer") / ".last_session.txt"
     with pytest.MonkeyPatch.context() as patcher:
         for name in ("genaumacher.paths", "genaumacher.session_launch", "genaumacher.session_persistence"):
@@ -114,12 +49,6 @@ def _the_last_session_pointer_is_never_the_real_one(tmp_path_factory):
 
 
 class _FakeCapture:
-    """The slice of cv2.VideoCapture that frame_store.load_range actually uses.
-
-    A MagicMock cannot stand in for it: `ok, frame = cap.read()` unpacks, so a
-    test that lets a real ensure_loaded run needs a capture that answers.
-    """
-
     def __init__(self, total_frames: int):
         self._total = total_frames
         self._pos = 0
@@ -139,8 +68,6 @@ class _FakeCapture:
 
 
 class _FakeAutosave:
-    """Stands in for the session write ``VideoState.save_edit`` triggers, and counts them."""
-
     def __init__(self) -> None:
         self.calls = 0
 
@@ -150,9 +77,7 @@ class _FakeAutosave:
 
 @pytest.fixture
 def ticked_within():
-    """Whether a Qt signal fires inside a budget; returns as soon as it does."""
     def wait(signal, budget_ms: int) -> bool:
-
         seen = []
         loop = QEventLoop()
 
@@ -170,13 +95,6 @@ def ticked_within():
 
 @pytest.fixture
 def shared_settings(tmp_path, monkeypatch):
-    """Give the app fabricated Haglio settings, found the way the real ones are.
-
-    Called with a dictionary, it writes them to a file of the test's own and
-    points the app at it; called with nothing, it points the app at a file that
-    does not exist, which is a machine with no settings yet.
-    """
-
     def use(values: dict | None = None) -> Path:
         settings = tmp_path / "haglio_settings.json"
         if values is not None:
@@ -189,8 +107,6 @@ def shared_settings(tmp_path, monkeypatch):
 
 @pytest.fixture
 def library(tmp_path, shared_settings) -> Path:
-    """A media library of the test's own, so nothing a test exports or records
-    lands in the one this machine's settings name."""
     root = tmp_path / "library"
     genau = root / "videos" / "videos" / "genau"
     flat_flicks_in(genau / "flicks").mkdir(parents=True)
@@ -204,26 +120,18 @@ def library(tmp_path, shared_settings) -> Path:
 
 @pytest.fixture
 def genau_sidecar(library):
-    """Where the family files the metadata of a clip Genaumacher cut into Genau's folder."""
     return lambda clip_name: (library / "videos" / "metadata" / "genau" / "flicks" / "2D" / "non_AI"
                               / f"{clip_name}.json")
 
 
 @pytest.fixture
 def recorded_cut(genau_sidecar):
-    """The stamp filed on a Genau clip's sidecar for the cut that made the clip."""
     return lambda clip_name: json.loads(
         genau_sidecar(clip_name).read_text(encoding="utf-8"))["provenance"]["cut"]
 
 
 @pytest.fixture
 def rendered():
-    """Paint a widget into an image, so a test can read the pixels it drew.
-
-    Nothing in this suite used to assert a painted pixel, so gutting any
-    ``paintEvent`` was caught only by the dead-code guard noticing the locals
-    it left unused.
-    """
     def paint(widget):
         return widget.grab().toImage()
     return paint
@@ -231,11 +139,6 @@ def rendered():
 
 @pytest.fixture
 def frames_of():
-    """One solid BGR frame per value -- the shape the loop transforms read in.
-
-    1x1 by default, which is enough for the pure transforms; ``size`` gives the
-    pipeline cases frames big enough for the shrink loop to have somewhere to go.
-    """
     def factory(values: list[int], size: int = 1) -> list[np.ndarray]:
         return [np.full((size, size, 3), value, dtype=np.uint8) for value in values]
     return factory
@@ -243,14 +146,6 @@ def frames_of():
 
 @pytest.fixture
 def textured_frames():
-    """Frames with enough detail for a keypoint match to have anything to match,
-    drifting a few pixels from the first to the last.
-
-    That drift is the seam ``--mode register`` exists to close.  ``frames_of``
-    makes solid frames, which have no keypoints at all, so every alignment on
-    them fails and the register path is never the one under test.
-    """
-
     def factory(count: int = 10, size: int = 128, seed: int = 10,
                 drift: tuple[int, int] = (8, 6)) -> list[np.ndarray]:
         frame = np.random.RandomState(seed).randint(0, 256, (size, size, 3), dtype=np.uint8)
@@ -270,7 +165,6 @@ def textured_frames():
 
 @pytest.fixture
 def values_of():
-    """The inverse of ``frames_of``: read each frame back as its one value."""
     def factory(frames: list[np.ndarray]) -> list[int]:
         return [int(frame[0, 0, 0]) for frame in frames]
     return factory
@@ -278,14 +172,6 @@ def values_of():
 
 @pytest.fixture
 def make_state():
-    """Factory for a VideoState the tests can edit without a disk or a codec.
-
-    Two modules held their own version of this and two more imported one of
-    them across module boundaries -- which worked only because tests/ has no
-    __init__.py and pytest prepends the directory to sys.path, so renaming
-    test_genaumacher_state.py broke two unrelated files.
-    """
-
     def factory(
         *,
         total_frames: int = 100,

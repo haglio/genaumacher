@@ -1,9 +1,3 @@
-"""The candidate window the loop-point search walks.
-
-`genaumacher/suggestion_search.py` is reached only through `loop_suggestions`, and
-the word `direction` -- the parameter that decides which way the window runs --
-appeared nowhere in tests/ until this file.
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -47,7 +41,6 @@ class TestSmooth1d:
 
 class TestTheCandidateWindow:
     def test_it_starts_ten_frames_clear_of_the_reference(self, make_state):
-        """A loop shorter than the minimum gap is not a loop."""
         state = make_state(total_frames=200, left_bound=0, right_bound=120)
 
         candidates, _smoothed = _curve(state, 40, direction=+1)
@@ -67,32 +60,21 @@ class TestTheCandidateWindow:
 
 
 class TestTheTwoDirectionsAreMirrorImages:
-    """Both windows start beside the reference frame and run away from it.
-
-    Backward used to start at `left_bound` -- the frame *farthest* from the
-    reference -- and run towards it, while the dip and peak walks in
-    `best_turning_point_index` and `best_duplicate_match_index` skip a fixed head
-    of that list and take their baseline from it. Forward that head is "the
-    frames beside the reference"; backward it was "the frames at the other end of
-    the bounds", which in base-tip-base -- the most common mode -- is where
-    the suggested mark-in point came from.
-    """
-
     def test_forward_the_window_begins_next_to_the_reference(self, make_state):
         state = make_state(total_frames=200, left_bound=20, right_bound=120)
 
         candidates, _smoothed = _curve(state, 60, direction=+1)
 
-        assert candidates[0] == 70  # the reference plus the minimum gap
-        assert candidates[-1] == 120  # and it ends at the far edge
+        assert candidates[0] == 70
+        assert candidates[-1] == 120
 
     def test_backward_the_window_begins_next_to_the_reference_too(self, make_state):
         state = make_state(total_frames=200, left_bound=20, right_bound=120)
 
         candidates, _smoothed = _curve(state, 60, direction=-1)
 
-        assert candidates[0] == 50  # the reference minus the minimum gap
-        assert candidates[-1] == 20  # and it ends at the far edge
+        assert candidates[0] == 50
+        assert candidates[-1] == 20
 
     def test_each_step_away_from_the_reference_is_one_step_along_the_list(self, make_state):
         state = make_state(total_frames=200, left_bound=20, right_bound=120)
@@ -112,16 +94,6 @@ class TestTheTwoDirectionsAreMirrorImages:
 
 
 class TestFindingTheRepeatBeforeAFrame:
-    """The end-to-end effect of the window's order, on a clip that does loop.
-
-    One texture rolled a pixel at a time with a 60-frame period: neighboring
-    frames look alike, similarity falls away smoothly, and it comes back exactly
-    at the repeat. Searching backward from frame 180 the nearest repeat is 120.
-    With the backward window running from the far end, the search answered 60 --
-    a whole period too early, and the turning point came back as 12, near the
-    start of the bounds.
-    """
-
     PERIOD = 60
     REF = 180
 
@@ -149,15 +121,6 @@ class TestFindingTheRepeatBeforeAFrame:
 
 
 class TestTheDipItself:
-    """`find_similarity_dip` hands its two callers six values.
-
-    They traveled as a positional tuple, unpacked by position at both sites --
-    one of which discarded four of them under underscore names.  Reordering or
-    adding a field would have miscomputed both callers silently, which matters
-    here because which end of the list is nearest the reference is what the
-    backward walk once got wrong.
-    """
-
     def test_it_names_what_it_found(self, make_state):
         rng = np.random.default_rng(11)
         texture = rng.integers(0, 256, (64, 64, 3), dtype=np.uint8)

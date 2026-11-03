@@ -1,5 +1,3 @@
-"""Seconds to and from the hh:mm:ss.sss the user types and the labels show."""
-
 from __future__ import annotations
 
 

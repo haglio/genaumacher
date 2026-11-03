@@ -1,5 +1,3 @@
-"""GenaumacherApp — owns the QApplication, the window and the playback clock."""
-
 from __future__ import annotations
 
 import sys
@@ -20,14 +18,10 @@ if TYPE_CHECKING:
 
 
 class GenaumacherApp:
-    """Creates QApplication, main window, and playback timer."""
-
     def __init__(self, state: VideoState, *, preview: Preview | None = None):
         self._state = state
 
-        # AppUserModelID is already set by app.main() before we get here;
-        # do NOT override it — it must stay "FunTime.Genaumacher" to match the
-        # hotkey so Windows groups the taskbar entry correctly.
+        # app.main() set the AppUserModelID Windows groups the taskbar button by.
 
         self._app = QApplication.instance()
         if self._app is None:
@@ -43,11 +37,9 @@ class GenaumacherApp:
         self.window.closed.connect(self.playback_timer.stop)
 
     def run(self) -> int:
-        """Show the window and enter the event loop."""
         self.window.show()
         self.playback_timer.start()
         return self._app.exec()
 
     def _on_tick(self) -> None:
-        """Called ~60fps -- redraw the window from the state."""
         self.window.render(self._state)

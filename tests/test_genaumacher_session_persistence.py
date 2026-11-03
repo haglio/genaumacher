@@ -66,12 +66,6 @@ def test_current_payload_includes_vr_true():
 
 
 class TestTheFieldsAnotherAppReads:
-    """Evolver moves the videos this app cuts, so it walks `sessions/*.json`,
-    repoints the reference in each and writes the file back whole.  Four keys
-    are therefore its contract and not ours to rename quietly -- a rename that
-    stopped here would strand every session it would have repointed, silently,
-    since nothing over there imports this."""
-
     def test_a_session_says_which_shape_it_is(self):
         assert current_payload(_state())["version"] == SESSION_FORMAT_VERSION
 
@@ -79,8 +73,6 @@ class TestTheFieldsAnotherAppReads:
         assert current_payload(_state())["video_path"] == "/video.mp4"
 
     def test_the_footage_is_described_well_enough_to_recognize_after_a_rename(self):
-        """A video that was renamed rather than moved is nowhere to search for
-        by name, and this pair is the only handle left on it."""
         payload = current_payload(_state())
 
         assert payload["fps"] == 30.0
@@ -111,12 +103,6 @@ def test_autosave_session_records_failure_message():
 
 
 def test_a_failed_write_keeps_the_last_payload_that_did_reach_disk(tmp_path: Path):
-    """The warning is the only signal the user gets; the good payload stands.
-
-    Driven through the real safe_atomic_write_json with nothing but the
-    filesystem in the way -- the session path names a directory that is not
-    there, which is the shape a moved or unmounted sessions folder takes.
-    """
     good = {"version": 1, "session_name": "demo"}
     state = _state(session_path=str(tmp_path / "moved away" / "demo.json"), last_saved_payload=good)
 

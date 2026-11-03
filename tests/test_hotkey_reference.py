@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.hotkey_reference — the painted hotkey hotkey reference."""
-
 from __future__ import annotations
 
 import os
@@ -33,9 +31,6 @@ def _keycap_pixels(image, upper: int, lower: int) -> int:
 
 
 class TestPainting:
-    """The hotkey reference is drawn and nothing else; gutting paintEvent used to be
-    caught only by the dead-code guard noticing the unused locals."""
-
     def test_every_row_of_the_legend_gets_keycaps(self, hotkey_reference, rendered):
         image = rendered(hotkey_reference)
         row_height = hotkey_reference.height() // len(hotkey_reference_rows())
@@ -56,18 +51,6 @@ class TestPainting:
         assert image.pixelColor(450, 60).name() == BG_PRIMARY.name()
 
     def test_no_row_carries_more_than_two_fifths_of_the_legend(self, hotkey_reference):
-        """The rows are balanced so the widest fits the window's 900 px minimum.
-
-        Measured with the family's font on Windows (Segoe UI) the three rows
-        are 598, 736 and 638 px against the 884 px a row has there; before
-        the repartition the six-entry bounds row was 959 px and its last entry
-        drew off the right edge.  The suite paints with the offscreen
-        platform's stand-in font, which widens every row alike, so the
-        invariant is a share of the whole rather than a pixel count: no row is
-        more than two fifths of the three together.  An entry added to the
-        wrong row reds this before it reaches the edge.
-        """
-
         hotkey_reference.resize(900, 80)
         image = QImage(900, 80, QImage.Format.Format_RGB32)
         painter = QPainter(image)
@@ -93,15 +76,6 @@ class TestPainting:
 
 
 def test_the_legend_does_not_need_the_video_decoder_to_be_imported():
-    """It paints keycaps; it should not drag cv2 in with them.
-
-    The hotkey table names the editing functions, which reach `frame_store`,
-    which imports cv2 -- so fetching the rows here rather than being handed
-    them would make the decoder a requirement for importing a painter.  Run in
-    a fresh interpreter with cv2 blocked, the way the other import checks in
-    this suite are.
-    """
-
     probe = "import sys; sys.modules['cv2'] = None; import genaumacher.gui.hotkey_reference"
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
 

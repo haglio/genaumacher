@@ -1,4 +1,3 @@
-"""Tests for genaumacher.timecode -- seconds to and from a clock string."""
 from __future__ import annotations
 
 import pytest

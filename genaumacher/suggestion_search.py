@@ -1,5 +1,3 @@
-"""The similarity walk backing the suggested in and out points."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,8 +18,6 @@ _PEAK_SLOPE = 0.0002
 
 @dataclass(frozen=True)
 class SimilarityDip:
-    """Where the similarity curve falls away, and what the walk needs after it."""
-
     candidates: list[int]
     smoothed: np.ndarray
     dip_idx: int
@@ -46,10 +42,6 @@ def candidate_similarity_curve(
     direction: int,
 ) -> tuple[list[int], np.ndarray] | None:
     min_gap = 10
-    # Both directions run outwards from the reference, so index 0 is always its
-    # nearest candidate. The dip and peak walks below skip a fixed head of this
-    # list and take their baseline from it; when the backward list ran the other
-    # way, that head was the far end of the bounds instead.
     if direction > 0:
         candidates = list(range(ref_idx + min_gap, state.right_bound + 1))
     else:

@@ -1,4 +1,3 @@
-"""Tests for genaumacher.state (pure logic, no real video files)."""
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -34,13 +33,8 @@ from genaumacher.playback import (
 )
 from genaumacher.state import VideoState
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 class _CapturesUpTo:
-    """A decoder that gives up after a frame, the way a truncated file does."""
-
     def __init__(self, last_readable: int):
         self._last = last_readable
         self._pos = 0
@@ -64,15 +58,10 @@ def _pattern_frame(seed: int) -> np.ndarray:
     return rng.integers(0, 256, size=(40, 40, 3), dtype=np.uint8)
 
 
-# ---------------------------------------------------------------------------
-# VideoState computed properties
-# ---------------------------------------------------------------------------
-
 class TestVideoStateDefaults:
     def test_skip_normalize_defaults_false(self, make_state):
         s = make_state()
         assert s.skip_normalize is False
-
 
 
 class TestVideoStateProperties:
@@ -84,11 +73,6 @@ class TestVideoStateProperties:
         s = make_state(left_bound=5, right_bound=5)
         assert s.loaded_count == 1
 
-
-
-# ---------------------------------------------------------------------------
-# clamp_cursor
-# ---------------------------------------------------------------------------
 
 class TestClampCurrent:
     def test_clamped_up_to_loaded_start_in_blue_mode(self, make_state):
@@ -106,10 +90,6 @@ class TestClampCurrent:
         s.clamp_cursor()
         assert s.cursor == 50
 
-
-# ---------------------------------------------------------------------------
-# current_payload
-# ---------------------------------------------------------------------------
 
 class TestCurrentPayload:
     def test_has_required_keys(self, make_state):
@@ -238,10 +218,6 @@ class TestChangeSpeed:
         assert s.speed == pytest.approx(1.25)
 
 
-# ---------------------------------------------------------------------------
-# contract_left / extend_left / contract_right / extend_right
-# ---------------------------------------------------------------------------
-
 class TestContractLeft:
     def test_shrinks_loaded_start_by_base_step(self, make_state):
         s = make_state(left_bound=10, in_point=20, base_step=5)
@@ -273,13 +249,6 @@ class TestContractLeft:
 
 
 class TestExtendLeft:
-    """The other half of bounds: `a` widens the range the cursor roams.
-
-    Both extend functions were imported by this file and tested by neither, so
-    `genaumacher/bounds.py` sat at the lowest coverage of the pure-logic
-    modules.
-    """
-
     def test_widens_the_loaded_range_by_one_step(self, make_state):
         s = make_state(left_bound=20, right_bound=60, base_step=5)
 
@@ -341,12 +310,6 @@ class TestExtendRight:
         assert s.persist_session.calls == 0
 
     def test_the_edge_is_the_last_frame_the_decoder_produced(self, make_state):
-        """A file the decoder abandons early used to leave the window claiming
-        the whole step -- frames nothing decoded, which the scrubber painted,
-        the cursor could be walked onto and `safe_frame` raised for.
-        The edge is where the frames end, and a press with nothing more to
-        decode moves nothing and saves nothing.
-        """
         s = make_state(total_frames=100, left_bound=0, right_bound=60, base_step=5)
         s.cap = _CapturesUpTo(62)
 
@@ -386,10 +349,6 @@ class TestContractRight:
         assert s.right_bound == original
 
 
-# ---------------------------------------------------------------------------
-# set_mark_in / set_mark_out
-# ---------------------------------------------------------------------------
-
 def _suggest_in(idx: int):
     def prepare(state: VideoState) -> None:
         state.suggestions.offer(idx, state.suggested_out)
@@ -418,8 +377,6 @@ def _shift(direction: int):
     return act
 
 
-# (label, _make_state kwargs, prepare, act) for every edit that changes the
-# clip the user is cutting.  Each must redraw and autosave.
 _EDITS_THAT_CHANGE_THE_CLIP = [
     ("set_mark_in", {"in_point": 5, "out_point": 50, "cursor": 20}, _no_prep, set_mark_in),
     ("set_mark_out", {"in_point": 5, "out_point": 50, "cursor": 30}, _no_prep, set_mark_out),
@@ -437,8 +394,6 @@ _EDITS_THAT_CHANGE_THE_CLIP = [
     ("move_cursor_right", {"left_bound": 0, "right_bound": 99, "cursor": 20}, _no_prep, move_cursor_right),
 ]
 
-# The same operations asked to do something they refuse: nothing changes, so
-# nothing is saved.
 _EDITS_THAT_REFUSE = [
     ("set_mark_in past active_end", {"in_point": 5, "out_point": 50, "cursor": 55}, _no_prep, set_mark_in),
     ("set_mark_out before active_start", {"in_point": 20, "out_point": 50, "cursor": 10}, _no_prep, set_mark_out),
@@ -485,7 +440,6 @@ class TestSetMarkIn:
         s = make_state(in_point=5, out_point=50, cursor=55)
         original = s.in_point
         set_mark_in(s)
-        # current > out_point, condition `current < out_point` is false → no change
         assert s.in_point == original
 
 
@@ -600,7 +554,6 @@ class TestShiftActiveRange:
         assert s.in_point == 10
 
     def test_shift_pulls_the_cursor_back_inside_the_loaded_range(self, make_state):
-        """The cursor moves with the range and can overshoot what is loaded."""
         s = make_state(total_frames=41, left_bound=0, right_bound=40,
                         in_point=0, out_point=20, cursor=39)
         shift_in_out(s, 1)
@@ -708,14 +661,6 @@ class TestLoopSuggestions:
     def test_a_half_loop_mode_searches_for_turning_points_and_nothing_else(
         self, make_state, loop_mode, initial, turning_points, expected
     ):
-        """base-tip and tip-base look for the turn, never for a duplicate frame
-        and never for a better pair.
-
-        This is the one rule here no frame fixture can show, because it is about
-        which search runs rather than what it finds -- so it is the one test in
-        this file that patches the searches by name. Three near-identical copies
-        of it collapsed into this table.
-        """
         s = make_state(
             total_frames=80, left_bound=0, right_bound=79,
             in_point=10, out_point=60,

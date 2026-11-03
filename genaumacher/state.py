@@ -46,12 +46,6 @@ class VideoState:
         default=persist_session_state, repr=False
     )
 
-    # The frame window's five fields are session-JSON keys, so they are readable
-    # here under the names the payload builder writes -- but only readable.  A
-    # module that wants one changed asks the window for the change it wants;
-    # that is what stops `left_bound <= current <= right_bound` being
-    # re-established by hand at every call site.
-
     @property
     def total_frames(self) -> int:
         return self.window.total_frames
@@ -76,10 +70,6 @@ class VideoState:
     def loaded_count(self) -> int:
         return self.window.count
 
-    # The clip's two ends are session-JSON keys as well.  Its two anchors are
-    # not, and nothing outside `loop_suggestions` reads them, so they stay on
-    # the range rather than getting a reader here that only a test would use.
-
     @property
     def in_point(self) -> int:
         return self.clip.start
@@ -88,10 +78,6 @@ class VideoState:
     def out_point(self) -> int:
         return self.clip.end
 
-    # The offered pair is drawn on the scrubber and read by the two accept
-    # operations; the opening selection it is compared against is nobody's
-    # business but the search's.
-
     @property
     def suggested_in(self) -> int | None:
         return self.suggestions.suggested_in
@@ -99,11 +85,6 @@ class VideoState:
     @property
     def suggested_out(self) -> int | None:
         return self.suggestions.suggested_out
-
-    # The loop cursor's, likewise.  `speed` is a session-JSON key; the other
-    # two are what the tick reads to draw the transport.  The anchor and the
-    # paused frame are not here: nothing outside the cursor reads either, and a
-    # reader that only a test has is how the last four dead surfaces got in.
 
     @property
     def speed(self) -> float:
@@ -124,7 +105,6 @@ class VideoState:
         self.loop.restart_at(time.monotonic())
 
     def bump_render(self) -> None:
-        """Say the picture changed."""
         self.render_rev += 1
 
     def save_edit(self) -> None:

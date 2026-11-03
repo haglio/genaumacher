@@ -1,5 +1,3 @@
-"""Tests for genaumacher.gui.launcher_dialog — session launcher dialog."""
-
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -17,7 +15,6 @@ def dialog():
 
 
 def _choose_file(dialog, path: str) -> None:
-    """Click "Clip whole vid..." and have the file chooser answer with `path`."""
     with patch.object(QFileDialog, "getOpenFileName", return_value=(path, "")):
         dialog.clip_whole_btn.click()
 
@@ -101,16 +98,6 @@ class TestResult:
 
 
 class TestVrAutoDetect:
-    """Which folder a clip lands in -- clips or vr_clips -- is decided here.
-
-    Both cases used to build their input out of the VR folder constant itself,
-    so the assertion held for any value of it: repointing that constant at a
-    folder outside the library left both green while every VR clip silently
-    routed to the non-VR folder.  The paths below are literals in the two
-    spellings the file dialog returns, under the library root the fabricated
-    settings name.
-    """
-
     @pytest.fixture(autouse=True)
     def _fabricated_library(self, shared_settings):
         shared_settings({"library_root": "D:/example-suite"})
