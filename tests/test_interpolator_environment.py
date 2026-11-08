@@ -56,7 +56,7 @@ class TestWhatTheCheckerSays:
         assert complaints() == []
 
 
-class TestWhichInterpolatorIsUsedAssertedExactlyAStringyWrongPathOncePassed:
+class TestWhichInterpolatorIsUsedAssertedExactlyBecauseTheLookupGatesTheWholeSeamPathAndAStringyWrongPathOncePassed:
     def test_the_copy_fetched_into_this_checkout_is_the_one_used(self, checkout: Path):
         exe = _fetched(checkout)
 

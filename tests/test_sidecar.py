@@ -11,8 +11,8 @@ from app_support.flick_folder import flat_flicks_in
 from genaumacher.paths import flicks_dir
 from genaumacher.sidecar import record_provenance
 from tests.stamps import (
-    METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
-    METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+    METHOD,
+    METHOD_VERSION,
 )
 
 
@@ -20,7 +20,7 @@ def test_an_exported_clip_is_recorded_where_evolver_files_that_clips_metadata(re
     record_provenance(flicks_dir() / "scene one.mp4", method="a method", method_version="7")
 
     recorded = recorded_cut("scene one")
-    assert (recorded["app"], recorded[METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT], recorded[METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT]) == (
+    assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
         "genaumacher", "a method", "7",
     )
 
@@ -103,8 +103,15 @@ def test_no_test_module_imports_another_pytest_puts_tests_on_sys_path_so_a_renam
     offenders = []
     for source in tests.glob("test_*.py"):
         for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"))):
-            names = ([node.module] if isinstance(node, ast.ImportFrom) and node.module else
+            names = ([node.module, *(f"{node.module}.{alias.name}" for alias in node.names)]
+                     if isinstance(node, ast.ImportFrom) and node.module else
                      [alias.name for alias in node.names] if isinstance(node, ast.Import) else [])
             if any(name.split(".")[-1].startswith("test_") for name in names):
                 offenders.append(source.name)
     assert offenders == []
+
+
+def test_the_stamp_keys_are_spelled_as_every_file_on_disk_already_holds_them(recorded_cut):
+    record_provenance(flicks_dir() / "scene one.mp4", method="a method", method_version="7")
+
+    assert {"recipe", "recipe_version"} <= set(recorded_cut("scene one"))

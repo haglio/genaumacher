@@ -8,8 +8,8 @@ from genaumacher.export_pipeline import run_export
 from genaumacher.paths import RAW_CLIPS_DIR, audio_dir, flicks_dir, vr_flicks_dir
 from genaumacher.sidecar import record_provenance
 from tests.stamps import (
-    METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
-    METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+    METHOD,
+    METHOD_VERSION,
 )
 
 pytestmark = pytest.mark.usefixtures("library")
@@ -208,7 +208,7 @@ class TestALoopedClipsRecord:
             run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)
-        assert (recorded[METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT], recorded[METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT]) == ("clip_postprocess", "3")
+        assert (recorded[METHOD], recorded[METHOD_VERSION]) == ("clip_postprocess", "3")
 
 
 class TestSkipNormalize:
@@ -246,6 +246,6 @@ class TestSkipNormalize:
         run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)
-        assert (recorded["app"], recorded[METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT], recorded[METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT]) == (
+        assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
             "genaumacher", None, None,
         )

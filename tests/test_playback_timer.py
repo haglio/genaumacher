@@ -11,7 +11,7 @@ def timer():
     return PlaybackTimer()
 
 
-class TestTickingWatchedAsRealTicksReadingThePrivateQTimerPassedOneThatNeverFired:
+class TestTickingWatchedAsRealTicksBecauseReadingThePrivateQTimerPassedOneThatNeverFired:
     def test_a_new_timer_does_not_tick(self, timer, ticked_within):
         assert ticked_within(timer.tick, 100) is False
 

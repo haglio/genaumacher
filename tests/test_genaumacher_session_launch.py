@@ -18,6 +18,13 @@ from genaumacher.launch_choice import ClipWholeVideo, LoadSession, NewSession
 from genaumacher.paths import PROJECT_DIR
 from genaumacher.session_launch import build_clip_whole_state, build_state, launch_state
 
+_FPS_THE_FAKE_FFPROBE_REPORTS = 30.0
+
+
+@pytest.fixture
+def library(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+    return library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session
+
 
 @pytest.fixture
 def library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session(tmp_path: Path, monkeypatch):
@@ -29,7 +36,7 @@ def library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green
     monkeypatch.setattr(session_persistence, "LAST_SESSION_FILE", pointer)
     monkeypatch.setattr(session_launch, "LAST_SESSION_FILE", pointer)
     monkeypatch.setattr(
-        create_session_module, "ffprobe_video_metadata", lambda path: (30.0, 900)
+        create_session_module, "ffprobe_video_metadata", lambda path: (_FPS_THE_FAKE_FFPROBE_REPORTS, 900)
     )
 
     capture = MagicMock()
@@ -72,8 +79,8 @@ def _write_session(sessions: Path, name: str, **overrides) -> Path:
 
 
 class TestLoadingASavedSession:
-    def test_the_state_comes_back_the_way_the_file_left_it(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
-        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
+    def test_the_state_comes_back_the_way_the_file_left_it(self, library):
+        saved = _write_session(library.sessions, "seaside walk")
 
         state = build_state(LoadSession(session_json=str(saved)))
 
@@ -85,23 +92,23 @@ class TestLoadingASavedSession:
         assert state.wrap_mode == "yellow"
         assert state.speed == pytest.approx(1.25)
 
-    def test_it_remembers_the_file_it_came_from(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
-        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
+    def test_it_remembers_the_file_it_came_from(self, library):
+        saved = _write_session(library.sessions, "seaside walk")
 
         state = build_state(LoadSession(session_json=str(saved)))
 
         assert state.session_path == str(saved)
 
-    def test_it_becomes_the_session_the_launcher_offers_next_time(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
-        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
+    def test_it_becomes_the_session_the_launcher_offers_next_time(self, library):
+        saved = _write_session(library.sessions, "seaside walk")
 
         build_state(LoadSession(session_json=str(saved)))
 
-        assert library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.pointer.read_text(encoding="utf-8") == str(saved)
+        assert library.pointer.read_text(encoding="utf-8") == str(saved)
 
-    def test_a_pointer_that_cannot_be_written_does_not_stop_the_session_opening(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
-        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
-        library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.pointer.mkdir()
+    def test_a_pointer_that_cannot_be_written_does_not_stop_the_session_opening(self, library):
+        saved = _write_session(library.sessions, "seaside walk")
+        library.pointer.mkdir()
 
         assert build_state(LoadSession(session_json=str(saved))).session_path == str(saved)
 
@@ -118,39 +125,38 @@ class TestCreatingANewSession:
         fields.update(overrides)
         return NewSession(**fields)
 
-    def test_the_typed_timestamp_becomes_the_window_written_to_disk(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+    def test_the_typed_timestamp_becomes_the_window_written_to_disk(self, library):
         state = build_state(self._new())
 
-        written = json.loads((library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json").read_text(encoding="utf-8"))
-        fps_the_fake_ffprobe_reports = 30
-        assert written["active_start"] == 12.5 * fps_the_fake_ffprobe_reports
-        assert written["active_end"] == (12.5 + 5.0) * fps_the_fake_ffprobe_reports - 1
+        written = json.loads((library.sessions / "second pass.json").read_text(encoding="utf-8"))
+        assert written["active_start"] == 12.5 * _FPS_THE_FAKE_FFPROBE_REPORTS
+        assert written["active_end"] == (12.5 + 5.0) * _FPS_THE_FAKE_FFPROBE_REPORTS - 1
         assert written["loop_mode"] == "tip-base"
         assert written["vr"] is False
         assert (state.in_point, state.out_point) == (written["active_start"], written["active_end"])
 
-    def test_an_hour_long_timestamp_is_parsed_whole(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+    def test_an_hour_long_timestamp_is_parsed_whole(self, library):
         build_state(self._new(timestamp="00:00:20", seconds=1.0))
 
-        written = json.loads((library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json").read_text(encoding="utf-8"))
+        written = json.loads((library.sessions / "second pass.json").read_text(encoding="utf-8"))
         assert written["active_start"] == 600
 
-    def test_a_vr_session_is_marked_vr_in_the_file_and_on_the_state(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+    def test_a_vr_session_is_marked_vr_in_the_file_and_on_the_state(self, library):
         state = build_state(self._new(vr=True))
 
-        written = json.loads((library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json").read_text(encoding="utf-8"))
+        written = json.loads((library.sessions / "second pass.json").read_text(encoding="utf-8"))
         assert written["vr"] is True
         assert state.vr is True
 
-    def test_it_becomes_the_last_session(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+    def test_it_becomes_the_last_session(self, library):
         build_state(self._new())
 
-        assert library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.pointer.read_text(encoding="utf-8") == str(
-            library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json"
+        assert library.pointer.read_text(encoding="utf-8") == str(
+            library.sessions / "second pass.json"
         )
 
-    def test_a_session_of_that_name_already_there_is_opened_rather_than_overwritten(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
-        existing = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "second pass", active_start=7, active_end=9)
+    def test_a_session_of_that_name_already_there_is_opened_rather_than_overwritten(self, library):
+        existing = _write_session(library.sessions, "second pass", active_start=7, active_end=9)
 
         state = build_state(self._new())
 

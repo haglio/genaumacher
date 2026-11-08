@@ -87,6 +87,7 @@ class TestConnectExport:
     def test_every_signal_the_worker_emits_reaches_the_dialog_one_wiring_the_caller_holds_and_starts_a_qthread_whose_last_reference_goes_dies_mid_export(self, state, steps):
         dialog = ExportDialog()
         worker = connect_export(state, dialog)
+        assert not worker.isRunning()
 
         worker.run()
 

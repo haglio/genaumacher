@@ -96,7 +96,11 @@ def test_a_control_that_is_on_sits_on_a_lighter_ground_read_off_the_installed_sh
 
 def test_which_family_color_stands_for_which_part_of_the_scrubber_is_decided_beside_the_widget_every_name_an_alias_of_a_family_color():
     family = {id(value) for value in vars(colors).values()}
-    own = {name: value for name, value in vars(scrubber_colors).items()
-           if name.isupper() and not name.startswith("_")}
+    assigned_here = {
+        target.id
+        for node in ast.parse(Path(scrubber_colors.__file__).read_text(encoding="utf-8")).body
+        if isinstance(node, ast.Assign) for target in node.targets if isinstance(target, ast.Name)}
+    own = {name: getattr(scrubber_colors, name) for name in assigned_here}
     assert own
     assert [name for name, value in own.items() if id(value) not in family] == []
+    assert not set(own) & set(vars(colors))

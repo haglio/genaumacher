@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 NORMALIZE_METHOD = "clip_postprocess"
 NORMALIZE_VERSION = "1"
 
-_DECODED_A_ROUGH_SHARE_OF_THE_WORK_AGAINST_THE_ENCODE = 0.2
-_FRAMES_BUILT_A_ROUGH_SHARE_OF_THE_WORK_AGAINST_THE_ENCODE = 0.6
+_ROUGH_SHARE_DONE_ONCE_DECODED = 0.2
+_ROUGH_SHARE_DONE_ONCE_FRAMES_BUILT = 0.6
 _SHORTEST_CLIP = 3
 
 
@@ -135,7 +135,7 @@ def normalize_clip(
     input_count = len(frames)
     if input_count < _SHORTEST_CLIP:
         raise RuntimeError("Clip is too short.")
-    say(_DECODED_A_ROUGH_SHARE_OF_THE_WORK_AGAINST_THE_ENCODE)
+    say(_ROUGH_SHARE_DONE_ONCE_DECODED)
 
     normalized_preview = normalize_loop_mode(frames, options.loop_mode)
     bridge_frames = compute_bridge_frames(
@@ -152,7 +152,7 @@ def normalize_clip(
     out_frames, normalized_n = build_output_frames(
         frames, options, bridge_frames=bridge_frames, seam_frames=seam_frames_count,
     )
-    say(_FRAMES_BUILT_A_ROUGH_SHARE_OF_THE_WORK_AGAINST_THE_ENCODE)
+    say(_ROUGH_SHARE_DONE_ONCE_FRAMES_BUILT)
 
     scale = 1.0
     min_dim = 64

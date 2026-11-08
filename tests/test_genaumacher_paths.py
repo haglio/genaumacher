@@ -22,7 +22,10 @@ from genaumacher.paths import (
     vr_flicks_dir,
     vr_video_dir,
 )
-from tests import conftest
+from tests.kept_out_of_his_files import (
+    MODULES_BINDING_THE_LAST_SESSION_POINTER,
+    MODULES_BINDING_THE_SESSIONS_FOLDER,
+)
 
 _RUNTIME_DIRS = (
     "SESSIONS_DIR",
@@ -50,6 +53,11 @@ def checkout_dirs(tmp_path: Path, monkeypatch):
     for name in names:
         monkeypatch.setattr(paths, name, tmp_path / name.lower())
     return {name: tmp_path / name.lower() for name in names}
+
+
+@pytest.fixture
+def runtime_dirs(runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library):
+    return runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library
 
 
 @pytest.fixture
@@ -159,23 +167,23 @@ class TestTheVrVideoFolder:
 
 
 class TestEnsureRuntimeDirs:
-    def test_creates_every_directory_the_app_writes_into(self, runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library):
+    def test_creates_every_directory_the_app_writes_into(self, runtime_dirs):
         ensure_runtime_dirs()
 
-        missing = sorted(name for name, path in runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library.items() if not path.is_dir())
+        missing = sorted(name for name, path in runtime_dirs.items() if not path.is_dir())
         assert missing == []
 
     def test_the_directories_it_creates_are_the_ones_named_here(self):
         assert _names_ensure_runtime_dirs_creates() == set(_RUNTIME_DIRS)
 
-    def test_a_second_run_keeps_what_the_first_one_left(self, runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library):
+    def test_a_second_run_keeps_what_the_first_one_left(self, runtime_dirs):
         ensure_runtime_dirs()
-        (runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library["SESSIONS_DIR"] / "demo.json").write_text("{}", encoding="utf-8")
+        (runtime_dirs["SESSIONS_DIR"] / "demo.json").write_text("{}", encoding="utf-8")
 
         ensure_runtime_dirs()
 
-        assert (runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library["SESSIONS_DIR"] / "demo.json").read_text(encoding="utf-8") == "{}"
-        assert all(path.is_dir() for path in runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library.values())
+        assert (runtime_dirs["SESSIONS_DIR"] / "demo.json").read_text(encoding="utf-8") == "{}"
+        assert all(path.is_dir() for path in runtime_dirs.values())
 
 
 class TestAMachineWithNoLibraryYet:
@@ -263,8 +271,9 @@ def _modules_importing_from_paths(name: str) -> set[str]:
 
 def test_every_module_binding_the_last_session_pointer_is_pointed_at_the_scratch_one_or_its_tests_reach_the_real_file():
     assert _modules_importing_from_paths("LAST_SESSION_FILE") | {"genaumacher.paths"} == set(
-        conftest.MODULES_BINDING_THE_LAST_SESSION_POINTER)
+        MODULES_BINDING_THE_LAST_SESSION_POINTER)
 
 
 def test_every_module_binding_the_sessions_folder_is_pointed_at_the_scratch_one_or_its_tests_write_into_the_checkout():
-    assert _modules_importing_from_paths("SESSIONS_DIR") == set(conftest.MODULES_BINDING_THE_SESSIONS_FOLDER)
+    assert _modules_importing_from_paths("SESSIONS_DIR") | {"genaumacher.paths"} == set(
+        MODULES_BINDING_THE_SESSIONS_FOLDER)
