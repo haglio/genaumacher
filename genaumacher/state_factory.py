@@ -4,6 +4,7 @@ import time
 from typing import Any
 
 import cv2
+from app_support import video_ids
 
 from .clip_range import ClipRange
 from .frame_store import load_range
@@ -22,7 +23,9 @@ def _normalized_speed(speed: float) -> float:
 
 
 def load_video_state(payload: dict[str, Any], session_name: str) -> VideoState:
-    video_path = payload["video_path"]
+    video_path = video_ids.video_named_by(payload)
+    if video_path is None:
+        raise RuntimeError(f"Could not open video: no video has the id {payload.get('video_id')}")
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Could not open video: {video_path}")

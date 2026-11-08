@@ -49,7 +49,7 @@ def test_build_session_payload_basic():
         session_name="Demo",
         seconds=5.0,
     )
-    assert payload["version"] == 1
+    assert payload["version"] == 2
     assert payload["session_name"] == "Demo"
     assert payload["video_path"] == r"C:\videos\Demo Video.mp4"
     assert payload["fps"] == 30.0
@@ -120,7 +120,7 @@ def test_create_session_writes_json(tmp_path):
     assert result == tmp_path / "TestVideo.json"
     assert result.exists()
     payload = json.loads(result.read_text(encoding="utf-8"))
-    assert payload["version"] == 1
+    assert payload["version"] == 2
     assert payload["session_name"] == "TestVideo"
     assert payload["video_path"] == r"C:\videos\TestVideo.mp4"
     assert payload["fps"] == 30.0

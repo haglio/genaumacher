@@ -14,7 +14,7 @@ from .launch_choice import ClipWholeVideo, LaunchChoice, LoadSession, NewSession
 from .loop_cursor import LoopCursor
 from .main_funestra_prefill import detect_main_funestra_session_prefill
 from .paths import LAST_SESSION_FILE, SESSIONS_DIR, ensure_runtime_dirs, sanitize_name
-from .session_persistence import read_json, remember_last_session
+from .session_persistence import name_the_videos_by_id, read_json, remember_last_session
 from .state import VideoState
 from .state_factory import load_video_state
 from .suggestions import Suggestions
@@ -87,6 +87,7 @@ def _run_clip_whole_export(video_file: str) -> None:
 
 def launch_state() -> VideoState | None:
     ensure_runtime_dirs()
+    name_the_videos_by_id(SESSIONS_DIR)
     last_session = LAST_SESSION_FILE.read_text(encoding="utf-8").strip() if LAST_SESSION_FILE.exists() else ""
     dialog = LauncherDialog(last_session=last_session)
 

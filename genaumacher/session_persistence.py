@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from app_support import video_ids
 from app_support.file_channel import write_whole
 
 from .loop_modes import LoopMode
@@ -37,7 +38,7 @@ def read_json(path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
-SESSION_FORMAT_VERSION = 1
+SESSION_FORMAT_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -61,7 +62,7 @@ class SessionRecord:
         return {
             "version": SESSION_FORMAT_VERSION,
             "session_name": self.session_name,
-            "video_path": self.video_path,
+            **video_ids.reference_to(self.video_path),
             "fps": self.fps,
             "total_frames": self.total_frames,
             "loaded_start": self.left_bound,
@@ -105,3 +106,14 @@ def autosave_session(state) -> None:
         remember_last_session(state.session_path)
     else:
         state.session_warning = f"Autosave failed: {detail}"
+
+
+def name_the_videos_by_id(sessions_dir: Path) -> None:
+    for session in sorted(Path(sessions_dir).glob("*.json")):
+        try:
+            moved = video_ids.named_by_id(read_json(session))
+        except (OSError, ValueError):
+            logger.warning("Could not read %s", session, exc_info=True)
+            continue
+        if moved is not None:
+            safe_atomic_write_json(session, {**moved, "version": SESSION_FORMAT_VERSION})

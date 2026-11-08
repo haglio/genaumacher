@@ -102,7 +102,7 @@ class TestCurrentPayload:
 
     def test_version_is_1(self, make_state):
         s = make_state()
-        assert s.current_payload()["version"] == 1
+        assert s.current_payload()["version"] == 2
 
     def test_session_name_correct(self, make_state):
         s = make_state(session_name="my_clip")
