@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from PyQt6.QtWidgets import QPushButton
 
 from genaumacher.gui.scrubber_controls import ScrubberControls
 
@@ -63,5 +64,5 @@ class TestLoopModeLabel:
 
 
 def test_every_button_on_the_row_has_a_line_in_the_table_or_its_wiring_goes_unchecked(ctl):
-    on_the_row = {name for name in dir(ctl) if name.endswith("_btn")}
+    on_the_row = {name for name, widget in vars(ctl).items() if isinstance(widget, QPushButton)}
     assert on_the_row == {button for _, button, _ in _BUTTONS}

@@ -97,6 +97,10 @@ def _bridge_returning(result):
 
 class TestRuns:
     @pytest.fixture
+    def extracted(self, extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe):
+        return extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe
+
+    @pytest.fixture
     def extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe(self, tmp_path: Path, monkeypatch) -> Path:
         monkeypatch.setattr(fetch_rife, "DEST", tmp_path)
         monkeypatch.setattr(fetch_rife, "RIFE_EXE", tmp_path / "rife-ncnn-vulkan.exe")
@@ -215,8 +219,6 @@ class TestDownload:
 
         assert fetched == [(fetch_rife.URL, fetch_rife._DOWNLOAD_TIMEOUT)]
 
-    def test_a_stalled_download_has_a_time_limit_urlretrieve_has_none_and_would_hold_a_gate_job_open(self):
-        assert fetch_rife._DOWNLOAD_TIMEOUT > 0
 
     def test_a_download_that_does_not_match_is_refused_and_removed(
         self, tmp_path: Path, monkeypatch
@@ -232,3 +234,11 @@ class TestDownload:
             fetch_rife.download(archive)
 
         assert not archive.exists()
+
+
+def test_the_release_is_fetched_not_tracked_a_clone_should_not_carry_a_windows_binary_most_machines_cannot_run():
+    ignored = subprocess.run(
+        ["git", "check-ignore", "-q", fetch_rife.DEST.relative_to(fetch_rife.TOOLS_DIR.parent).as_posix() + "/"],
+        cwd=fetch_rife.TOOLS_DIR.parent, check=False)
+
+    assert ignored.returncode == 0

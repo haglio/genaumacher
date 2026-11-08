@@ -38,19 +38,20 @@ def runs() -> bool:
     # arguments, upstream prints its usage and exits before it touches Vulkan.
     if not is_present():
         return False
+    interpolate = _the_production_call_imported_here_so_fetching_needs_no_app_installed()
     try:
-        return _one_real_interpolation_through_the_production_call() is not None
+        return interpolate() is not None
     except Exception:
         return False
 
 
-def _one_real_interpolation_through_the_production_call():
+def _the_production_call_imported_here_so_fetching_needs_no_app_installed():
     import numpy as np  # noqa: PLC0415
 
     from genaumacher.normalize_transforms import build_rife_bridge  # noqa: PLC0415
 
     y, x = (a.astype(np.uint8) for a in np.mgrid[0:64, 0:64])
-    return build_rife_bridge(np.dstack([x, y, x]), np.dstack([y, x, y]), 1)
+    return lambda: build_rife_bridge(np.dstack([x, y, x]), np.dstack([y, x, y]), 1)
 
 
 def sha256_of(path: Path) -> str:

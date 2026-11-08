@@ -280,22 +280,22 @@ class GenaumacherMainWindow(QMainWindow):
         ))
 
     def render(self, state: VideoState) -> None:
-        loop_idx = self._draw_frames_settling_the_loop_position(state)
+        loop_idx, loop_position = self._draw_frames(state)
         self._draw_scrubber(state, loop_idx)
-        self._write_labels_from_the_position_drawing_settled(state, loop_idx)
+        self._write_labels(state, loop_idx, loop_position)
         self.button_bar.set_playing(not state.loop_paused)
         self.scrubber_controls.set_loop_mode(state.loop_mode)
         self.warning_label.setText(state.session_warning)
         self.update_button_positions()
 
-    def _draw_frames_settling_the_loop_position(self, state: VideoState) -> int:
+    def _draw_frames(self, state: VideoState) -> tuple[int, int | None]:
         loop_idx = state.in_point
         with contextlib.suppress(*_UNDECODABLE):
             loop_idx = current_loop_frame_index(state)
             self._fill(self.loop_preview_pane, safe_frame(state, loop_idx))
         with contextlib.suppress(*_UNDECODABLE):
             self._fill(self.frame_at_cursor_pane, safe_frame(state, state.cursor))
-        return loop_idx
+        return loop_idx, state.paused_loop_pos
 
     def _fill(self, pane: VideoPane, frame) -> None:
         image = bgr_to_qimage(frame)
@@ -308,7 +308,7 @@ class GenaumacherMainWindow(QMainWindow):
         self.scrubber.set_loop_position(loop_idx)
         self.scrubber.set_suggestions(state.suggested_in, state.suggested_out)
 
-    def _write_labels_from_the_position_drawing_settled(self, state: VideoState, loop_idx: int) -> None:
+    def _write_labels(self, state: VideoState, loop_idx: int, loop_position: int | None) -> None:
         cursor_max = state.loaded_count - 1
         width = max(2, len(str(max(0, cursor_max))))
         self.cursor_label.setText(
@@ -319,7 +319,7 @@ class GenaumacherMainWindow(QMainWindow):
         preview_total = len(loop_preview_indices(state))
         width = max(2, len(str(max(0, preview_total))))
         self.loop_label.setText(
-            f"loop frame: {state.paused_loop_pos:0{width}d}/{preview_total}"
+            f"loop frame: {loop_position:0{width}d}/{preview_total}"
             f" @ {format_seconds(loop_idx / state.fps)}"
         )
 

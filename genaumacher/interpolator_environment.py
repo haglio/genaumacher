@@ -9,7 +9,7 @@ VENDORED_EXE = Path("tools") / "rife-ncnn-vulkan-20221029-windows" / "rife-ncnn-
 MODEL_DIR_NAME = "rife-v4.6"
 MODEL_FILES = ("flownet.bin", "flownet.param")
 
-_FETCH_THE_17_MB_THE_REPO_LEAVES_UNTRACKED_THE_17_MB_THE_REPO_LEAVES_UNTRACKED = "run `python tools/fetch_rife.py` -- see CLAUDE.md, Fetching RIFE"
+_HOW_TO_FETCH_THE_UNTRACKED_INTERPOLATOR = "run `python tools/fetch_rife.py` -- see CLAUDE.md, Fetching RIFE"
 _FALLBACK = "normalizing falls back to its geometric seam"
 
 
@@ -38,8 +38,8 @@ def locate() -> tuple[Path, Path] | None:
 def complaints() -> list[str]:
     exe = _find_exe()
     if exe is None:
-        return [f"there is none in this checkout, so {_FALLBACK}; {_FETCH_THE_17_MB_THE_REPO_LEAVES_UNTRACKED_THE_17_MB_THE_REPO_LEAVES_UNTRACKED}"]
+        return [f"there is none in this checkout, so {_FALLBACK}; {_HOW_TO_FETCH_THE_UNTRACKED_INTERPOLATOR}"]
     missing = _missing_weights(exe)
     if missing:
-        return [f"{exe} has no {' or '.join(missing)} beside it, so {_FALLBACK}; {_FETCH_THE_17_MB_THE_REPO_LEAVES_UNTRACKED_THE_17_MB_THE_REPO_LEAVES_UNTRACKED}"]
+        return [f"{exe} has no {' or '.join(missing)} beside it, so {_FALLBACK}; {_HOW_TO_FETCH_THE_UNTRACKED_INTERPOLATOR}"]
     return []

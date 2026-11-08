@@ -33,7 +33,7 @@ class GenaumacherApp:
 
         self.window = GenaumacherMainWindow(state, preview=preview)
         self.playback_timer = PlaybackTimer()
-        self.playback_timer.tick.connect(self._push_the_state_to_the_window_which_alone_knows_its_widgets)
+        self.playback_timer.tick.connect(self._on_tick)
         self.window.closed.connect(self.playback_timer.stop)
 
     def run(self) -> int:
@@ -41,5 +41,5 @@ class GenaumacherApp:
         self.playback_timer.start()
         return self._app.exec()
 
-    def _push_the_state_to_the_window_which_alone_knows_its_widgets(self) -> None:
+    def _on_tick(self) -> None:
         self.window.render(self._state)

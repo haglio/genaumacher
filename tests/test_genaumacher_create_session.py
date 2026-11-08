@@ -98,7 +98,11 @@ def test_build_session_payload_vr_true():
     assert payload["vr"] is True
 
 
-def _mock_ffprobe(fps: float = 30.0, total_frames: int = 900):
+_FPS_THE_FAKE_FFPROBE_REPORTS = 30.0
+_A_PATH_WITH_FORWARD_SLASHES_SO_THE_CASE_READS_THE_SAME_ON_BOTH_PLATFORMS = "/library/seaside walk.mp4"
+
+
+def _mock_ffprobe(fps: float = _FPS_THE_FAKE_FFPROBE_REPORTS, total_frames: int = 900):
     return patch(
         "genaumacher.create_session.ffprobe_video_metadata",
         return_value=(fps, total_frames),
@@ -242,12 +246,12 @@ def test_the_command_line_fun_time_runs_writes_the_file_prints_its_path_and_move
 def test_cli_writes_the_window_it_was_asked_for(tmp_path):
     with _mock_ffprobe(), \
          patch("genaumacher.create_session.SESSIONS_DIR", tmp_path):
-        main(["--video", "/library/seaside walk.mp4", "--time", "5.0", "--seconds", "3.0"])
+        main(["--video", _A_PATH_WITH_FORWARD_SLASHES_SO_THE_CASE_READS_THE_SAME_ON_BOTH_PLATFORMS,
+              "--time", "5.0", "--seconds", "3.0"])
 
-    fps_the_fake_ffprobe_reports = 30
     payload = json.loads((tmp_path / "seaside walk.json").read_text(encoding="utf-8"))
-    assert payload["active_start"] == 5.0 * fps_the_fake_ffprobe_reports
-    assert payload["active_end"] == (5.0 + 3.0) * fps_the_fake_ffprobe_reports - 1
+    assert payload["active_start"] == 5.0 * _FPS_THE_FAKE_FFPROBE_REPORTS
+    assert payload["active_end"] == (5.0 + 3.0) * _FPS_THE_FAKE_FFPROBE_REPORTS - 1
 
 
 def test_cli_failure(capsys):

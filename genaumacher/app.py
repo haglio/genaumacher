@@ -47,12 +47,12 @@ def _init_logger() -> logging.Logger:
     return logger
 
 
-def _warn_at_start_about_the_interpolator_the_gate_always_has_it_this_machine_may_not(logger: logging.Logger) -> None:
+def _warn_at_start_about_a_missing_interpolator(logger: logging.Logger) -> None:
     for said in complaints():
         logger.warning("Frame interpolator: %s", said)
 
 
-def _dress_the_app_before_the_launcher_dialog_inherits_its_icon(app, preview: Preview | None) -> None:
+def _set_the_icon_the_launcher_dialog_inherits(app, preview: Preview | None) -> None:
     app.setWindowIcon(app_icon(genaumacher_icon_path(), preview))
 
 
@@ -66,13 +66,13 @@ def main() -> int:
     _claim_the_taskbar_identity_before_the_first_window(preview)
     _name_this_process()
     logger = _init_logger()
-    _warn_at_start_about_the_interpolator_the_gate_always_has_it_this_machine_may_not(logger)
+    _warn_at_start_about_a_missing_interpolator(logger)
     try:
         # Qt loads here, so a failure to load it reaches the handler below.
         from PyQt6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
 
         _app = QApplication.instance() or QApplication(sys.argv)
-        _dress_the_app_before_the_launcher_dialog_inherits_its_icon(_app, preview)
+        _set_the_icon_the_launcher_dialog_inherits(_app, preview)
         from shared_ui.loading_window import Loading, LoadingCanceled  # noqa: PLC0415
 
         loading = Loading.at_the_click(_app, logger, lambda: open_the_loading_screen(preview))

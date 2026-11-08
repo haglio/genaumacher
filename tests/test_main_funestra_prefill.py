@@ -86,14 +86,16 @@ class TestWhenThereIsNothingToPrefill:
         assert detect_main_funestra_session_prefill(tmp_path) is None
 
 
+_FUNESTRAS_FOLDER_BEFORE_ITS_RENAME_ON_A_MACHINE_THAT_HAS_NOT_MOVED_IT = "player_core"
+
+
 class TestTheContractWithTheMainFunestraGenaumachersWholeLinkToTheOtherApps:
-    _THE_OLD_FOLDER_NAME_ON_A_MACHINE_THAT_HAS_NOT_MOVED_IT = "player_core"
 
     @staticmethod
     def _status_sources_beside_the_primary_checkout_a_worktrees_neighbors_are_worktrees() -> list[Path]:
         siblings = primary_checkout_of(PROJECT_DIR).parent
         sources = (siblings / "funestra" / "funestra" / "status.py",
-                   siblings / TestTheContractWithTheMainFunestraGenaumachersWholeLinkToTheOtherApps._THE_OLD_FOLDER_NAME_ON_A_MACHINE_THAT_HAS_NOT_MOVED_IT / "funestra" / "status.py",
+                   siblings / _FUNESTRAS_FOLDER_BEFORE_ITS_RENAME_ON_A_MACHINE_THAT_HAS_NOT_MOVED_IT / "funestra" / "status.py",
                    siblings / "fun_time" / "main_funestra" / "status.py")
         return [source for source in sources if source.is_file()]
 

@@ -67,7 +67,12 @@ def test_current_payload_includes_vr_true():
 
 class TestTheFieldsEvolverReadsAndRewritesWhenItMovesAVideo:
     def test_a_session_says_which_shape_it_is_a_changed_shape_needs_a_higher_version_so_evolver_refuses_rather_than_rewrites_wrong(self):
-        assert current_payload(_state())["version"] == SESSION_FORMAT_VERSION
+        payload = current_payload(_state())
+
+        assert (SESSION_FORMAT_VERSION, tuple(payload)) == (1, (
+            "version", "session_name", "video_path", "fps", "total_frames", "loaded_start",
+            "loaded_end", "active_start", "active_end", "current", "seconds_per_step",
+            "loop_mode", "wrap_mode", "speed", "vr"))
 
     def test_the_video_it_was_cut_against_is_a_top_level_string(self):
         assert current_payload(_state())["video_path"] == "/video.mp4"

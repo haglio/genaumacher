@@ -50,7 +50,7 @@ class TestSetFrame:
             mock_update.assert_called_once()
 
 
-class TestPaintingReadsPixelsReadingTheStoredImagePassedAPaneThatPaintedNothing:
+class TestPaintingReadsPixelsBecauseReadingTheStoredImagePassedAPaneThatPaintedNothing:
     _SMALL_FRAME_BGR = (50, 100, 150)
 
     @pytest.fixture

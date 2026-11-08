@@ -22,6 +22,10 @@ from genaumacher.loop_modes import read_loop_mode
 from genaumacher.state import VideoState
 from genaumacher.suggestions import Suggestions
 from genaumacher.wrap_modes import read_wrap_mode
+from tests.kept_out_of_his_files import (
+    MODULES_BINDING_THE_LAST_SESSION_POINTER,
+    MODULES_BINDING_THE_SESSIONS_FOLDER,
+)
 
 os.environ[haglio_settings.SETTINGS_ENV] = haglio_settings.THE_EXAMPLE
 
@@ -37,13 +41,6 @@ def qapp():
     if app is None:
         app = QApplication(sys.argv)
     return app
-
-
-MODULES_BINDING_THE_LAST_SESSION_POINTER = (
-    "genaumacher.paths", "genaumacher.session_launch", "genaumacher.session_persistence")
-MODULES_BINDING_THE_SESSIONS_FOLDER = (
-    "genaumacher.create_session", "genaumacher.gui.launcher_dialog", "genaumacher.session_launch",
-    "genaumacher.state_factory")
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -159,6 +156,11 @@ def frames_of():
     def factory(values: list[int], size: int = 1) -> list[np.ndarray]:
         return [np.full((size, size, 3), value, dtype=np.uint8) for value in values]
     return factory
+
+
+@pytest.fixture
+def textured_frames(textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback):
+    return textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback
 
 
 @pytest.fixture
