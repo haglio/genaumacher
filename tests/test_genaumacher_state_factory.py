@@ -94,3 +94,28 @@ def test_the_right_edge_is_the_last_frame_the_decoder_produced():
     state = _load(_payload(loaded_end=40, active_end=18), frames=frames)
 
     assert state.right_bound == 20
+
+
+def test_a_session_naming_its_video_by_id_opens_the_video_wherever_it_now_is(library):
+    from app_support import video_ids  # noqa: PLC0415
+
+    video = library / "videos" / "videos" / "2D" / "scene one.mp4"
+    video.parent.mkdir(parents=True)
+    video.write_bytes(b"")
+    payload = _payload(version=2, **video_ids.reference_to(video))
+    del payload["video_path"]
+    with patch("genaumacher.state_factory.cv2.VideoCapture",
+               return_value=_build_capture()) as opened, \
+         patch("genaumacher.state_factory.load_range",
+               return_value={i: np.zeros((2, 2, 3), dtype=np.uint8) for i in range(10, 41)}):
+        state = load_video_state(payload, "the file stem")
+
+    assert (opened.call_args.args[0], state.path) == (str(video), str(video))
+
+
+def test_a_session_whose_video_is_found_nowhere_says_it_could_not_open_it():
+    payload = _payload(version=2, video_id="no such id")
+    del payload["video_path"]
+
+    with pytest.raises(RuntimeError, match="Could not open video"):
+        _load(payload)

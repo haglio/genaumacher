@@ -6,7 +6,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from genaumacher.session_persistence import (
-    SESSION_FORMAT_VERSION,
     autosave_session,
     current_payload,
     remember_last_session,
@@ -42,7 +41,7 @@ def test_current_payload_builds_expected_fields():
     payload = current_payload(_state())
 
     assert payload == {
-        "version": 1,
+        "version": 2,
         "session_name": "demo",
         "video_path": "/video.mp4",
         "fps": 30.0,
@@ -65,23 +64,8 @@ def test_current_payload_includes_vr_true():
     assert payload["vr"] is True
 
 
-class TestTheFieldsEvolverReadsAndRewritesWhenItMovesAVideo:
-    def test_a_session_says_which_shape_it_is_a_changed_shape_needs_a_higher_version_so_evolver_refuses_rather_than_rewrites_wrong(self):
-        payload = current_payload(_state())
-
-        assert (SESSION_FORMAT_VERSION, tuple(payload)) == (1, (
-            "version", "session_name", "video_path", "fps", "total_frames", "loaded_start",
-            "loaded_end", "active_start", "active_end", "current", "seconds_per_step",
-            "loop_mode", "wrap_mode", "speed", "vr"))
-
-    def test_the_video_it_was_cut_against_is_a_top_level_string(self):
-        assert current_payload(_state())["video_path"] == "/video.mp4"
-
-    def test_the_footage_is_described_well_enough_to_recognize_after_a_rename(self):
-        payload = current_payload(_state())
-
-        assert payload["fps"] == 30.0
-        assert payload["total_frames"] == 120
+def test_a_session_of_a_video_outside_the_library_names_it_by_its_path():
+    assert current_payload(_state())["video_path"] == "/video.mp4"
 
 
 def test_autosave_session_updates_last_saved_payload_on_success():

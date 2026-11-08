@@ -18,7 +18,7 @@ from genaumacher.session_launch import build_state
 from genaumacher.session_persistence import current_payload
 
 GOLDEN_SESSION = """{
-  "version": 1,
+  "version": 2,
   "session_name": "beta rehearsal",
   "video_path": "D:/media/example/beta rehearsal.mp4",
   "fps": 30.0,
