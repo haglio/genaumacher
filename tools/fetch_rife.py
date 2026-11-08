@@ -17,14 +17,11 @@ DEST = TOOLS_DIR / f"rife-ncnn-vulkan-{RELEASE}-windows"
 RIFE_EXE = DEST / "rife-ncnn-vulkan.exe"
 ZIP_PATH = TOOLS_DIR / ASSET
 
-FILES = (
-    "LICENSE",
-    "README.md",
-    "rife-ncnn-vulkan.exe",
-    "vcomp140.dll",
-    "rife-v4.6/flownet.bin",
-    "rife-v4.6/flownet.param",
-)
+_THE_C_RUNTIME_THE_EXECUTABLE_LOADS = "vcomp140.dll"
+_WHAT_THE_APP_RUNS = ("rife-ncnn-vulkan.exe", _THE_C_RUNTIME_THE_EXECUTABLE_LOADS)
+_THE_ONE_MODEL_THE_APP_OPENS = ("rife-v4.6/flownet.bin", "rife-v4.6/flownet.param")
+_WHAT_THE_MIT_LICENSE_REQUIRES_TO_TRAVEL_WITH_THE_BINARIES = ("LICENSE", "README.md")
+FILES = (*_WHAT_THE_MIT_LICENSE_REQUIRES_TO_TRAVEL_WITH_THE_BINARIES, *_WHAT_THE_APP_RUNS, *_THE_ONE_MODEL_THE_APP_OPENS)
 
 _DOWNLOAD_TIMEOUT = 120
 
@@ -37,19 +34,23 @@ def is_present() -> bool:
 
 
 def runs() -> bool:
-    # A Windows machine with no Vulkan device starts it and gets no frame back.
+    # A Windows machine with no Vulkan device starts it and gets no frame back: called with no
+    # arguments, upstream prints its usage and exits before it touches Vulkan.
     if not is_present():
         return False
+    try:
+        return _one_real_interpolation_through_the_production_call() is not None
+    except Exception:
+        return False
 
+
+def _one_real_interpolation_through_the_production_call():
     import numpy as np  # noqa: PLC0415
 
     from genaumacher.normalize_transforms import build_rife_bridge  # noqa: PLC0415
 
     y, x = (a.astype(np.uint8) for a in np.mgrid[0:64, 0:64])
-    try:
-        return build_rife_bridge(np.dstack([x, y, x]), np.dstack([y, x, y]), 1) is not None
-    except Exception:
-        return False
+    return build_rife_bridge(np.dstack([x, y, x]), np.dstack([y, x, y]), 1)
 
 
 def sha256_of(path: Path) -> str:

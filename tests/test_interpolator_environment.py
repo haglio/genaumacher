@@ -56,7 +56,7 @@ class TestWhatTheCheckerSays:
         assert complaints() == []
 
 
-class TestWhichInterpolatorIsUsed:
+class TestWhichInterpolatorIsUsedAssertedExactlyAStringyWrongPathOncePassed:
     def test_the_copy_fetched_into_this_checkout_is_the_one_used(self, checkout: Path):
         exe = _fetched(checkout)
 
@@ -86,7 +86,7 @@ class TestWhichInterpolatorIsUsed:
 
         assert locate() is None
 
-    def test_an_interpolator_with_no_weights_is_not_reached_for_at_all(
+    def test_an_interpolator_with_no_weights_is_not_reached_for_at_all_it_would_start_fail_on_every_frame_and_fall_back_one_process_per_frame_later(
         self, checkout: Path
     ):
         _fetched(checkout, models=())
@@ -109,10 +109,10 @@ class _RecordingLog:
 
 
 class TestWhereTheComplaintsGo:
-    def test_the_launch_writes_what_the_checker_says_into_genaumachers_log(self, monkeypatch):
+    def test_the_launch_writes_what_the_checker_says_into_genaumachers_log_a_test_of_a_missing_interpolator_could_only_pass_on_the_gate_which_always_fetches_it(self, monkeypatch):
         logged = _RecordingLog()
         monkeypatch.setattr(app, "complaints", lambda: ["no interpolator here"])
-        monkeypatch.setattr(app, "_set_windows_app_user_model_id", lambda preview: None)
+        monkeypatch.setattr(app, "_claim_the_taskbar_identity_before_the_first_window", lambda preview: None)
         monkeypatch.setattr(app, "_name_this_process", lambda: None)
         monkeypatch.setattr(app, "_init_logger", lambda: logged)
         monkeypatch.setattr(app, "launch_state", lambda: None)

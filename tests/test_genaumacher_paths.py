@@ -22,6 +22,7 @@ from genaumacher.paths import (
     vr_flicks_dir,
     vr_video_dir,
 )
+from tests import conftest
 
 _RUNTIME_DIRS = (
     "SESSIONS_DIR",
@@ -52,7 +53,7 @@ def checkout_dirs(tmp_path: Path, monkeypatch):
 
 
 @pytest.fixture
-def runtime_dirs(library, checkout_dirs):
+def runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library(library, checkout_dirs):
     genau = Path(haglio_settings.value("genau_dir"))
     return {
         **checkout_dirs,
@@ -109,7 +110,7 @@ class TestWhereTheLibraryFoldersAre:
         with pytest.raises(FileNotFoundError, match=re.escape(str(genau))):
             flicks_dir()
 
-    def test_settings_written_after_the_import_are_the_ones_that_answer(
+    def test_settings_written_after_the_import_are_the_ones_that_answer_a_module_reading_them_at_import_makes_every_consumer_pay_and_see_whichever_copy_came_first(
         self, tmp_path: Path, shared_settings
     ):
         written = tmp_path / "written just now"
@@ -142,14 +143,14 @@ class TestWhereTheLibraryFoldersAre:
 
 
 class TestTheVrVideoFolder:
-    def test_it_is_the_vr_folder_under_the_librarys_own_root(self, shared_settings):
+    def test_it_is_the_vr_folder_under_the_librarys_own_root_written_as_a_literal_so_a_repointed_folder_fails(self, shared_settings):
         shared_settings({"library_root": "D:/example-suite"})
 
         assert vr_video_dir() == PureWindowsPath(
             r"D:\example-suite\videos\videos\VR"
         )
 
-    def test_it_matches_a_windows_path_wherever_the_test_is_run(self, shared_settings):
+    def test_it_matches_a_windows_path_wherever_the_test_is_run_what_the_launchers_file_dialog_hands_it_on_the_windows_machine_the_app_runs_on(self, shared_settings):
         shared_settings({"library_root": "D:/example-suite"})
 
         typed = PureWindowsPath(r"D:\example-suite\videos\videos\VR\seaside walk.mp4")
@@ -158,23 +159,23 @@ class TestTheVrVideoFolder:
 
 
 class TestEnsureRuntimeDirs:
-    def test_creates_every_directory_the_app_writes_into(self, runtime_dirs):
+    def test_creates_every_directory_the_app_writes_into(self, runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library):
         ensure_runtime_dirs()
 
-        missing = sorted(name for name, path in runtime_dirs.items() if not path.is_dir())
+        missing = sorted(name for name, path in runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library.items() if not path.is_dir())
         assert missing == []
 
     def test_the_directories_it_creates_are_the_ones_named_here(self):
         assert _names_ensure_runtime_dirs_creates() == set(_RUNTIME_DIRS)
 
-    def test_a_second_run_keeps_what_the_first_one_left(self, runtime_dirs):
+    def test_a_second_run_keeps_what_the_first_one_left(self, runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library):
         ensure_runtime_dirs()
-        (runtime_dirs["SESSIONS_DIR"] / "demo.json").write_text("{}", encoding="utf-8")
+        (runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library["SESSIONS_DIR"] / "demo.json").write_text("{}", encoding="utf-8")
 
         ensure_runtime_dirs()
 
-        assert (runtime_dirs["SESSIONS_DIR"] / "demo.json").read_text(encoding="utf-8") == "{}"
-        assert all(path.is_dir() for path in runtime_dirs.values())
+        assert (runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library["SESSIONS_DIR"] / "demo.json").read_text(encoding="utf-8") == "{}"
+        assert all(path.is_dir() for path in runtime_dirs_all_under_tmp_path_patching_them_one_by_one_once_wrote_into_the_live_library.values())
 
 
 class TestAMachineWithNoLibraryYet:
@@ -197,7 +198,7 @@ class TestAMachineWithNoLibraryYet:
 
         assert library_is_configured() is False
 
-    def test_a_placeholder_library_gets_no_folders_though_its_tree_is_laid_out(
+    def test_a_placeholder_library_gets_no_folders_though_its_tree_is_laid_out_on_posix_the_placeholder_is_a_c_tree_inside_the_repo_one_git_add_from_public(
         self, tmp_path: Path, checkout_dirs, shared_settings
     ):
         genau = tmp_path / "genau"
@@ -217,7 +218,7 @@ class TestAMachineWithNoLibraryYet:
         assert checkout_dirs["SESSIONS_DIR"].is_dir()
         assert checkout_dirs["RAW_CLIPS_DIR"].is_dir()
 
-    def test_no_library_directory_is_made(self, checkout_dirs, shared_settings):
+    def test_no_library_directory_is_made_judged_by_what_the_run_changed_a_machine_that_ran_the_old_code_still_has_the_tree(self, checkout_dirs, shared_settings):
         shared_settings()
         genau = Path(haglio_settings.value("genau_dir"))
         already = genau.is_dir()
@@ -247,3 +248,23 @@ class TestSanitizeName:
 
     def test_a_name_of_only_spaces_becomes_the_empty_string(self):
         assert sanitize_name("   ") == ""
+
+
+def _modules_importing_from_paths(name: str) -> set[str]:
+    package = Path(__file__).resolve().parents[1] / "genaumacher"
+    found = set()
+    for source in package.rglob("*.py"):
+        module = "genaumacher." + ".".join(source.relative_to(package).with_suffix("").parts)
+        for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.ImportFrom) and any(alias.name == name for alias in node.names):
+                found.add(module)
+    return found
+
+
+def test_every_module_binding_the_last_session_pointer_is_pointed_at_the_scratch_one_or_its_tests_reach_the_real_file():
+    assert _modules_importing_from_paths("LAST_SESSION_FILE") | {"genaumacher.paths"} == set(
+        conftest.MODULES_BINDING_THE_LAST_SESSION_POINTER)
+
+
+def test_every_module_binding_the_sessions_folder_is_pointed_at_the_scratch_one_or_its_tests_write_into_the_checkout():
+    assert _modules_importing_from_paths("SESSIONS_DIR") == set(conftest.MODULES_BINDING_THE_SESSIONS_FOLDER)

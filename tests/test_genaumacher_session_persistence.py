@@ -65,8 +65,8 @@ def test_current_payload_includes_vr_true():
     assert payload["vr"] is True
 
 
-class TestTheFieldsAnotherAppReads:
-    def test_a_session_says_which_shape_it_is(self):
+class TestTheFieldsEvolverReadsAndRewritesWhenItMovesAVideo:
+    def test_a_session_says_which_shape_it_is_a_changed_shape_needs_a_higher_version_so_evolver_refuses_rather_than_rewrites_wrong(self):
         assert current_payload(_state())["version"] == SESSION_FORMAT_VERSION
 
     def test_the_video_it_was_cut_against_is_a_top_level_string(self):
@@ -92,7 +92,7 @@ def test_autosave_session_updates_last_saved_payload_on_success():
     last_session_file.write_text.assert_called_once_with("C:\\demo.json", encoding="utf-8")
 
 
-def test_autosave_session_records_failure_message():
+def test_autosave_session_records_failure_message_the_warning_is_the_only_sign_the_user_gets_of_a_save_that_failed():
     state = _state()
 
     with patch("genaumacher.session_persistence.safe_atomic_write_json", return_value=(False, "disk full")):

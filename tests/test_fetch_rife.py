@@ -97,7 +97,7 @@ def _bridge_returning(result):
 
 class TestRuns:
     @pytest.fixture
-    def extracted(self, tmp_path: Path, monkeypatch) -> Path:
+    def extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe(self, tmp_path: Path, monkeypatch) -> Path:
         monkeypatch.setattr(fetch_rife, "DEST", tmp_path)
         monkeypatch.setattr(fetch_rife, "RIFE_EXE", tmp_path / "rife-ncnn-vulkan.exe")
         monkeypatch.setattr(
@@ -112,11 +112,11 @@ class TestRuns:
 
         assert fetch_rife.runs() is False
 
-    def test_a_file_this_machine_cannot_execute_does_not_run(self, extracted: Path):
+    def test_a_file_this_machine_cannot_execute_does_not_run(self, extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe: Path):
         assert fetch_rife.runs() is False
 
     def test_a_bridge_frame_coming_back_is_what_running_means(
-        self, extracted: Path, monkeypatch
+        self, extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe: Path, monkeypatch
     ):
         monkeypatch.setattr(
             "genaumacher.normalize_transforms.build_rife_bridge",
@@ -126,7 +126,7 @@ class TestRuns:
         assert fetch_rife.runs() is True
 
     def test_a_binary_that_starts_and_interpolates_nothing_does_not_run(
-        self, extracted: Path, monkeypatch
+        self, extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe: Path, monkeypatch
     ):
         monkeypatch.setattr(
             "genaumacher.normalize_transforms.build_rife_bridge",
@@ -135,7 +135,7 @@ class TestRuns:
 
         assert fetch_rife.runs() is False
 
-    def test_a_bridge_that_raises_does_not_run(self, extracted: Path, monkeypatch):
+    def test_a_bridge_that_raises_does_not_run(self, extracted_with_the_apps_own_lookup_pointed_at_the_fake_too_or_the_windows_runner_finds_the_real_exe: Path, monkeypatch):
         monkeypatch.setattr(
             "genaumacher.normalize_transforms.build_rife_bridge",
             _bridge_returning(subprocess.TimeoutExpired(cmd="rife", timeout=1)),
@@ -191,7 +191,7 @@ class TestMain:
 
 
 class TestDownload:
-    def test_an_intact_copy_already_there_is_reused(self, tmp_path: Path, monkeypatch):
+    def test_an_intact_copy_already_there_is_reused_the_asset_is_432_mb_for_the_six_files_taken(self, tmp_path: Path, monkeypatch):
         archive = tmp_path / fetch_rife.ASSET
         archive.write_bytes(_RELEASE_BYTES)
         monkeypatch.setattr(fetch_rife, "SHA256", hashlib.sha256(_RELEASE_BYTES).hexdigest())
@@ -215,7 +215,7 @@ class TestDownload:
 
         assert fetched == [(fetch_rife.URL, fetch_rife._DOWNLOAD_TIMEOUT)]
 
-    def test_a_stalled_download_has_a_time_limit(self):
+    def test_a_stalled_download_has_a_time_limit_urlretrieve_has_none_and_would_hold_a_gate_job_open(self):
         assert fetch_rife._DOWNLOAD_TIMEOUT > 0
 
     def test_a_download_that_does_not_match_is_refused_and_removed(

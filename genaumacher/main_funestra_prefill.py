@@ -44,9 +44,13 @@ def detect_main_funestra_session_prefill(status_file: Path | None = None) -> Ses
     except ValueError:
         position_seconds = 0.0
 
-    name = PureWindowsPath(video).stem
+    name = _named_as_the_main_funestra_wrote_it_on_windows(video)
     return SessionPrefill(
         video_file=video,
         session_name=sanitize_name(name),
         timestamp=format_seconds(position_seconds),
     )
+
+
+def _named_as_the_main_funestra_wrote_it_on_windows(video: str) -> str:
+    return PureWindowsPath(video).stem

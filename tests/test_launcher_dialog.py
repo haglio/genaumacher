@@ -112,7 +112,7 @@ class TestVrAutoDetect:
         (r"E:\example-suite\videos\videos\VR\seaside walk.mp4", False),
         ("", False),
     ])
-    def test_the_vr_box_follows_the_folder_the_file_sits_in(self, dialog, typed, is_vr):
+    def test_the_vr_box_follows_the_folder_the_file_sits_in_given_as_literals_in_both_slash_spellings_the_dialog_returns_a_path_built_from_the_constant_would_pass_whatever_it_said(self, dialog, typed, is_vr):
         dialog.video_file_edit.setText(typed)
 
         assert dialog.vr_checkbox.isChecked() is is_vr

@@ -9,6 +9,7 @@ import pytest
 
 from genaumacher.export_progress import progress_line
 from genaumacher.export_steps import (
+    _SMALLEST_VIDEO_BYTES,
     _has_audio_stream,
     _parse_ffmpeg_clock,
     _run_ffmpeg_with_progress,
@@ -67,14 +68,14 @@ class TestValidateVideoFile:
 
     def test_a_file_too_small_to_be_a_video_is_refused(self, tmp_path: Path):
         tiny = tmp_path / "tiny.mp4"
-        tiny.write_bytes(b"\x00" * 100)
+        tiny.write_bytes(b"\x00" * (_SMALLEST_VIDEO_BYTES - 1))
         ok, msg = validate_video_file(tiny)
         assert ok is False
         assert "tiny" in msg.lower()
 
     def test_a_file_the_decoder_cannot_open_is_refused(self, tmp_path: Path):
         fake = tmp_path / "fake.mp4"
-        fake.write_bytes(b"\x00" * 4096)
+        fake.write_bytes(b"\x00" * (_SMALLEST_VIDEO_BYTES * 2))
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = False
@@ -88,7 +89,7 @@ class TestValidateVideoFile:
 
     def test_a_file_that_opens_but_decodes_no_frame_is_refused(self, tmp_path: Path):
         fake = tmp_path / "fake.mp4"
-        fake.write_bytes(b"\x00" * 4096)
+        fake.write_bytes(b"\x00" * (_SMALLEST_VIDEO_BYTES * 2))
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = True
@@ -102,7 +103,7 @@ class TestValidateVideoFile:
 
     def test_a_file_that_decodes_a_frame_is_accepted(self, tmp_path: Path):
         fake = tmp_path / "ok.mp4"
-        fake.write_bytes(b"\x00" * 4096)
+        fake.write_bytes(b"\x00" * (_SMALLEST_VIDEO_BYTES * 2))
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = True
@@ -117,7 +118,7 @@ class TestValidateVideoFile:
 
     def test_cap_released_on_success(self, tmp_path: Path):
         fake = tmp_path / "ok.mp4"
-        fake.write_bytes(b"\x00" * 4096)
+        fake.write_bytes(b"\x00" * (_SMALLEST_VIDEO_BYTES * 2))
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = True
@@ -130,7 +131,7 @@ class TestValidateVideoFile:
 
     def test_cap_released_on_failure(self, tmp_path: Path):
         fake = tmp_path / "ok.mp4"
-        fake.write_bytes(b"\x00" * 4096)
+        fake.write_bytes(b"\x00" * (_SMALLEST_VIDEO_BYTES * 2))
 
         mock_cap = MagicMock()
         mock_cap.isOpened.return_value = False
@@ -180,6 +181,15 @@ class TestRunFfmpegWithProgress:
             )
         assert ok is False
         assert "not found" in err
+
+    def test_a_clock_it_cannot_read_leaves_the_bar_where_it_was(self):
+        proc = self._make_proc_mock(["out_time=00:00:05.000000", "out_time=N/A", "progress=end"])
+        progress_values: list[float] = []
+
+        with patch("subprocess.Popen", return_value=proc):
+            _run_ffmpeg_with_progress(["ffmpeg"], 10.0, progress_values.append)
+
+        assert progress_values[:2] == [pytest.approx(0.5), pytest.approx(0.5)]
 
     def test_out_time_line_advances_progress(self):
         proc = self._make_proc_mock(["out_time=00:00:05.000000", "progress=end"])

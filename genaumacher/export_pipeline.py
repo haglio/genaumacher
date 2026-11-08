@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from . import export_steps
-from .export_progress import ExportProgress
+from .export_progress import ExportProgressListener
 from .paths import RAW_CLIPS_DIR, audio_dir, flicks_dir, sanitize_name, vr_flicks_dir
 from .sidecar import record_provenance
 from .state import VideoState
@@ -19,7 +19,7 @@ def _output_paths(state: VideoState) -> tuple[Path, Path, Path]:
     )
 
 
-def run_export(state: VideoState, progress: ExportProgress) -> tuple[bool, str]:
+def run_export(state: VideoState, progress: ExportProgressListener) -> tuple[bool, str]:
     progress.stage("preparing export")
     progress.clip(0.0)
     progress.normalize(0.0)

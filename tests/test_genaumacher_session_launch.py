@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import cv2
 import numpy as np
 import pytest
+from PyQt6.QtWidgets import QDialog
 from shared_ui.preview import Preview
 
 from genaumacher import create_session as create_session_module
@@ -19,7 +20,7 @@ from genaumacher.session_launch import build_clip_whole_state, build_state, laun
 
 
 @pytest.fixture
-def library(tmp_path: Path, monkeypatch):
+def library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session(tmp_path: Path, monkeypatch):
     sessions = tmp_path / "sessions"
     sessions.mkdir()
     pointer = tmp_path / ".last_session.txt"
@@ -71,8 +72,8 @@ def _write_session(sessions: Path, name: str, **overrides) -> Path:
 
 
 class TestLoadingASavedSession:
-    def test_the_state_comes_back_the_way_the_file_left_it(self, library):
-        saved = _write_session(library.sessions, "seaside walk")
+    def test_the_state_comes_back_the_way_the_file_left_it(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
 
         state = build_state(LoadSession(session_json=str(saved)))
 
@@ -84,23 +85,23 @@ class TestLoadingASavedSession:
         assert state.wrap_mode == "yellow"
         assert state.speed == pytest.approx(1.25)
 
-    def test_it_remembers_the_file_it_came_from(self, library):
-        saved = _write_session(library.sessions, "seaside walk")
+    def test_it_remembers_the_file_it_came_from(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
 
         state = build_state(LoadSession(session_json=str(saved)))
 
         assert state.session_path == str(saved)
 
-    def test_it_becomes_the_session_the_launcher_offers_next_time(self, library):
-        saved = _write_session(library.sessions, "seaside walk")
+    def test_it_becomes_the_session_the_launcher_offers_next_time(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
 
         build_state(LoadSession(session_json=str(saved)))
 
-        assert library.pointer.read_text(encoding="utf-8") == str(saved)
+        assert library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.pointer.read_text(encoding="utf-8") == str(saved)
 
-    def test_a_pointer_that_cannot_be_written_does_not_stop_the_session_opening(self, library):
-        saved = _write_session(library.sessions, "seaside walk")
-        library.pointer.mkdir()
+    def test_a_pointer_that_cannot_be_written_does_not_stop_the_session_opening(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+        saved = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "seaside walk")
+        library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.pointer.mkdir()
 
         assert build_state(LoadSession(session_json=str(saved))).session_path == str(saved)
 
@@ -117,38 +118,39 @@ class TestCreatingANewSession:
         fields.update(overrides)
         return NewSession(**fields)
 
-    def test_the_typed_timestamp_becomes_the_window_written_to_disk(self, library):
+    def test_the_typed_timestamp_becomes_the_window_written_to_disk(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
         state = build_state(self._new())
 
-        written = json.loads((library.sessions / "second pass.json").read_text(encoding="utf-8"))
-        assert written["active_start"] == 375
-        assert written["active_end"] == 524
+        written = json.loads((library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json").read_text(encoding="utf-8"))
+        fps_the_fake_ffprobe_reports = 30
+        assert written["active_start"] == 12.5 * fps_the_fake_ffprobe_reports
+        assert written["active_end"] == (12.5 + 5.0) * fps_the_fake_ffprobe_reports - 1
         assert written["loop_mode"] == "tip-base"
         assert written["vr"] is False
-        assert (state.in_point, state.out_point) == (375, 524)
+        assert (state.in_point, state.out_point) == (written["active_start"], written["active_end"])
 
-    def test_an_hour_long_timestamp_is_parsed_whole(self, library):
+    def test_an_hour_long_timestamp_is_parsed_whole(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
         build_state(self._new(timestamp="00:00:20", seconds=1.0))
 
-        written = json.loads((library.sessions / "second pass.json").read_text(encoding="utf-8"))
+        written = json.loads((library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json").read_text(encoding="utf-8"))
         assert written["active_start"] == 600
 
-    def test_a_vr_session_is_marked_vr_in_the_file_and_on_the_state(self, library):
+    def test_a_vr_session_is_marked_vr_in_the_file_and_on_the_state(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
         state = build_state(self._new(vr=True))
 
-        written = json.loads((library.sessions / "second pass.json").read_text(encoding="utf-8"))
+        written = json.loads((library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json").read_text(encoding="utf-8"))
         assert written["vr"] is True
         assert state.vr is True
 
-    def test_it_becomes_the_last_session(self, library):
+    def test_it_becomes_the_last_session(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
         build_state(self._new())
 
-        assert library.pointer.read_text(encoding="utf-8") == str(
-            library.sessions / "second pass.json"
+        assert library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.pointer.read_text(encoding="utf-8") == str(
+            library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions / "second pass.json"
         )
 
-    def test_a_session_of_that_name_already_there_is_opened_rather_than_overwritten(self, library):
-        existing = _write_session(library.sessions, "second pass", active_start=7, active_end=9)
+    def test_a_session_of_that_name_already_there_is_opened_rather_than_overwritten(self, library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session):
+        existing = _write_session(library_with_only_ffprobe_and_the_decoder_stubbed_a_patched_call_stays_green_over_a_wrong_session.sessions, "second pass", active_start=7, active_end=9)
 
         state = build_state(self._new())
 
@@ -188,7 +190,7 @@ class TestBuildClipWholeState:
 
 def test_a_canceled_launcher_gives_no_state_to_open():
     mock_dialog = MagicMock()
-    mock_dialog.exec.return_value = 0
+    mock_dialog.exec.return_value = QDialog.DialogCode.Rejected
 
     with patch("genaumacher.session_launch.ensure_runtime_dirs"), \
          patch("genaumacher.session_launch.LAST_SESSION_FILE", MagicMock(exists=MagicMock(return_value=False))), \
@@ -199,7 +201,7 @@ def test_a_canceled_launcher_gives_no_state_to_open():
 
 def test_choosing_a_whole_video_exports_it_and_opens_no_editor():
     mock_dialog = MagicMock()
-    mock_dialog.exec.return_value = 1
+    mock_dialog.exec.return_value = QDialog.DialogCode.Accepted
     mock_dialog.build_result.return_value = ClipWholeVideo(video_file="/path/to/loop.mp4")
 
     with patch("genaumacher.session_launch.ensure_runtime_dirs"), \
@@ -215,7 +217,7 @@ def test_choosing_a_whole_video_exports_it_and_opens_no_editor():
 
 def test_launch_state_builds_state_from_launcher_info():
     mock_dialog = MagicMock()
-    mock_dialog.exec.return_value = 1
+    mock_dialog.exec.return_value = QDialog.DialogCode.Accepted
     chosen = LoadSession(session_json="/sessions/seaside walk.json")
     mock_dialog.build_result.return_value = chosen
     built_state = object()
@@ -234,7 +236,7 @@ def test_launch_state_builds_state_from_launcher_info():
 
 def test_closing_the_launcher_without_choosing_exits_cleanly():
     with patch("genaumacher.app.launch_state", return_value=None), \
-         patch("genaumacher.app._set_windows_app_user_model_id"), \
+         patch("genaumacher.app._claim_the_taskbar_identity_before_the_first_window"), \
          patch("genaumacher.app._init_logger"):
         result = app_main()
 
@@ -246,7 +248,7 @@ def test_the_launch_hands_this_checkouts_preview_to_the_taskbar_and_the_window()
     built_state = object()
     with patch("genaumacher.app.preview_of", return_value=a_preview) as asked, \
          patch("genaumacher.app.launch_state", return_value=built_state), \
-         patch("genaumacher.app._set_windows_app_user_model_id") as claimed, \
+         patch("genaumacher.app._claim_the_taskbar_identity_before_the_first_window") as claimed, \
          patch("genaumacher.app._name_this_process"), \
          patch("genaumacher.app._init_logger"), \
          patch("genaumacher.gui.app.GenaumacherApp") as genaumacher_app:
@@ -261,7 +263,7 @@ def test_the_launch_hands_this_checkouts_preview_to_the_taskbar_and_the_window()
 def test_a_preview_that_crashes_says_which_preview_it_was():
     with patch("genaumacher.app.preview_of", return_value=Preview(feature="the new loop")), \
          patch("genaumacher.app.launch_state", side_effect=RuntimeError("no session")), \
-         patch("genaumacher.app._set_windows_app_user_model_id"), \
+         patch("genaumacher.app._claim_the_taskbar_identity_before_the_first_window"), \
          patch("genaumacher.app._name_this_process"), \
          patch("genaumacher.app._init_logger"), \
          patch("PyQt6.QtWidgets.QMessageBox.critical") as critical:

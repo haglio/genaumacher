@@ -39,13 +39,29 @@ def qapp():
     return app
 
 
+MODULES_BINDING_THE_LAST_SESSION_POINTER = (
+    "genaumacher.paths", "genaumacher.session_launch", "genaumacher.session_persistence")
+MODULES_BINDING_THE_SESSIONS_FOLDER = (
+    "genaumacher.create_session", "genaumacher.gui.launcher_dialog", "genaumacher.session_launch",
+    "genaumacher.state_factory")
+
+
 @pytest.fixture(autouse=True, scope="session")
-def _the_last_session_pointer_is_never_the_real_one(tmp_path_factory):
+def _the_last_session_pointer_is_never_the_real_one_redirected_not_saved_and_restored_a_killed_run_never_restores(
+        tmp_path_factory):
     scratch = tmp_path_factory.mktemp("pointer") / ".last_session.txt"
     with pytest.MonkeyPatch.context() as patcher:
-        for name in ("genaumacher.paths", "genaumacher.session_launch", "genaumacher.session_persistence"):
-            patcher.setattr(importlib.import_module(name),
-                            "LAST_SESSION_FILE", scratch)
+        for name in MODULES_BINDING_THE_LAST_SESSION_POINTER:
+            patcher.setattr(importlib.import_module(name), "LAST_SESSION_FILE", scratch)
+        yield
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _no_session_is_ever_written_into_the_checkouts_own_sessions_folder(tmp_path_factory):
+    scratch = tmp_path_factory.mktemp("sessions")
+    with pytest.MonkeyPatch.context() as patcher:
+        for name in MODULES_BINDING_THE_SESSIONS_FOLDER:
+            patcher.setattr(importlib.import_module(name), "SESSIONS_DIR", scratch)
         yield
 
 
@@ -146,7 +162,7 @@ def frames_of():
 
 
 @pytest.fixture
-def textured_frames():
+def textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback():
     def factory(count: int = 10, size: int = 128, seed: int = 10,
                 drift: tuple[int, int] = (8, 6)) -> list[np.ndarray]:
         frame = np.random.RandomState(seed).randint(0, 256, (size, size, 3), dtype=np.uint8)

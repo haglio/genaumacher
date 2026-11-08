@@ -49,7 +49,7 @@ class TestWhatItReads:
         assert prefill.session_name == pushed["session_name"]
 
 class TestWhenThereIsNothingToPrefill:
-    def test_a_machine_that_has_not_named_the_status_file(self, monkeypatch):
+    def test_a_machine_that_has_not_named_the_status_file_under_fun_times_own_name_main_player_status_file_gets_a_blank_launcher(self, monkeypatch):
         monkeypatch.setattr(main_funestra_prefill, "main_funestra_status_file", lambda: None)
 
         assert detect_main_funestra_session_prefill() is None
@@ -86,12 +86,14 @@ class TestWhenThereIsNothingToPrefill:
         assert detect_main_funestra_session_prefill(tmp_path) is None
 
 
-class TestTheContractWithTheMainFunestra:
+class TestTheContractWithTheMainFunestraGenaumachersWholeLinkToTheOtherApps:
+    _THE_OLD_FOLDER_NAME_ON_A_MACHINE_THAT_HAS_NOT_MOVED_IT = "player_core"
+
     @staticmethod
-    def _status_sources() -> list[Path]:
+    def _status_sources_beside_the_primary_checkout_a_worktrees_neighbors_are_worktrees() -> list[Path]:
         siblings = primary_checkout_of(PROJECT_DIR).parent
         sources = (siblings / "funestra" / "funestra" / "status.py",
-                   siblings / "player_core" / "funestra" / "status.py",
+                   siblings / TestTheContractWithTheMainFunestraGenaumachersWholeLinkToTheOtherApps._THE_OLD_FOLDER_NAME_ON_A_MACHINE_THAT_HAS_NOT_MOVED_IT / "funestra" / "status.py",
                    siblings / "fun_time" / "main_funestra" / "status.py")
         return [source for source in sources if source.is_file()]
 
@@ -124,9 +126,9 @@ class TestTheContractWithTheMainFunestra:
                 }
         return set()
 
-    def test_the_main_funestra_still_publishes_both_fields_genaumacher_reads(self):
+    def test_the_main_funestra_still_publishes_both_fields_genaumacher_reads_the_same_two_fun_times_semicolon_reads_to_start_a_session(self):
         wanted = self._keys_genaumacher_reads()
-        sources = self._status_sources()
+        sources = self._status_sources_beside_the_primary_checkout_a_worktrees_neighbors_are_worktrees()
         published = set().union(*map(self._keys_the_main_funestra_publishes, sources)) if sources else wanted
 
         uncovered = (f"the Main Funestra publishes {sorted(published)}, which no longer covers "
@@ -135,7 +137,7 @@ class TestTheContractWithTheMainFunestra:
         assert wanted <= published, uncovered
 
     def test_the_prefill_reads_a_payload_the_main_funestra_itself_produced(self, tmp_path: Path):
-        sources = self._status_sources()
+        sources = self._status_sources_beside_the_primary_checkout_a_worktrees_neighbors_are_worktrees()
         keys = set().union(*map(self._keys_the_main_funestra_publishes, sources)) if sources else set(_PLAYING)
         payload = {key: _PLAYING.get(key, "0") for key in sorted(keys)}
         payload["video"] = "S:/library/main/beta clip.mp4"

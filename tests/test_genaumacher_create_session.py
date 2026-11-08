@@ -27,7 +27,7 @@ def _create(video_path, start_time_s, *, sessions_dir=None, **ask) -> Path:
     return create_session(SessionAsk(video_path, start_time_s, **ask), sessions_dir=sessions_dir)
 
 
-def test_create_session_importable_without_cv2():
+def test_create_session_importable_without_cv2_checked_in_a_fresh_interpreter_blocking_cv2_in_this_one_left_two_copies_of_the_module():
     probe = (
         "import sys; sys.modules['cv2'] = None; sys.modules['numpy'] = None; "
         "import genaumacher.create_session"
@@ -172,7 +172,7 @@ def test_create_session_sanitizes_name(tmp_path):
     assert result.name == "Bad__Name.json"
 
 
-def test_create_session_sanitizes_a_supplied_name_too(tmp_path):
+def test_create_session_sanitizes_a_supplied_name_too_the_rest_of_the_app_builds_every_path_from_the_sanitized_form(tmp_path):
     with _mock_ffprobe():
         result = _create(
             r"C:\videos\SomeLongFilename_v2.mp4",
@@ -224,7 +224,7 @@ def test_create_session_ffprobe_failure(tmp_path):
         _create("nonexistent.mp4", 0.0, sessions_dir=tmp_path)
 
 
-def test_cli_success(tmp_path, capsys):
+def test_the_command_line_fun_time_runs_writes_the_file_prints_its_path_and_moves_the_last_session_pointer(tmp_path, capsys):
     last_session = tmp_path / ".last_session.txt"
 
     with _mock_ffprobe(), \
@@ -244,9 +244,10 @@ def test_cli_writes_the_window_it_was_asked_for(tmp_path):
          patch("genaumacher.create_session.SESSIONS_DIR", tmp_path):
         main(["--video", "/library/seaside walk.mp4", "--time", "5.0", "--seconds", "3.0"])
 
+    fps_the_fake_ffprobe_reports = 30
     payload = json.loads((tmp_path / "seaside walk.json").read_text(encoding="utf-8"))
-    assert payload["active_start"] == 150
-    assert payload["active_end"] == 239
+    assert payload["active_start"] == 5.0 * fps_the_fake_ffprobe_reports
+    assert payload["active_end"] == (5.0 + 3.0) * fps_the_fake_ffprobe_reports - 1
 
 
 def test_cli_failure(capsys):
@@ -258,4 +259,3 @@ def test_cli_failure(capsys):
 
     assert code == 1
     assert "no video" in capsys.readouterr().err
-

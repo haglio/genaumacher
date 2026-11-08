@@ -23,19 +23,19 @@ class TestLoopMode:
         assert read_loop_mode("tip-base-tip") is LoopMode.TIP_BASE_TIP
         assert read_loop_mode(LoopMode.BASE_TIP) is LoopMode.BASE_TIP
 
-    def test_a_word_it_does_not_know_reads_as_the_default(self):
+    def test_a_word_it_does_not_know_reads_as_the_default_so_a_session_file_from_another_build_still_opens(self):
         for raw in ("", "sideways", None, 3):
             assert read_loop_mode(raw) is LoopMode.BASE_TIP_BASE
 
 
 class TestWrapMode:
-    def test_the_two_words_are_the_colors_the_version_one_file_holds(self):
+    def test_the_two_words_are_the_colors_the_version_one_file_holds_which_evolver_reads_and_rewrites_unversioned(self):
         assert (WrapMode.OVER_BOUNDS.value, WrapMode.OVER_IN_OUT.value) == ("blue", "yellow")
 
     def test_a_known_word_reads_as_its_entry(self):
         assert read_wrap_mode("yellow") is WrapMode.OVER_IN_OUT
         assert read_wrap_mode(WrapMode.OVER_BOUNDS) is WrapMode.OVER_BOUNDS
 
-    def test_a_word_it_does_not_know_reads_as_over_the_loaded_range(self):
+    def test_a_word_it_does_not_know_reads_as_over_the_loaded_range_so_a_session_file_from_another_build_still_opens(self):
         for raw in ("red", "", None):
             assert read_wrap_mode(raw) is WrapMode.OVER_BOUNDS
