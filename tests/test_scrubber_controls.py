@@ -60,3 +60,8 @@ class TestLoopModeLabel:
     def test_set_loop_mode_unknown_falls_back_to_raw(self, ctl):
         ctl.set_loop_mode("unknown-mode")
         assert ctl.loop_mode_btn.text() == "unknown-mode"
+
+
+def test_every_button_on_the_row_has_a_line_in_the_table_or_its_wiring_goes_unchecked(ctl):
+    on_the_row = {name for name in dir(ctl) if name.endswith("_btn")}
+    assert on_the_row == {button for _, button, _ in _BUTTONS}

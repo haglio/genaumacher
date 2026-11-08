@@ -50,7 +50,7 @@ class TestPainting:
         assert _keycap_pixels(image, 0, image.height()) == 0
         assert image.pixelColor(450, 60).name() == BG_PRIMARY.name()
 
-    def test_no_row_carries_more_than_two_fifths_of_the_legend(self, hotkey_reference):
+    def test_no_row_carries_more_than_two_fifths_of_the_legend_so_the_widest_fits_the_900_px_window_a_share_since_the_offscreen_font_widens_every_row_alike(self, hotkey_reference):
         hotkey_reference.resize(900, 80)
         image = QImage(900, 80, QImage.Format.Format_RGB32)
         painter = QPainter(image)

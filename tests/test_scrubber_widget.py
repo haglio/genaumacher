@@ -114,6 +114,9 @@ class TestClickSignal:
         assert results == []
 
 
+_MID_HEIGHT_CLEAR_OF_THE_TICK_DOTS_ALONG_BOTH_EDGES = 12
+
+
 class TestPainting:
     @pytest.fixture
     def painted(self, widget, rendered):
@@ -125,7 +128,7 @@ class TestPainting:
         return rendered(widget)
 
     def _band(self, image, x):
-        return image.pixelColor(x, 12).name()
+        return image.pixelColor(x, _MID_HEIGHT_CLEAR_OF_THE_TICK_DOTS_ALONG_BOTH_EDGES).name()
 
     def test_the_loaded_range_is_drawn_outside_the_active_one(self, painted):
         assert self._band(painted, 40) == SCRUBBER_BOUNDS.name()
@@ -152,7 +155,7 @@ class TestPainting:
         assert self._band(painted, widget.x_for_index(10)) == SCRUBBER_SUGGESTED_IN.name()
         assert self._band(painted, widget.x_for_index(90)) == SCRUBBER_SUGGESTED_OUT.name()
 
-    def test_no_suggestion_lines_appear_when_there_are_none(self, widget, rendered):
+    def test_no_suggestion_lines_appear_when_there_are_none_and_their_hues_differ_from_both_ranges_a_suggestion_can_land_on_either(self, widget, rendered):
         widget.set_bounds(0, 100)
         widget.set_in_out(20, 80)
         widget.set_cursor_position(50)
@@ -161,7 +164,7 @@ class TestPainting:
 
         image = rendered(widget)
 
-        drawn = {image.pixelColor(x, 12).name() for x in range(4, 796)}
+        drawn = {image.pixelColor(x, _MID_HEIGHT_CLEAR_OF_THE_TICK_DOTS_ALONG_BOTH_EDGES).name() for x in range(4, 796)}
         assert SCRUBBER_SUGGESTED_IN.name() not in drawn
         assert SCRUBBER_SUGGESTED_OUT.name() not in drawn
 

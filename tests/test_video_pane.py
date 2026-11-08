@@ -50,11 +50,13 @@ class TestSetFrame:
             mock_update.assert_called_once()
 
 
-class TestPainting:
+class TestPaintingReadsPixelsReadingTheStoredImagePassedAPaneThatPaintedNothing:
+    _SMALL_FRAME_BGR = (50, 100, 150)
+
     @pytest.fixture
     def small_frame(self):
         frame = np.zeros((100, 200, 3), dtype=np.uint8)
-        frame[:] = (50, 100, 150)
+        frame[:] = self._SMALL_FRAME_BGR
         return frame
 
     def test_an_empty_pane_is_all_background(self, pane, rendered):
@@ -70,7 +72,7 @@ class TestPainting:
         pane.set_frame(bgr_to_qimage(small_frame))
         image = rendered(pane)
 
-        assert image.pixelColor(200, 150).name() == "#966432"
+        assert image.pixelColor(200, 150).name() == _as_rgb_hex(self._SMALL_FRAME_BGR)
         assert _drawn_rect(image, BG_SECONDARY.name()) == (100, 100, 299, 199)
 
     def test_a_new_frame_replaces_the_one_before_it(self, pane, rendered, small_frame):
@@ -78,11 +80,12 @@ class TestPainting:
         pane.set_frame(bgr_to_qimage(small_frame))
 
         wider = np.zeros((100, 300, 3), dtype=np.uint8)
-        wider[:] = (10, 20, 30)
+        wider_bgr = (10, 20, 30)
+        wider[:] = wider_bgr
         pane.set_frame(bgr_to_qimage(wider))
         image = rendered(pane)
 
-        assert image.pixelColor(200, 150).name() == "#1e140a"
+        assert image.pixelColor(200, 150).name() == _as_rgb_hex(wider_bgr)
         assert _drawn_rect(image, BG_SECONDARY.name()) == (50, 100, 349, 199)
 
     def test_clearing_the_frame_wipes_what_was_drawn(self, pane, rendered, small_frame):
@@ -93,3 +96,8 @@ class TestPainting:
         image = rendered(pane)
 
         assert _drawn_rect(image, BG_SECONDARY.name()) is None
+
+
+def _as_rgb_hex(bgr: tuple[int, int, int]) -> str:
+    blue, green, red = bgr
+    return f"#{red:02x}{green:02x}{blue:02x}"

@@ -59,7 +59,7 @@ class TestTheCandidateWindow:
         assert _curve(state, 40, direction=+1) is None
 
 
-class TestTheTwoDirectionsAreMirrorImages:
+class TestBothWindowsRunOutwardSoTheDipAndPeakWalksHeadIsAlwaysTheNearestCandidate:
     def test_forward_the_window_begins_next_to_the_reference(self, make_state):
         state = make_state(total_frames=200, left_bound=20, right_bound=120)
 

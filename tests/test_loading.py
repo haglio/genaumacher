@@ -26,7 +26,7 @@ class _Loading:
 def _launch(happened: list[str], loading: _Loading) -> int:
     with loading_at_the_click(loading) as opened, \
          patch.object(app, "launch_state", side_effect=lambda: happened.append("launcher") or None), \
-         patch.object(app, "_set_windows_app_user_model_id"), \
+         patch.object(app, "_claim_the_taskbar_identity_before_the_first_window"), \
          patch.object(app, "_name_this_process"), \
          patch.object(app, "_init_logger"):
         result = app.main()
