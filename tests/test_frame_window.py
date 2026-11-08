@@ -111,7 +111,7 @@ class TestWiden:
 
         assert window.left_bound == 15
 
-    def test_a_left_edge_already_further_out_stands(self):
+    def test_a_left_edge_already_further_out_stands_a_loader_that_came_back_short_cannot_narrow_the_window_under_the_cursor(self):
         window = _window(left_bound=20)
 
         window.widen_left_to(25)
@@ -125,7 +125,7 @@ class TestWiden:
 
         assert window.right_bound == 65
 
-    def test_a_right_edge_already_further_out_stands(self):
+    def test_a_right_edge_already_further_out_stands_a_loader_that_came_back_short_cannot_narrow_the_window_under_the_cursor(self):
         window = _window(right_bound=60)
 
         window.widen_right_to(55)

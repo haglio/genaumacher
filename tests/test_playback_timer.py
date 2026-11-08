@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtWidgets import QApplication
 
 from genaumacher.gui.playback_timer import PlaybackTimer
+from tests.qt_events import drain_a_tick_already_on_its_way
 
 
 @pytest.fixture
@@ -11,7 +11,7 @@ def timer():
     return PlaybackTimer()
 
 
-class TestTicking:
+class TestTickingWatchedAsRealTicksReadingThePrivateQTimerPassedOneThatNeverFired:
     def test_a_new_timer_does_not_tick(self, timer, ticked_within):
         assert ticked_within(timer.tick, 100) is False
 
@@ -27,7 +27,7 @@ class TestTicking:
         assert ticked_within(timer.tick, 2000) is True
 
         timer.stop()
-        QApplication.processEvents()
+        drain_a_tick_already_on_its_way()
 
         assert ticked_within(timer.tick, 100) is False
 

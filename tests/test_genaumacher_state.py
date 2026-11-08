@@ -678,3 +678,11 @@ class TestLoopSuggestions:
         assert turning.call_count == len(turning_points)
         duplicate.assert_not_called()
         pair_score.assert_not_called()
+
+
+def test_the_frame_windows_fields_are_read_only_views_every_change_goes_through_the_window_which_keeps_the_cursor_inside(
+        make_state):
+    state = make_state()
+    for name in ("total_frames", "left_bound", "right_bound", "cursor", "base_step"):
+        with pytest.raises(AttributeError):
+            setattr(state, name, 1)

@@ -7,7 +7,10 @@ from pathlib import Path
 import pytest
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
+from shared_ui import colors
 from shared_ui.colors import dress_application
+
+from genaumacher.gui import scrubber_colors
 
 _GUI = Path(__file__).resolve().parent.parent / "genaumacher" / "gui"
 
@@ -21,7 +24,7 @@ def _sources() -> list[Path]:
 
 
 @pytest.mark.repo_check
-def test_no_color_is_spelled_out_in_a_stylesheet():
+def test_no_color_is_spelled_out_in_a_stylesheet_parsed_not_grepped_so_a_hash_in_a_comment_or_a_path_is_no_hit():
     offenders = []
     for path in _sources():
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -56,7 +59,7 @@ def test_no_color_is_built_from_raw_channel_numbers():
 
 
 @pytest.mark.repo_check
-def test_the_chrome_reads_the_family_palette():
+def test_the_chrome_reads_the_family_palette_so_the_two_checks_above_are_not_passing_on_a_gui_that_draws_nothing():
     importers = [
         path.name for path in _sources()
         if "shared_ui.colors" in path.read_text(encoding="utf-8")
@@ -80,7 +83,7 @@ def _button_backgrounds(sheet: str) -> dict[str, QColor]:
     return found
 
 
-def test_a_control_that_is_on_sits_on_a_lighter_ground():
+def test_a_control_that_is_on_sits_on_a_lighter_ground_read_off_the_installed_sheet_and_compared_so_an_unapplied_sheet_fails_and_a_palette_change_does_not():
     app = QApplication.instance()
     dress_application(app)
 
@@ -89,3 +92,11 @@ def test_a_control_that_is_on_sits_on_a_lighter_ground():
     assert ":checked" in backgrounds, "no rule paints a button that is switched on"
     assert "" in backgrounds, "no rule paints a button at rest"
     assert backgrounds[":checked"].lightness() > backgrounds[""].lightness()
+
+
+def test_which_family_color_stands_for_which_part_of_the_scrubber_is_decided_beside_the_widget_every_name_an_alias_of_a_family_color():
+    family = {id(value) for value in vars(colors).values()}
+    own = {name: value for name, value in vars(scrubber_colors).items()
+           if name.isupper() and not name.startswith("_")}
+    assert own
+    assert [name for name, value in own.items() if id(value) not in family] == []

@@ -91,3 +91,12 @@ class TestLookup:
 
     def test_an_unbound_key_finds_nothing(self):
         assert hotkey_for(0, "z") is None
+
+
+_SHIFTED_TWINS = (("-", "_"), ("=", "+"), (",", "<"), (".", ">"), ("9", "("), ("0", ")"))
+
+
+def test_the_reference_prints_one_keycap_per_physical_key_a_shifted_twin_would_read_as_a_second_way():
+    for hotkey in HOTKEYS:
+        for twins in _SHIFTED_TWINS:
+            assert len(set(twins) & set(hotkey.keycaps)) <= 1, hotkey.name

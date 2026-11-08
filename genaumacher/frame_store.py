@@ -9,7 +9,8 @@ if TYPE_CHECKING:
     from .state import VideoState
 
 
-_FAILED_READS_TOLERATED = 8
+_WIDER_THAN_A_DAMAGED_PATCH = 8
+_FAILED_READS_TOLERATED = _WIDER_THAN_A_DAMAGED_PATCH
 
 
 def load_range(cap: cv2.VideoCapture, start_idx: int, end_idx: int) -> dict[int, np.ndarray]:

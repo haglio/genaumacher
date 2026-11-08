@@ -96,7 +96,7 @@ class TestConstruction:
         for button in (bb.speed_down_btn, bb.speed_up_btn, bb.play_pause_btn):
             assert button.size() == QSize(BUTTON_SIZE, BUTTON_SIZE)
 
-    def test_all_buttons_have_no_focus_policy(self, window):
+    def test_all_buttons_have_no_focus_policy_a_focused_button_would_take_arrows_space_and_enter_for_itself(self, window):
         buttons = window.findChildren(QPushButton)
         assert len(buttons) > 0
         for btn in buttons:
@@ -175,7 +175,9 @@ class TestExportWiring:
         mock_worker.start.assert_called_once()
 
 
-_DISPATCH_STATE = {
+_PRESSED_BY_THE_CASES_BELOW_WHICH_THIS_COUNT_LEANS_ON = {Qt.Key.Key_Return, Qt.Key.Key_Enter, "q"}
+
+_DISPATCH_STATE_WITH_ROOM_TO_CONTRACT_AND_EXTEND_ON_BOTH_SIDES = {
     "total_frames": 100, "left_bound": 10, "right_bound": 60,
     "in_point": 20, "out_point": 40, "cursor": 30, "base_step": 5,
 }
@@ -230,7 +232,7 @@ class TestKeyDispatch:
     )
     def test_a_key_makes_its_edit(self, make_state, binding):
         key, text, prepare, observe, expected = binding
-        state = make_state(**_DISPATCH_STATE)
+        state = make_state(**_DISPATCH_STATE_WITH_ROOM_TO_CONTRACT_AND_EXTEND_ON_BOTH_SIDES)
         prepare(state)
         window = GenaumacherMainWindow(state)
 
@@ -240,7 +242,7 @@ class TestKeyDispatch:
 
     def test_every_key_the_table_binds_has_a_case(self):
         exercised = {text or key for _, key, text, *_ in _KEY_BINDINGS}
-        exercised |= {Qt.Key.Key_Return, Qt.Key.Key_Enter, "q"}
+        exercised |= _PRESSED_BY_THE_CASES_BELOW_WHICH_THIS_COUNT_LEANS_ON
 
         bound = {key for s in HOTKEYS for key in s.keys}
         bound |= {code for s in HOTKEYS for code in s.qt_keys}
@@ -248,7 +250,7 @@ class TestKeyDispatch:
         assert bound == exercised
 
     def test_an_unbound_key_changes_nothing(self, make_state):
-        state = make_state(**_DISPATCH_STATE)
+        state = make_state(**_DISPATCH_STATE_WITH_ROOM_TO_CONTRACT_AND_EXTEND_ON_BOTH_SIDES)
         window = GenaumacherMainWindow(state)
         before = (state.cursor, state.in_point, state.out_point,
                   state.left_bound, state.right_bound, state.wrap_mode,
@@ -262,7 +264,7 @@ class TestKeyDispatch:
 
     @pytest.mark.parametrize("key", [Qt.Key.Key_Return, Qt.Key.Key_Enter])
     def test_enter_starts_an_export(self, make_state, key):
-        state = make_state(**_DISPATCH_STATE)
+        state = make_state(**_DISPATCH_STATE_WITH_ROOM_TO_CONTRACT_AND_EXTEND_ON_BOTH_SIDES)
         window = GenaumacherMainWindow(state)
 
         with patch("genaumacher.gui.export_worker.ExportWorker") as worker_cls, \
@@ -273,7 +275,7 @@ class TestKeyDispatch:
         worker_cls.return_value.start.assert_called_once()
 
     def test_q_closes_the_window(self, make_state):
-        state = make_state(**_DISPATCH_STATE)
+        state = make_state(**_DISPATCH_STATE_WITH_ROOM_TO_CONTRACT_AND_EXTEND_ON_BOTH_SIDES)
         window = GenaumacherMainWindow(state)
         window.show()
         assert window.isVisible()
@@ -296,7 +298,7 @@ def _brace_width(window, rendered) -> int:
 
 
 @pytest.fixture
-def shown_window(mock_state):
+def shown_window_qt_computes_geometry_only_once_shown(mock_state):
     w = GenaumacherMainWindow(mock_state)
     w.resize(1520, 960)
     w.show()
@@ -306,8 +308,8 @@ def shown_window(mock_state):
 
 
 class TestDynamicPositioning:
-    def test_shift_buttons_center_on_in_out(self, shown_window, mock_state):
-        w = shown_window
+    def test_shift_buttons_center_on_in_out(self, shown_window_qt_computes_geometry_only_once_shown, mock_state):
+        w = shown_window_qt_computes_geometry_only_once_shown
         mock_state.in_point = 20
         mock_state.out_point = 80
         w.scrubber.set_bounds(0, 100)
@@ -328,8 +330,8 @@ class TestDynamicPositioning:
 
         assert abs(actual_center - expected_center) < 10
 
-    def test_shift_buttons_move_when_in_out_changes(self, shown_window, mock_state):
-        w = shown_window
+    def test_shift_buttons_move_when_in_out_changes(self, shown_window_qt_computes_geometry_only_once_shown, mock_state):
+        w = shown_window_qt_computes_geometry_only_once_shown
         tl = w.scrubber
         tc = w.scrubber_controls
         tl.set_bounds(0, 100)
@@ -350,8 +352,8 @@ class TestDynamicPositioning:
 
         assert right_pos > left_pos + 100
 
-    def test_mark_buttons_straddle_cursor_inside_active(self, shown_window, mock_state):
-        w = shown_window
+    def test_mark_buttons_straddle_cursor_inside_active(self, shown_window_qt_computes_geometry_only_once_shown, mock_state):
+        w = shown_window_qt_computes_geometry_only_once_shown
         mock_state.in_point = 20
         mock_state.out_point = 80
         mock_state.cursor = 50
@@ -369,8 +371,8 @@ class TestDynamicPositioning:
         assert out_left >= in_right
         assert out_left - in_right < 20
 
-    def test_mark_buttons_split_when_cursor_outside_active(self, shown_window, mock_state):
-        w = shown_window
+    def test_mark_buttons_split_when_cursor_outside_active(self, shown_window_qt_computes_geometry_only_once_shown, mock_state):
+        w = shown_window_qt_computes_geometry_only_once_shown
         mock_state.in_point = 40
         mock_state.out_point = 60
         mock_state.cursor = 10
@@ -384,8 +386,8 @@ class TestDynamicPositioning:
         out_x = tc.mark_out_btn.mapToGlobal(QPoint(0, 0)).x()
         assert out_x > in_x + 50
 
-    def test_mark_in_disabled_at_active_end(self, shown_window, mock_state):
-        w = shown_window
+    def test_mark_in_disabled_at_active_end(self, shown_window_qt_computes_geometry_only_once_shown, mock_state):
+        w = shown_window_qt_computes_geometry_only_once_shown
         mock_state.in_point = 20
         mock_state.out_point = 80
         mock_state.cursor = 80
@@ -396,8 +398,8 @@ class TestDynamicPositioning:
         assert not w.scrubber_controls.mark_in_btn.isEnabled()
         assert w.scrubber_controls.mark_out_btn.isEnabled()
 
-    def test_wrap_button_color_changes_with_mode(self, shown_window, mock_state):
-        w = shown_window
+    def test_wrap_button_color_changes_with_mode(self, shown_window_qt_computes_geometry_only_once_shown, mock_state):
+        w = shown_window_qt_computes_geometry_only_once_shown
         w.scrubber.set_bounds(0, 100)
         w.scrubber.set_in_out(20, 80)
         QApplication.processEvents()
@@ -412,8 +414,8 @@ class TestDynamicPositioning:
 
         assert blue_style != yellow_style
 
-    def test_a_tick_that_keeps_the_wrap_color_does_not_restyle_the_wrap_button(self, shown_window, mock_state):
-        w = shown_window
+    def test_a_tick_that_keeps_the_wrap_color_does_not_restyle_the_wrap_button(self, shown_window_qt_computes_geometry_only_once_shown, mock_state):
+        w = shown_window_qt_computes_geometry_only_once_shown
         mock_state.wrap_mode = WrapMode.OVER_BOUNDS
         w.update_button_positions()
         button = w.scrubber_controls.wrap_btn
@@ -425,8 +427,8 @@ class TestDynamicPositioning:
 
         assert restyled == []
 
-    def test_wrap_brace_spans_loaded_range_in_blue_mode(self, shown_window, mock_state, rendered):
-        w = shown_window
+    def test_wrap_brace_spans_loaded_range_in_blue_mode(self, shown_window_qt_computes_geometry_only_once_shown, mock_state, rendered):
+        w = shown_window_qt_computes_geometry_only_once_shown
         mock_state.wrap_mode = WrapMode.OVER_BOUNDS
         mock_state.left_bound = 0
         mock_state.right_bound = 100
@@ -436,8 +438,8 @@ class TestDynamicPositioning:
 
         assert _brace_width(w, rendered) > w.scrubber.width() * 0.8
 
-    def test_wrap_brace_narrows_to_in_out_in_yellow_mode(self, shown_window, mock_state, rendered):
-        w = shown_window
+    def test_wrap_brace_narrows_to_in_out_in_yellow_mode(self, shown_window_qt_computes_geometry_only_once_shown, mock_state, rendered):
+        w = shown_window_qt_computes_geometry_only_once_shown
         mock_state.wrap_mode = WrapMode.OVER_IN_OUT
         mock_state.in_point = 40
         mock_state.out_point = 60

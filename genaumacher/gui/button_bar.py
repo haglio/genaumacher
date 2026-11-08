@@ -6,7 +6,7 @@ from shared_ui.colors import TEXT_PRIMARY
 from shared_ui.icon_button import fill_square_with_icon
 from shared_ui.icons import qt_icon
 
-_ICON_COLOR = TEXT_PRIMARY
+_ICON_COLOR_MATCHING_THE_LABEL_BESIDE_IT_MATCHING_THE_LABEL_BESIDE_IT = TEXT_PRIMARY
 
 
 class ButtonBar(QWidget):
@@ -18,11 +18,11 @@ class ButtonBar(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
-        self._icon_play = qt_icon("play", color=_ICON_COLOR)
-        self._icon_pause = qt_icon("pause", color=_ICON_COLOR)
+        self._icon_play = qt_icon("play", color=_ICON_COLOR_MATCHING_THE_LABEL_BESIDE_IT_MATCHING_THE_LABEL_BESIDE_IT)
+        self._icon_pause = qt_icon("pause", color=_ICON_COLOR_MATCHING_THE_LABEL_BESIDE_IT_MATCHING_THE_LABEL_BESIDE_IT)
 
-        self.speed_down_btn = QPushButton(qt_icon("minus", color=_ICON_COLOR), "")
-        self.speed_up_btn = QPushButton(qt_icon("plus", color=_ICON_COLOR), "")
+        self.speed_down_btn = QPushButton(qt_icon("minus", color=_ICON_COLOR_MATCHING_THE_LABEL_BESIDE_IT_MATCHING_THE_LABEL_BESIDE_IT), "")
+        self.speed_up_btn = QPushButton(qt_icon("plus", color=_ICON_COLOR_MATCHING_THE_LABEL_BESIDE_IT_MATCHING_THE_LABEL_BESIDE_IT), "")
         self.play_pause_btn = QPushButton(self._icon_play, "")
         self.export_btn = QPushButton("export")
 

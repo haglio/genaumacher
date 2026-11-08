@@ -11,12 +11,16 @@ LABEL_STYLE = f"color: {TEXT_SECONDARY.name()}; background: transparent;"
 WARNING_STYLE = f"color: {RED.name()}; background: transparent;"
 _FIXED_SIZE = "fixedSize"
 
+_PAD_SO_A_TWO_CHARACTER_LABEL_FITS_A_FIXED_SQUARE = BUTTON_PAD_H_TIGHT
+
+_PAD_SO_A_TWO_CHARACTER_LABEL_FITS_A_FIXED_SQUARE = BUTTON_PAD_H_TIGHT
+
 _CHROME_STYLE = f"""
     QPushButton {{
-        padding: {BUTTON_PAD_V}px {BUTTON_PAD_H_TIGHT}px;
+        padding: {BUTTON_PAD_V}px {_PAD_SO_A_TWO_CHARACTER_LABEL_FITS_A_FIXED_SQUARE}px;
     }}
     QPushButton[{_FIXED_SIZE}="true"] {{
-        padding: 0px {BUTTON_PAD_H_TIGHT}px;
+        padding: 0px {_PAD_SO_A_TWO_CHARACTER_LABEL_FITS_A_FIXED_SQUARE}px;
     }}
 """
 

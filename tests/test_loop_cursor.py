@@ -124,7 +124,10 @@ class TestChangeSpeed:
 
         cursor.change_speed(1.0, SEQUENCE, FPS, now=100.45)
 
-        assert abs(cursor.frame_in(SEQUENCE, FPS, now=100.45) - 14) <= 1
+        assert abs(cursor.frame_in(SEQUENCE, FPS, now=100.45) - 14) <= _ONE_FRAME_THE_ANCHORS_DIVISION_CAN_LAND_A_HAIR_UNDER_A_WHOLE_ONE
+
+
+_ONE_FRAME_THE_ANCHORS_DIVISION_CAN_LAND_A_HAIR_UNDER_A_WHOLE_ONE = 1
 
 
 class TestRestart:

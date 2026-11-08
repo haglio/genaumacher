@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 from genaumacher.clip_range import ClipRange
 
 
@@ -73,3 +76,17 @@ class TestShift:
 class TestSpan:
     def test_the_span_is_how_far_a_shift_travels(self):
         assert ClipRange(start=10, end=20).span == 10
+
+
+def test_a_mark_moves_only_through_clip_range_s_own_methods_which_move_its_anchor_with_it():
+    package = Path(__file__).resolve().parents[1] / "genaumacher"
+    assignments = []
+    for source in package.rglob("*.py"):
+        if source.name == "clip_range.py":
+            continue
+        for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"))):
+            targets = getattr(node, "targets", None) or ([node.target] if hasattr(node, "target") else [])
+            assignments.extend(
+                f"{source.name}:{node.lineno}" for target in targets
+                if isinstance(target, ast.Attribute) and target.attr in ("start", "end"))
+    assert assignments == []

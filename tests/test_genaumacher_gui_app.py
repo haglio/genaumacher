@@ -13,7 +13,9 @@ from shared_ui.preview import Preview
 from genaumacher.gui.app import GenaumacherApp
 from genaumacher.loop_modes import LoopMode
 from genaumacher.playback import change_speed, toggle_loop_pause
+from genaumacher.timecode import format_seconds
 from genaumacher.wrap_modes import WrapMode
+from tests.qt_events import drain_a_tick_already_on_its_way
 
 
 @pytest.fixture
@@ -52,7 +54,7 @@ class TestConstruction:
         app = GenaumacherApp(mock_state)
         assert app.window.session_label.text() == mock_state.session_name
 
-    def test_the_application_wears_the_familys_palette_under_its_sheet(self, mock_state):
+    def test_the_application_wears_the_familys_palette_under_its_sheet_what_the_sheet_leaves_unpainted_the_selection_first_comes_from_it(self, mock_state):
         palette_before = QApplication.instance().palette()
         try:
             GenaumacherApp(mock_state)
@@ -105,7 +107,7 @@ class TestOnTick:
     def test_it_hands_the_scrubber_the_state_it_is_looking_at(self, live_app):
         state = live_app._state
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         scrubber = live_app.window.scrubber
         assert (scrubber.left_bound, scrubber.right_bound) == (10, 60)
@@ -114,11 +116,11 @@ class TestOnTick:
         assert state.in_point <= scrubber.loop_pos <= state.out_point
 
     def test_it_follows_the_state_when_it_moves(self, live_app):
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
         live_app._state.window.jump_to(47)
         live_app._state.clip.mark_out(50)
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         scrubber = live_app.window.scrubber
         assert scrubber.cursor_pos == 47
@@ -127,7 +129,7 @@ class TestOnTick:
     def test_it_passes_the_suggestions_through(self, live_app):
         live_app._state.suggestions.offer(22, 38)
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         scrubber = live_app.window.scrubber
         assert (scrubber.suggested_in, scrubber.suggested_out) == (22, 38)
@@ -137,20 +139,23 @@ class TestOnTick:
         assert _is_blank(window.frame_at_cursor_pane, rendered)
         assert _is_blank(window.loop_preview_pane, rendered)
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         assert not _is_blank(window.frame_at_cursor_pane, rendered)
         assert not _is_blank(window.loop_preview_pane, rendered)
 
     def test_it_writes_the_cursor_position_and_timestamp(self, live_app):
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
-        assert live_app.window.cursor_label.text() == "cursor: 23/50 @ 00:00:01.320"
+        frame_of_the_loaded = _TICK_STATE["cursor"] - _TICK_STATE["left_bound"]
+        last_loaded = _TICK_STATE["right_bound"] - _TICK_STATE["left_bound"]
+        at = format_seconds(_TICK_STATE["cursor"] / _TICK_STATE["fps"])
+        assert live_app.window.cursor_label.text() == f"cursor: {frame_of_the_loaded}/{last_loaded} @ {at}"
 
     def test_it_writes_the_loop_length_and_the_speed(self, live_app):
         change_speed(live_app._state, 0.5)
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         assert "/21 @ " in live_app.window.loop_label.text()
         assert live_app.window.speed_label.text() == "speed: 1.50x (playing)"
@@ -158,27 +163,27 @@ class TestOnTick:
     def test_a_paused_loop_says_so(self, live_app):
         toggle_loop_pause(live_app._state)
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         assert live_app.window.speed_label.text() == "speed: 1.00x (paused)"
 
     def test_it_shows_the_session_warning_the_state_carries(self, live_app):
         live_app._state.session_warning = "Autosave failed: disk full"
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         assert live_app.window.warning_label.text() == "Autosave failed: disk full"
 
     def test_it_tells_the_controls_which_loop_mode_is_on(self, live_app):
         live_app._state.loop_mode = LoopMode.TIP_BASE
 
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         assert live_app.window.scrubber_controls.loop_mode_btn.text() == "tip-base"
 
     def test_a_frame_that_cannot_be_decoded_does_not_stop_the_rest(self, live_app, rendered):
         with patch("genaumacher.gui.main_window.safe_frame", side_effect=KeyError("gone")):
-            live_app._on_tick()
+            live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
         assert _is_blank(live_app.window.frame_at_cursor_pane, rendered)
         assert _is_blank(live_app.window.loop_preview_pane, rendered)
@@ -208,15 +213,15 @@ class TestRun:
         assert ticked_within(live_app.playback_timer.tick, 2000) is True
 
         live_app.window.close()
-        QApplication.processEvents()
+        drain_a_tick_already_on_its_way()
 
         assert ticked_within(live_app.playback_timer.tick, 200) is False
 
 
-def test_a_frame_the_decoder_will_not_give_up_does_not_take_the_window_with_it(live_app, rendered):
+def test_a_frame_the_decoder_will_not_give_up_does_not_take_the_window_with_it_an_exception_out_of_a_qt_slot_would_end_the_process(live_app, rendered):
     with patch("genaumacher.gui.main_window.safe_frame",
                side_effect=RuntimeError("Could not load frame 211")):
-        live_app._on_tick()
+        live_app._push_the_state_to_the_window_which_alone_knows_its_widgets()
 
     assert _is_blank(live_app.window.frame_at_cursor_pane, rendered)
     assert _is_blank(live_app.window.loop_preview_pane, rendered)
