@@ -25,7 +25,7 @@ def _make_textured_frame(w: int = 128, h: int = 128, seed: int = 42) -> np.ndarr
 
 
 @pytest.fixture
-def interpolator(tmp_path: Path, monkeypatch) -> None:
+def interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require(tmp_path: Path, monkeypatch) -> None:
     exe = tmp_path / interpolator_environment.VENDORED_EXE
     exe.parent.mkdir(parents=True)
     exe.write_bytes(b"MZ")
@@ -125,8 +125,8 @@ class TestEstimateAlignment:
 
 
 class TestBuildRegisteredSeam:
-    def test_reduces_endpoint_drift(self, textured_frames):
-        frames = textured_frames()
+    def test_reduces_endpoint_drift(self, textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback):
+        frames = textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback()
 
         diff_before = np.mean(np.abs(frames[-1].astype(float) - frames[0].astype(float)))
         result, ok = build_registered_seam(frames, seam_frames=3)
@@ -156,7 +156,7 @@ class TestRifeBridge:
         result = build_rife_bridge(frame, frame, 0)
         assert result is None
 
-    def test_produces_correct_count(self, interpolator):
+    def test_produces_correct_count(self, interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require):
         frame_a = _make_textured_frame(128, 128, seed=1)
         frame_b = _make_textured_frame(128, 128, seed=2)
         result = build_rife_bridge(frame_a, frame_b, 3)
@@ -166,7 +166,7 @@ class TestRifeBridge:
             assert f.shape == frame_a.shape
             assert f.dtype == np.uint8
 
-    def test_bridge_frames_differ_from_endpoints(self, interpolator):
+    def test_bridge_frames_differ_from_endpoints(self, interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require):
         frame_a = _make_textured_frame(128, 128, seed=10)
         frame_b = _make_textured_frame(128, 128, seed=20)
         result = build_rife_bridge(frame_a, frame_b, 1)
@@ -185,13 +185,13 @@ class TestRifeSeam:
         frames = [_make_textured_frame(64, 64, seed=i) for i in range(3)]
         assert build_rife_seam(frames, 1) is None
 
-    def test_preserves_frame_count(self, interpolator):
+    def test_preserves_frame_count(self, interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require):
         frames = [_make_textured_frame(128, 128, seed=i) for i in range(10)]
         result = build_rife_seam(frames, 3)
         assert result is not None
         assert len(result) == len(frames)
 
-    def test_modifies_frames_near_seam(self, interpolator):
+    def test_modifies_frames_near_seam(self, interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require):
         frames = [_make_textured_frame(128, 128, seed=i) for i in range(10)]
         result = build_rife_seam(frames, 3)
         assert result is not None
@@ -205,14 +205,14 @@ class TestWhatTheSeamDoesToAFrame:
     def _frames() -> list[np.ndarray]:
         return [np.full((2, 2, 3), value, dtype=np.uint8) for value in range(0, 160, 20)]
 
-    def test_no_frame_moves_more_than_halfway_toward_its_partner(self, interpolator):
+    def test_a_frame_near_the_seam_is_exactly_one_interpolator_output_at_most_halfway_toward_its_partner_never_a_blend_with_itself(self, interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require):
         frames = self._frames()
 
         result = build_rife_seam(frames, 4)
 
         assert result[-1][0, 0, 0] == (frames[-1][0, 0, 0] // 2 + frames[0][0, 0, 0] // 2)
 
-    def test_a_seam_wider_than_half_the_clip_is_capped_at_half(self, interpolator):
+    def test_a_seam_wider_than_half_the_clip_is_capped_at_half(self, interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require):
         frames = self._frames()
 
         widest = build_rife_seam(frames, len(frames))
@@ -220,7 +220,7 @@ class TestWhatTheSeamDoesToAFrame:
 
         assert [int(frame[0, 0, 0]) for frame in widest] == [int(frame[0, 0, 0]) for frame in half]
 
-    def test_a_frame_moves_toward_its_partner_and_stays_nearer_itself(self, interpolator):
+    def test_a_frame_moves_toward_its_partner_and_stays_nearer_itself(self, interpolator_stood_in_for_the_binary_the_gate_alone_runs_the_real_one_under_require):
         frames = self._frames()
 
         moved = int(build_rife_seam(frames, 4)[-2][0, 0, 0])

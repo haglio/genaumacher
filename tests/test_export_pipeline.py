@@ -7,7 +7,10 @@ import pytest
 from genaumacher.export_pipeline import run_export
 from genaumacher.paths import RAW_CLIPS_DIR, audio_dir, flicks_dir, vr_flicks_dir
 from genaumacher.sidecar import record_provenance
-from tests.stamps import METHOD, METHOD_VERSION
+from tests.stamps import (
+    METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+    METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+)
 
 pytestmark = pytest.mark.usefixtures("library")
 
@@ -194,7 +197,7 @@ class TestVrExportPath:
 
 
 class TestALoopedClipsRecord:
-    def test_the_export_leaves_the_stamp_normalizing_wrote(
+    def test_the_export_leaves_the_stamp_normalizing_wrote_its_code_may_be_newer_than_the_windows(
         self, state, steps, watcher, recorded_cut
     ):
         def normalize(_state, _raw_path, clip_path, _progress):
@@ -205,7 +208,7 @@ class TestALoopedClipsRecord:
             run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)
-        assert (recorded[METHOD], recorded[METHOD_VERSION]) == ("clip_postprocess", "3")
+        assert (recorded[METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT], recorded[METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT]) == ("clip_postprocess", "3")
 
 
 class TestSkipNormalize:
@@ -213,7 +216,7 @@ class TestSkipNormalize:
     def _skipping(self, state):
         state.skip_normalize = True
 
-    def test_the_normalize_step_never_runs(self, state, steps, watcher):
+    def test_the_normalize_step_never_runs_a_whole_video_is_already_a_loop(self, state, steps, watcher):
         run_export(state, watcher)
 
         assert not steps["normalize"].called
@@ -237,12 +240,12 @@ class TestSkipNormalize:
 
         assert steps["audio"].called
 
-    def test_the_clip_says_genaumacher_made_it_without_normalizing(
+    def test_the_clip_says_genaumacher_made_it_without_normalizing_so_a_sweep_for_clips_made_before_a_change_passes_it_by(
         self, state, steps, watcher, recorded_cut
     ):
         run_export(state, watcher)
 
         recorded = recorded_cut(state.session_name)
-        assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
+        assert (recorded["app"], recorded[METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT], recorded[METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT]) == (
             "genaumacher", None, None,
         )

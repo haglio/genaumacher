@@ -9,7 +9,7 @@ from pathlib import Path
 import cv2
 from app_support.subprocess_utils import hidden_subprocess_kwargs
 
-from .export_progress import ExportProgress, fraction_in
+from .export_progress import ExportProgressListener, fraction_in
 from .paths import NORMALIZE_SCRIPT
 from .state import VideoState
 from .timecode import parse_timestamp
@@ -93,7 +93,7 @@ def validate_video_file(path: Path) -> tuple[bool, str]:
     return True, ""
 
 
-def export_raw_clip(state: VideoState, out_path: Path, progress: ExportProgress) -> tuple[bool, str]:
+def export_raw_clip(state: VideoState, out_path: Path, progress: ExportProgressListener) -> tuple[bool, str]:
     ffmpeg = find_tool("ffmpeg")
     if not ffmpeg:
         return False, "ffmpeg not found on PATH"
@@ -120,7 +120,7 @@ def export_raw_clip(state: VideoState, out_path: Path, progress: ExportProgress)
     return True, str(out_path)
 
 
-def run_normalize(state: VideoState, raw_path: Path, out_path: Path, progress: ExportProgress) -> tuple[bool, str]:
+def run_normalize(state: VideoState, raw_path: Path, out_path: Path, progress: ExportProgressListener) -> tuple[bool, str]:
     progress.stage("normalizing")
     cmd = [sys.executable, str(NORMALIZE_SCRIPT), str(raw_path), "-o", str(out_path), "--loop-mode", state.loop_mode]
     try:
@@ -164,7 +164,7 @@ def _has_audio_stream(video_path: str, ffprobe: str | None) -> bool:
         return True
 
 
-def export_full_audio_mp3(state: VideoState, out_path: Path, progress: ExportProgress) -> tuple[bool, str]:
+def export_full_audio_mp3(state: VideoState, out_path: Path, progress: ExportProgressListener) -> tuple[bool, str]:
     ffmpeg = find_tool("ffmpeg")
     if not ffmpeg:
         return False, "ffmpeg not found on PATH"

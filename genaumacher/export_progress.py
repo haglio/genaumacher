@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol
 
 
-class ExportProgress(Protocol):
+class ExportProgressListener(Protocol):
     def stage(self, text: str) -> None: ...
 
     def clip(self, fraction: float) -> None: ...

@@ -18,7 +18,10 @@ from genaumacher.normalize_pipeline import (
     normalize_clip,
 )
 from genaumacher.paths import flicks_dir
-from tests.stamps import METHOD, METHOD_VERSION
+from tests.stamps import (
+    METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+    METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+)
 
 pytestmark = pytest.mark.usefixtures("library")
 
@@ -90,12 +93,12 @@ class TestTheRegisteredSeam:
                **overrides},
         )
 
-    def test_a_converged_seam_is_the_whole_answer(self, textured_frames, frames_of, values_of):
+    def test_a_converged_seam_is_the_whole_answer(self, textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback, frames_of, values_of):
         converged = frames_of([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
         with patch("genaumacher.normalize_pipeline.build_rife_seam",
                    return_value=converged) as seam:
-            out, normalized_n = self._built(textured_frames())
+            out, normalized_n = self._built(textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback())
 
         seam.assert_called_once()
         assert seam.call_args.args[1] == 3
@@ -103,34 +106,34 @@ class TestTheRegisteredSeam:
         assert normalized_n == 10
 
     def test_a_seam_that_will_not_converge_falls_to_an_interpolated_bridge(
-        self, textured_frames, frames_of, values_of
+        self, textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback, frames_of, values_of
     ):
         bridge = frames_of([1, 2])
 
         with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
              patch("genaumacher.normalize_pipeline.build_rife_bridge", return_value=bridge):
-            out, normalized_n = self._built(textured_frames())
+            out, normalized_n = self._built(textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback())
 
         assert len(out) == normalized_n == 10
         assert values_of(out[-2:]) == [1, 2]
 
     def test_an_appended_bridge_makes_the_clip_longer(
-        self, textured_frames, frames_of, values_of
+        self, textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback, frames_of, values_of
     ):
         bridge = frames_of([1, 2])
 
         with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
              patch("genaumacher.normalize_pipeline.build_rife_bridge", return_value=bridge):
-            out, normalized_n = self._built(textured_frames(), keep_length=False)
+            out, normalized_n = self._built(textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback(), keep_length=False)
 
         assert normalized_n == 10
         assert len(out) == 12
         assert values_of(out[-2:]) == [1, 2]
 
-    def test_with_no_interpolator_the_geometric_correction_stands_alone(
-        self, textured_frames
+    def test_with_no_interpolator_the_geometric_correction_stands_alone_spread_over_every_frame_so_no_single_step_shows_a_shift(
+        self, textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback
     ):
-        frames = textured_frames()
+        frames = textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback()
 
         with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
              patch("genaumacher.normalize_pipeline.build_rife_bridge", return_value=None):
@@ -144,12 +147,12 @@ class TestTheRegisteredSeam:
         gap_after = np.mean(np.abs(out[-1].astype(float) - out[0].astype(float)))
         assert gap_after < gap_before
 
-    def test_a_bridge_longer_than_the_clip_is_refused(self, textured_frames, frames_of):
+    def test_a_bridge_longer_than_the_clip_is_refused(self, textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback, frames_of):
         with patch("genaumacher.normalize_pipeline.build_rife_seam", return_value=None), \
              patch("genaumacher.normalize_pipeline.build_rife_bridge",
                    return_value=frames_of([1] * 10)), \
              pytest.raises(RuntimeError, match="--keep-length bridge is too long"):
-            self._built(textured_frames(), bridge_frames=10)
+            self._built(textured_frames_solid_ones_have_no_keypoints_and_test_only_the_fallback(), bridge_frames=10)
 
 
 def test_build_output_frames_rejects_keep_length_when_bridge_is_too_long(frames_of):
@@ -195,7 +198,7 @@ class _RecordingEncoder:
         Path(options.output).write_bytes(b"\0" * size)
 
 
-def _options(tmp_path: Path, **overrides) -> NormalizeOptions:
+def _options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path: Path, **overrides) -> NormalizeOptions:
     return NormalizeOptions(
         input=str(tmp_path / "clip_in.mp4"),
         output=str(tmp_path / "clip_out.mp4"),
@@ -222,7 +225,7 @@ def run_pipeline(frames_of):
 
 
 def test_normalize_clip_reports_the_clip_it_actually_encoded(tmp_path, run_pipeline):
-    options = _options(tmp_path)
+    options = _options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path)
 
     summary, encoder = run_pipeline(options)
 
@@ -246,7 +249,7 @@ def test_normalize_clip_reports_the_clip_it_actually_encoded(tmp_path, run_pipel
 
 
 def test_normalize_clip_normalizes_the_loop_before_bridging(tmp_path, run_pipeline):
-    summary, encoder = run_pipeline(_options(tmp_path, loop_mode=LoopMode.BASE_TIP))
+    summary, encoder = run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path, loop_mode=LoopMode.BASE_TIP))
 
     assert summary["normalized_frames"] == 7
     assert summary["output_frames"] == 7
@@ -255,7 +258,7 @@ def test_normalize_clip_normalizes_the_loop_before_bridging(tmp_path, run_pipeli
 
 def test_normalize_clip_appends_the_bridge_when_the_length_is_not_kept(tmp_path, run_pipeline):
     summary, encoder = run_pipeline(
-        _options(tmp_path, keep_length=False, bridge_frames=2),
+        _options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path, keep_length=False, bridge_frames=2),
         values=(10, 20, 30, 40, 50, 60),
     )
 
@@ -266,7 +269,7 @@ def test_normalize_clip_appends_the_bridge_when_the_length_is_not_kept(tmp_path,
 
 
 def test_normalize_clip_caps_the_bridge_at_a_third_of_the_normalized_clip(tmp_path, run_pipeline):
-    summary, _encoder = run_pipeline(_options(tmp_path, bridge_frames=3))
+    summary, _encoder = run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path, bridge_frames=3))
 
     assert summary["bridge_frames"] == 1
 
@@ -275,7 +278,7 @@ def test_normalize_clip_shrinks_and_re_encodes_until_the_output_fits(tmp_path, r
     over = 2 * 1024 * 1024
     encoder = _RecordingEncoder(over, 4096)
 
-    summary, encoder = run_pipeline(_options(tmp_path), size=80, encoder=encoder)
+    summary, encoder = run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path), size=80, encoder=encoder)
 
     assert summary["encode_attempts"] == 2
     assert summary["final_scale"] == pytest.approx(0.9)
@@ -288,7 +291,7 @@ def test_normalize_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path, 
     encoder = _RecordingEncoder(2 * 1024 * 1024)
 
     with caplog.at_level(logging.WARNING, logger="genaumacher.normalize_pipeline"):
-        summary, encoder = run_pipeline(_options(tmp_path), size=64, encoder=encoder)
+        summary, encoder = run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path), size=64, encoder=encoder)
 
     assert summary["encode_attempts"] == 1
     assert summary["final_scale"] == 1.0
@@ -300,7 +303,7 @@ def test_normalize_clip_stops_shrinking_at_the_smallest_allowed_frame(tmp_path, 
 def test_normalize_clip_keeps_the_input_audio_only_when_asked(
     tmp_path, run_pipeline, copy_audio, expected_audio
 ):
-    options = _options(tmp_path, copy_audio=copy_audio)
+    options = _options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path, copy_audio=copy_audio)
 
     _summary, encoder = run_pipeline(options)
 
@@ -309,43 +312,43 @@ def test_normalize_clip_keeps_the_input_audio_only_when_asked(
 
 
 def test_normalize_clip_passes_the_encoder_settings_through(tmp_path, run_pipeline):
-    _summary, encoder = run_pipeline(_options(tmp_path, crf=30, preset="veryfast", pix_fmt="yuv444p"))
+    _summary, encoder = run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path, crf=30, preset="veryfast", pix_fmt="yuv444p"))
 
     assert encoder.calls[0]["crf"] == 30
     assert encoder.calls[0]["preset"] == "veryfast"
     assert encoder.calls[0]["pix_fmt"] == "yuv444p"
 
 
-def test_a_clip_it_writes_into_the_library_is_recorded_under_the_name_every_clip_it_made_carries(
+def test_a_clip_it_writes_into_the_library_is_recorded_under_the_name_every_clip_it_made_carries_written_as_a_literal_a_later_sweep_filters_on_it(
     tmp_path, run_pipeline, recorded_cut
 ):
     flicks_dir().mkdir(parents=True)
-    options = replace(_options(tmp_path), output=str(flicks_dir() / "scene one.mp4"))
+    options = replace(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path), output=str(flicks_dir() / "scene one.mp4"))
 
     run_pipeline(options)
 
     recorded = recorded_cut("scene one")
-    assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
+    assert (recorded["app"], recorded[METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT], recorded[METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT]) == (
         "genaumacher", "clip_postprocess", NORMALIZE_VERSION,
     )
 
 
 def test_normalize_clip_refuses_a_size_budget_of_zero(tmp_path, run_pipeline):
     with pytest.raises(RuntimeError, match="--max-mb must be greater than 0"):
-        run_pipeline(_options(tmp_path, max_mb=0.0))
+        run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path, max_mb=0.0))
 
 
 def test_normalize_clip_refuses_a_clip_too_short_to_bridge(tmp_path, run_pipeline):
     with pytest.raises(RuntimeError, match="Clip is too short"):
-        run_pipeline(_options(tmp_path), values=(10, 20))
+        run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path), values=(10, 20))
 
 
-_BLEND_SOURCE = list(range(10, 170, 10))
+_BLEND_SOURCE_SIXTEEN_FRAMES_WITH_EIGHT_THE_QUARTER_CAP_WOULD_EQUAL_THE_WIDTH_ASKED_FOR = list(range(10, 170, 10))
 
 
 def _blend_run(frames_of, values_of, symmetric_blend):
     out, normalized_n = _output_frames(
-        frames_of(_BLEND_SOURCE), loop_mode=LoopMode.BASE_TIP_BASE, bridge_frames=1,
+        frames_of(_BLEND_SOURCE_SIXTEEN_FRAMES_WITH_EIGHT_THE_QUARTER_CAP_WOULD_EQUAL_THE_WIDTH_ASKED_FOR), loop_mode=LoopMode.BASE_TIP_BASE, bridge_frames=1,
         mode="blend", keep_length=False, symmetric_blend=symmetric_blend,
     )
     return values_of(out[:normalized_n]), normalized_n
@@ -385,7 +388,7 @@ def test_the_register_fallback_blends_the_same_way(frames_of, values_of):
     blended, n = _blend_run(frames_of, values_of, 2)
 
     out, registered_n = _output_frames(
-        frames_of(_BLEND_SOURCE), loop_mode=LoopMode.BASE_TIP_BASE, bridge_frames=1,
+        frames_of(_BLEND_SOURCE_SIXTEEN_FRAMES_WITH_EIGHT_THE_QUARTER_CAP_WOULD_EQUAL_THE_WIDTH_ASKED_FOR), loop_mode=LoopMode.BASE_TIP_BASE, bridge_frames=1,
         mode="register", keep_length=False, symmetric_blend=2,
     )
 
@@ -393,7 +396,7 @@ def test_the_register_fallback_blends_the_same_way(frames_of, values_of):
 
 
 class TestSayingHowFarItHasGot:
-    def test_each_step_is_reported_as_that_step_finishes(self, tmp_path, frames_of):
+    def test_each_step_is_reported_as_that_step_finishes_nothing_finer_since_nothing_knows_the_total_and_nothing_says_one_returning_ends_the_run(self, tmp_path, frames_of):
         trace: list = []
 
         def decode(_path):
@@ -409,7 +412,7 @@ class TestSayingHowFarItHasGot:
                                  "nb_frames": 4, "duration": 4 / 24.0}), \
              patch("genaumacher.normalize_pipeline.read_frames", decode), \
              patch("genaumacher.normalize_pipeline.encode_with_ffmpeg", encode):
-            normalize_clip(_options(tmp_path), report=trace.append)
+            normalize_clip(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path), report=trace.append)
 
         assert trace == ["decoded", 0.2, 0.6, "encoded"]
 
@@ -417,14 +420,14 @@ class TestSayingHowFarItHasGot:
         reported: list[float] = []
         encoder = _RecordingEncoder(2 * 1024 * 1024, 4096)
 
-        summary, _ = run_pipeline(_options(tmp_path), size=80, encoder=encoder,
+        summary, _ = run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path), size=80, encoder=encoder,
                                   report=reported.append)
 
         assert summary["encode_attempts"] == 2
         assert reported == [0.2, 0.6]
 
     def test_it_runs_with_nobody_listening(self, tmp_path, run_pipeline):
-        summary, _ = run_pipeline(_options(tmp_path))
+        summary, _ = run_pipeline(_options_pinning_the_mode_that_needs_no_keypoint_match(tmp_path))
 
         assert summary["output_frames"] == 4
 

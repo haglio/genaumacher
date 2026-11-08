@@ -1,21 +1,26 @@
 from __future__ import annotations
 
+import ast
 import json
 import logging
+from pathlib import Path
 
 import pytest
 from app_support.flick_folder import flat_flicks_in
 
 from genaumacher.paths import flicks_dir
 from genaumacher.sidecar import record_provenance
-from tests.stamps import METHOD, METHOD_VERSION
+from tests.stamps import (
+    METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+    METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT,
+)
 
 
 def test_an_exported_clip_is_recorded_where_evolver_files_that_clips_metadata(recorded_cut):
     record_provenance(flicks_dir() / "scene one.mp4", method="a method", method_version="7")
 
     recorded = recorded_cut("scene one")
-    assert (recorded["app"], recorded[METHOD], recorded[METHOD_VERSION]) == (
+    assert (recorded["app"], recorded[METHOD_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT], recorded[METHOD_VERSION_KEY_AS_EVERY_FILE_ON_DISK_ALREADY_HOLDS_IT]) == (
         "genaumacher", "a method", "7",
     )
 
@@ -91,3 +96,15 @@ def test_a_record_it_cannot_write_does_not_stop_the_export(library, caplog):
         record_provenance(flicks_dir() / "scene one.mp4")
 
     assert "scene one.mp4" in caplog.text
+
+
+def test_no_test_module_imports_another_pytest_puts_tests_on_sys_path_so_a_rename_would_break_unrelated_files():
+    tests = Path(__file__).resolve().parent
+    offenders = []
+    for source in tests.glob("test_*.py"):
+        for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"))):
+            names = ([node.module] if isinstance(node, ast.ImportFrom) and node.module else
+                     [alias.name for alias in node.names] if isinstance(node, ast.Import) else [])
+            if any(name.split(".")[-1].startswith("test_") for name in names):
+                offenders.append(source.name)
+    assert offenders == []

@@ -28,7 +28,7 @@ def open_the_loading_screen(preview: Preview | None):
     )
 
 
-def _set_windows_app_user_model_id(preview: Preview | None) -> None:
+def _claim_the_taskbar_identity_before_the_first_window(preview: Preview | None) -> None:
     if sys.platform != "win32":
         return
     try:
@@ -47,9 +47,13 @@ def _init_logger() -> logging.Logger:
     return logger
 
 
-def _report_interpolator_environment(logger: logging.Logger) -> None:
+def _warn_at_start_about_the_interpolator_the_gate_always_has_it_this_machine_may_not(logger: logging.Logger) -> None:
     for said in complaints():
         logger.warning("Frame interpolator: %s", said)
+
+
+def _dress_the_app_before_the_launcher_dialog_inherits_its_icon(app, preview: Preview | None) -> None:
+    app.setWindowIcon(app_icon(genaumacher_icon_path(), preview))
 
 
 def _name_this_process() -> None:
@@ -59,16 +63,16 @@ def _name_this_process() -> None:
 
 def main() -> int:
     preview = preview_of(PROJECT_DIR)
-    _set_windows_app_user_model_id(preview)
+    _claim_the_taskbar_identity_before_the_first_window(preview)
     _name_this_process()
     logger = _init_logger()
-    _report_interpolator_environment(logger)
+    _warn_at_start_about_the_interpolator_the_gate_always_has_it_this_machine_may_not(logger)
     try:
         # Qt loads here, so a failure to load it reaches the handler below.
         from PyQt6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
 
         _app = QApplication.instance() or QApplication(sys.argv)
-        _app.setWindowIcon(app_icon(genaumacher_icon_path(), preview))
+        _dress_the_app_before_the_launcher_dialog_inherits_its_icon(_app, preview)
         from shared_ui.loading_window import Loading, LoadingCanceled  # noqa: PLC0415
 
         loading = Loading.at_the_click(_app, logger, lambda: open_the_loading_screen(preview))

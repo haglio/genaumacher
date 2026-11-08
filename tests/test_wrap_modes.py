@@ -20,7 +20,7 @@ class TestWrapBounds:
 
         assert wrap_bounds(state) == (20, 40)
 
-    def test_the_two_modes_are_the_colors_the_session_file_carries(self):
+    def test_the_two_modes_are_the_colors_the_session_file_carries_which_evolver_reads_and_rewrites_unversioned(self):
         assert (WrapMode.OVER_BOUNDS, WrapMode.OVER_IN_OUT) == ("blue", "yellow")
 
 

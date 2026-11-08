@@ -52,7 +52,7 @@ def _recorded(worker: ExportWorker) -> dict[str, list]:
 
 
 class TestSignals:
-    def test_a_run_emits_every_signal_the_worker_declares(self, state, steps):
+    def test_a_run_emits_every_signal_the_worker_declares_run_in_this_thread_so_qt_delivers_them_at_once_not_queued(self, state, steps):
         worker = ExportWorker(state)
         seen = _recorded(worker)
 
@@ -84,7 +84,7 @@ class TestWhatTheRunAnswers:
 
 
 class TestConnectExport:
-    def test_every_signal_the_worker_emits_reaches_the_dialog(self, state, steps):
+    def test_every_signal_the_worker_emits_reaches_the_dialog_one_wiring_the_caller_holds_and_starts_a_qthread_whose_last_reference_goes_dies_mid_export(self, state, steps):
         dialog = ExportDialog()
         worker = connect_export(state, dialog)
 
