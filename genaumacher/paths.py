@@ -28,7 +28,8 @@ def _genau_dir() -> Path:
 def _genau_flicks_dir() -> Path:
     flicks = flicks_folder_in(_genau_dir())
     if flicks is None:
-        raise FileNotFoundError(f"No folder in {_genau_dir()} is laid out as Genau's flicks are")
+        raise FileNotFoundError(f"No folder in {_genau_dir()} is laid out as Genau's "
+                                f"{haglio_settings.value('genau_flick_words', 'many')} are")
     return flicks
 
 

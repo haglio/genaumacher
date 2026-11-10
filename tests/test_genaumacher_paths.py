@@ -109,13 +109,15 @@ class TestWhereTheLibraryFoldersAre:
 
         assert (flicks_dir(), vr_flicks_dir()) == (flicks / "2D" / "non_AI", flicks / "VR")
 
-    def test_with_no_folder_shaped_like_genaus_flicks_a_cut_has_nowhere_to_go(
+    def test_with_no_folder_shaped_like_genaus_flicks_a_cut_has_nowhere_to_go_said_in_the_rooms_own_word(
         self, tmp_path: Path, shared_settings
     ):
         genau = tmp_path / "empty library" / "genau-here"
-        shared_settings({"library_root": str(tmp_path / "empty library"), "genau_dir": str(genau)})
+        shared_settings({"library_root": str(tmp_path / "empty library"), "genau_dir": str(genau),
+                         "genau_flick_words": {"one": "pip", "many": "pips"}})
 
-        with pytest.raises(FileNotFoundError, match=re.escape(str(genau))):
+        with pytest.raises(FileNotFoundError,
+                           match=re.escape(f"No folder in {genau} is laid out as Genau's pips are")):
             flicks_dir()
 
     def test_settings_written_after_the_import_are_the_ones_that_answer_a_module_reading_them_at_import_makes_every_consumer_pay_and_see_whichever_copy_came_first(
