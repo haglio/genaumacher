@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtCore import QPointF, Qt
-from PyQt6.QtGui import QMouseEvent
+from PySide6.QtCore import QPointF, Qt
+from PySide6.QtGui import QMouseEvent
+from shared_ui.testing import appending_to
 
 from genaumacher.gui.scrubber_colors import (
     SCRUBBER_BOUNDS,
@@ -81,19 +82,19 @@ class TestSetState:
         assert widget.suggested_out == 90
 
 
+def _press_in_the_middle_of(widget, button):
+    middle = QPointF(widget.width() / 2, widget.height() / 2)
+    return QMouseEvent(QMouseEvent.Type.MouseButtonPress, middle, middle, button, button,
+                       Qt.KeyboardModifier.NoModifier)
+
+
 class TestClickSignal:
     def test_click_emits_cursor_jumped(self, widget):
         widget.set_bounds(0, 100)
         results = []
-        widget.cursor_jumped.connect(results.append)
+        widget.cursor_jumped.connect(appending_to(results))
 
-        widget.mousePressEvent(QMouseEvent(
-            QMouseEvent.Type.MouseButtonPress,
-            QPointF(widget.width() / 2, widget.height() / 2),
-            Qt.MouseButton.LeftButton,
-            Qt.MouseButton.LeftButton,
-            Qt.KeyboardModifier.NoModifier,
-        ))
+        widget.mousePressEvent(_press_in_the_middle_of(widget, Qt.MouseButton.LeftButton))
 
         assert len(results) == 1
         assert abs(results[0] - 50) <= 1
@@ -101,15 +102,9 @@ class TestClickSignal:
     def test_a_right_click_moves_nothing(self, widget):
         widget.set_bounds(0, 100)
         results = []
-        widget.cursor_jumped.connect(results.append)
+        widget.cursor_jumped.connect(appending_to(results))
 
-        widget.mousePressEvent(QMouseEvent(
-            QMouseEvent.Type.MouseButtonPress,
-            QPointF(widget.width() / 2, widget.height() / 2),
-            Qt.MouseButton.RightButton,
-            Qt.MouseButton.RightButton,
-            Qt.KeyboardModifier.NoModifier,
-        ))
+        widget.mousePressEvent(_press_in_the_middle_of(widget, Qt.MouseButton.RightButton))
 
         assert results == []
 

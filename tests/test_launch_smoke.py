@@ -74,7 +74,7 @@ def test_the_editor_window_is_imported_only_once_the_launcher_has_a_session_to_o
 
 def test_the_export_steps_and_their_progress_import_without_qt_so_they_are_tested_with_no_thread_and_no_window():
     for module in ("genaumacher.export_pipeline", "genaumacher.export_progress", "genaumacher.export_steps"):
-        assert _imports_in_a_fresh_interpreter(module, "PyQt6") == {"PyQt6": False}, module
+        assert _imports_in_a_fresh_interpreter(module, "PySide6") == {"PySide6": False}, module
 
 
 def test_the_windows_dressing_knows_nothing_of_a_video_state():

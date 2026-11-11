@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QPainter, QPen
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtWidgets import QWidget
 from shared_ui.colors import BG_PRIMARY
 
 from .scrubber_colors import (
@@ -18,7 +18,7 @@ from .scrubber_colors import (
 
 
 class ScrubberWidget(QWidget):
-    cursor_jumped = pyqtSignal(int)
+    cursor_jumped = Signal(int)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)

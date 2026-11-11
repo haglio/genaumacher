@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 import cv2
-from PyQt6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog
 
 from .clip_range import ClipRange
 from .create_session import SessionAsk, create_session, ffprobe_video_metadata

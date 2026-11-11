@@ -5,9 +5,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PyQt6.QtCore import QPoint, QSize, Qt
-from PyQt6.QtGui import QColor, QFont, QFontDatabase, QKeyEvent
-from PyQt6.QtWidgets import QApplication, QPushButton, QWidget
+from PySide6.QtCore import QPoint, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QKeyEvent
+from PySide6.QtWidgets import QApplication, QPushButton, QWidget
 from shared_ui.colors import dress_application
 from shared_ui.fonts import FONT_UI
 from shared_ui.preview import Preview

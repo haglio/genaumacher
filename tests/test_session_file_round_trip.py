@@ -7,8 +7,8 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 import pytest
-from PyQt6.QtCore import QTimer
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
 
 from genaumacher.create_session import SessionAsk, build_session_payload
 from genaumacher.editing import set_mark_in

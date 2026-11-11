@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import cv2
 import numpy as np
 import pytest
-from PyQt6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog
 from shared_ui.preview import Preview
 
 from genaumacher import create_session as create_session_module
@@ -272,7 +272,7 @@ def test_a_preview_that_crashes_says_which_preview_it_was():
          patch("genaumacher.app._claim_the_taskbar_identity_before_the_first_window"), \
          patch("genaumacher.app._name_this_process"), \
          patch("genaumacher.app._init_logger"), \
-         patch("PyQt6.QtWidgets.QMessageBox.critical") as critical:
+         patch("PySide6.QtWidgets.QMessageBox.critical") as critical:
         assert app_main() == 1
 
     assert critical.call_args.args[1] == "Genaumacher \u2014 preview of the new loop"

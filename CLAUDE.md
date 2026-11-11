@@ -10,7 +10,7 @@ Shared rules are in the global `~/.claude/CLAUDE.md`. This file contains only ge
 
 ## Architecture
 
-Genaumacher is a standalone PyQt6/OpenCV video clip editor, extracted from the fun_time project. Key relationships:
+Genaumacher is a standalone PySide6/OpenCV video clip editor, extracted from the fun_time project. Key relationships:
 
 - **What the suite tells genaumacher**: exactly two things, both about one video. Fun Time's `;` pushes — it reads the Main Funestra's status file and runs `python -m genaumacher.create_session --video <path> --time <seconds>`. `genaumacher/main_funestra_prefill.py` pulls the same two fields out of the same file, for the case where genaumacher is opened on its own; the file's location is one optional key in genaumacher's own `content.local.json`. **Genaumacher does not read fun_time's config**, and has no path to the fun_time checkout. It used to do both, for a VLC prefill the suite outgrew.
 - **Output dirs**: The settings all of Haglio shares (`~/.haglio/settings.json`) say where Genau's folder is, as `genau_dir`, and where its sounds go, as `genau_audio_dir`. `genaumacher/paths.py` reads each through `app_support.haglio_settings` in one function (`_genau_dir`, `audio_dir`) and no other file spells either place, so moving them is a change to the settings and to nothing here. Clips export to `<genau_dir>/clips/2D/non_AI/`, VR clips to `<genau_dir>/clips/VR/`, audio to `<genau_audio_dir>/`; the two need not share a parent. The 2D and VR folders are `app_support.flick_folder`'s, which `genaumacher/paths.py` asks.

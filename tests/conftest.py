@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 from app_support import haglio_settings
 from app_support.flick_folder import flat_flicks_in
-from PyQt6.QtCore import QEventLoop, QTimer
+from PySide6.QtCore import QEventLoop, QTimer
 
 from genaumacher.clip_range import ClipRange
 from genaumacher.frame_window import FrameWindow
@@ -32,7 +32,7 @@ os.environ[haglio_settings.SETTINGS_ENV] = haglio_settings.THE_EXAMPLE
 # Qt reads this when the QApplication below is built.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 
 
 @pytest.fixture(scope="session", autouse=True)

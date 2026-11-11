@@ -69,7 +69,7 @@ def main() -> int:
     _warn_at_start_about_a_missing_interpolator(logger)
     try:
         # Qt loads here, so a failure to load it reaches the handler below.
-        from PyQt6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
+        from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
 
         _app = QApplication.instance() or QApplication(sys.argv)
         _set_the_icon_the_launcher_dialog_inherits(_app, preview)
@@ -94,7 +94,7 @@ def main() -> int:
         logger.exception("Genaumacher crashed")
         try:
             # What failed may be the import of Qt itself.
-            from PyQt6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
+            from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
 
             _app = QApplication.instance() or QApplication(sys.argv)
             QMessageBox.critical(None, window_title("Genaumacher", preview), f"ERROR: {exc}")

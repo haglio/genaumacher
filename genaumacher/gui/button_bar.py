@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 from shared_ui.colors import TEXT_PRIMARY
 from shared_ui.icon_button import fill_square_with_icon
 from shared_ui.icons import qt_icon
@@ -10,10 +10,10 @@ _ICON_COLOR_MATCHING_THE_LABEL_BESIDE_IT = TEXT_PRIMARY
 
 
 class ButtonBar(QWidget):
-    speed_down_clicked = pyqtSignal()
-    speed_up_clicked = pyqtSignal()
-    play_pause_clicked = pyqtSignal()
-    export_clicked = pyqtSignal()
+    speed_down_clicked = Signal()
+    speed_up_clicked = Signal()
+    play_pause_clicked = Signal()
+    export_clicked = Signal()
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)

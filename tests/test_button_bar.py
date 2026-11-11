@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtCore import QPoint, QRect, QSize
-from PyQt6.QtGui import QIcon
+from PySide6.QtCore import QPoint, QRect, QSize
+from PySide6.QtGui import QIcon
 from shared_ui.chrome import family_stylesheet
 from shared_ui.colors import TEXT_PRIMARY
 from shared_ui.icon_geometry import ICONS, Polygon

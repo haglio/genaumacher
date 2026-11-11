@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtCore import QThread, Signal
 
 from genaumacher.export_pipeline import run_export
 
@@ -23,11 +23,11 @@ def connect_export(state: VideoState, dialog) -> ExportWorker:
 
 
 class ExportWorker(QThread):
-    stage_changed = pyqtSignal(str)
-    clip_progress = pyqtSignal(float)
-    normalize_progress = pyqtSignal(float)
-    audio_progress = pyqtSignal(float)
-    export_finished = pyqtSignal(bool, str)
+    stage_changed = Signal(str)
+    clip_progress = Signal(float)
+    normalize_progress = Signal(float)
+    audio_progress = Signal(float)
+    export_finished = Signal(bool, str)
 
     def __init__(self, state: VideoState, parent=None):
         super().__init__(parent)
