@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from PyQt6.QtGui import QImage
+from PySide6.QtGui import QImage
 
 from genaumacher.gui.frame_converter import bgr_to_qimage, rgb_to_qimage, scale_to_fit
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import QRectF, Qt
-from PyQt6.QtGui import QFont, QPainter
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtCore import QRectF, Qt
+from PySide6.QtGui import QFont, QPainter
+from PySide6.QtWidgets import QWidget
 from shared_ui.colors import BG_KEYCAP, BG_PRIMARY, BORDER_DEFAULT, TEXT_PRIMARY
 from shared_ui.fonts import FONT_UI, SIZE_SMALL, SIZE_TINY
 from shared_ui.spacing import BUTTON_GAP, BUTTON_PAD_H_TIGHT, GAP_DIALOG, GAP_SMALL

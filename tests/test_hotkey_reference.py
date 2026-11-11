@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from PyQt6.QtGui import QFont, QImage, QPainter
+from PySide6.QtGui import QFont, QImage, QPainter
 from shared_ui.colors import BG_KEYCAP, BG_PRIMARY
 from shared_ui.fonts import FONT_UI, SIZE_SMALL, SIZE_TINY
 

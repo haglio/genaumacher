@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QImage, QPixmap
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QImage, QPixmap
 
 
 def bgr_to_qimage(frame: np.ndarray) -> QImage:

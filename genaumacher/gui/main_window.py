@@ -4,9 +4,9 @@ import contextlib
 import os
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QKeyEvent, QPainter, QPen
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QKeyEvent, QPainter, QPen
+from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -104,7 +104,7 @@ def _button_row_of(*buttons: QWidget) -> QWidget:
 
 
 class GenaumacherMainWindow(QMainWindow):
-    closed = pyqtSignal()
+    closed = Signal()
 
     def __init__(self, state: VideoState, parent=None, *, preview: Preview | None = None):
         super().__init__(parent)

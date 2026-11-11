@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from PyQt6.QtGui import QPalette
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QApplication
 from shared_ui.colors import BG_SECONDARY, family_palette
 from shared_ui.palette import PREVIEW_INK
 from shared_ui.preview import Preview
@@ -195,7 +195,7 @@ class TestOnTick:
 
 class TestRun:
     def test_run_shows_the_window_and_starts_the_animation(self, live_app, ticked_within):
-        with patch.object(QApplication, "exec", return_value=0) as event_loop:
+        with patch.object(live_app._app, "exec", return_value=0) as event_loop:
             assert live_app.run() == 0
 
         event_loop.assert_called_once()
@@ -203,14 +203,14 @@ class TestRun:
         assert ticked_within(live_app.playback_timer.tick, 2000) is True
 
     def test_the_tick_is_wired_to_the_frame_update(self, live_app, ticked_within):
-        with patch.object(QApplication, "exec", return_value=0):
+        with patch.object(live_app._app, "exec", return_value=0):
             live_app.run()
 
         assert ticked_within(live_app.playback_timer.tick, 2000) is True
         assert live_app.window.scrubber.cursor_pos == 33
 
     def test_closing_the_window_stops_the_animation(self, live_app, ticked_within):
-        with patch.object(QApplication, "exec", return_value=0):
+        with patch.object(live_app._app, "exec", return_value=0):
             live_app.run()
         assert ticked_within(live_app.playback_timer.tick, 2000) is True
 

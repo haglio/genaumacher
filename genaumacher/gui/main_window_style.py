@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QPushButton, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QPushButton, QWidget
 from shared_ui.colors import RED, TEXT_SECONDARY
 from shared_ui.fonts import FONT_UI, SIZE_SMALL, make_font
 from shared_ui.spacing import BUTTON_PAD_H_TIGHT, BUTTON_PAD_V

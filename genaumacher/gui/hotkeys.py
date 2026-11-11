@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from genaumacher.bounds import contract_left, contract_right, extend_left, extend_right
 from genaumacher.editing import (

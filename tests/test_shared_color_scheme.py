@@ -5,8 +5,8 @@ import re
 from pathlib import Path
 
 import pytest
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QApplication
 from shared_ui import colors
 from shared_ui.colors import dress_application
 

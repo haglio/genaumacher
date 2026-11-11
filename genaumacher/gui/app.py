@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from shared_ui.colors import dress_application
 from shared_ui.preview import Preview
 from shared_ui.preview_icon import app_icon

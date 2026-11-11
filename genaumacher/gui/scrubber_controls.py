@@ -1,22 +1,22 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from genaumacher.loop_modes import LoopMode
 
 
 class ScrubberControls(QWidget):
-    extend_left_clicked = pyqtSignal()
-    contract_left_clicked = pyqtSignal()
-    extend_right_clicked = pyqtSignal()
-    contract_right_clicked = pyqtSignal()
-    shift_left_clicked = pyqtSignal()
-    shift_right_clicked = pyqtSignal()
-    mark_in_clicked = pyqtSignal()
-    mark_out_clicked = pyqtSignal()
-    wrap_clicked = pyqtSignal()
-    loop_mode_clicked = pyqtSignal()
+    extend_left_clicked = Signal()
+    contract_left_clicked = Signal()
+    extend_right_clicked = Signal()
+    contract_right_clicked = Signal()
+    shift_left_clicked = Signal()
+    shift_right_clicked = Signal()
+    mark_in_clicked = Signal()
+    mark_out_clicked = Signal()
+    wrap_clicked = Signal()
+    loop_mode_clicked = Signal()
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)

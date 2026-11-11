@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+from PySide6.QtCore import QObject, QTimer, Signal
 
 
 class PlaybackTimer(QObject):
-    tick = pyqtSignal()
+    tick = Signal()
 
     def __init__(self, parent: QObject | None = None):
         super().__init__(parent)

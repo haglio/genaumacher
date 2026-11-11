@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from PyQt6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog
 
 from genaumacher.gui.launcher_dialog import LauncherDialog
 from genaumacher.launch_choice import ClipWholeVideo, LoadSession, NewSession

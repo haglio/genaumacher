@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from PyQt6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QPushButton
 
 from genaumacher.gui.scrubber_controls import ScrubberControls
 
