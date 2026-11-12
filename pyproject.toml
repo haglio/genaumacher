@@ -26,7 +26,7 @@ dependencies = [
     "shared-ui @ git+https://github.com/haglio/shared_ui@v0.1.416",
     "numpy>=2.4,<3",
     "opencv-python>=4.8,<5",
-    "PySide6>=6.11.2,<6.12",
+    "PySide6>=6.12.0,<6.13",
 ]
 
 [project.optional-dependencies]
