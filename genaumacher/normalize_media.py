@@ -8,6 +8,7 @@ from fractions import Fraction
 import cv2
 
 from .normalize_options import NormalizeOptions
+from .video_encoder import encoder_arguments
 
 
 def _run_checked(cmd: list[str]) -> subprocess.CompletedProcess[str]:
@@ -62,6 +63,26 @@ def read_frames(path: str) -> list:
     return frames
 
 
+def encode_command(
+    *, width: int, height: int, fps: float, options: NormalizeOptions,
+    input_audio_path: str | None = None,
+) -> list[str]:
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "rawvideo",
+        "-pix_fmt", "bgr24",
+        "-s", f"{width}x{height}",
+        "-r", f"{fps:.12f}",
+        "-i", "-",
+    ]
+    if input_audio_path:
+        cmd += ["-i", input_audio_path, "-map", "0:v:0", "-map", "1:a:0?", "-shortest"]
+    else:
+        cmd += ["-an"]
+    return [*cmd, *encoder_arguments(qp=options.qp, preset=options.preset),
+            "-pix_fmt", options.pix_fmt, options.output]
+
+
 def encode_with_ffmpeg(
     frames: list,
     fps: float,
@@ -71,29 +92,9 @@ def encode_with_ffmpeg(
     if not shutil.which("ffmpeg"):
         raise RuntimeError("ffmpeg not found in PATH.")
 
-    h, w = frames[0].shape[:2]
-    cmd = [
-        "ffmpeg", "-y",
-        "-f", "rawvideo",
-        "-pix_fmt", "bgr24",
-        "-s", f"{w}x{h}",
-        "-r", f"{fps:.12f}",
-        "-i", "-",
-    ]
-
-    if input_audio_path:
-        cmd += ["-i", input_audio_path, "-map", "0:v:0", "-map", "1:a:0?", "-shortest"]
-    else:
-        cmd += ["-an"]
-
-    cmd += [
-        "-c:v", "libx264",
-        "-preset", options.preset,
-        "-crf", str(options.crf),
-        "-pix_fmt", options.pix_fmt,
-        options.output,
-    ]
-
+    height, width = frames[0].shape[:2]
+    cmd = encode_command(width=width, height=height, fps=fps, options=options,
+                         input_audio_path=input_audio_path)
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
         for frame in frames:

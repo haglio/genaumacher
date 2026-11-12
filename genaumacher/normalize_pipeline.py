@@ -21,7 +21,7 @@ from .sidecar import record_provenance
 logger = logging.getLogger(__name__)
 
 NORMALIZE_METHOD = "clip_postprocess"
-NORMALIZE_VERSION = "1"
+NORMALIZE_VERSION = "2"
 
 _ROUGH_SHARE_DONE_ONCE_DECODED = 0.2
 _ROUGH_SHARE_DONE_ONCE_FRAMES_BUILT = 0.6

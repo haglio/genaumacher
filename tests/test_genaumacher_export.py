@@ -14,10 +14,12 @@ from genaumacher.export_steps import (
     _parse_ffmpeg_clock,
     _run_ffmpeg_with_progress,
     export_full_audio_mp3,
+    export_raw_clip,
     run_normalize,
     validate_video_file,
 )
 from genaumacher.loop_modes import LoopMode
+from genaumacher.video_encoder import encoder_arguments
 
 
 class _Recorder:
@@ -336,3 +338,22 @@ class TestExportFullAudioMp3:
 
         assert ok is True
         assert str(out_path) in detail
+
+
+class TestExportRawClip:
+    def test_the_raw_clip_is_encoded_on_the_graphics_card_like_every_other_video_genau_makes(
+            self, tmp_path: Path, make_state):
+        asked = []
+
+        def _run(cmd, _seconds, _report):
+            asked.append(cmd)
+            return True, ""
+
+        with patch("genaumacher.export_steps.find_tool", side_effect=lambda name: name), \
+             patch("genaumacher.export_steps._run_ffmpeg_with_progress", side_effect=_run), \
+             patch("genaumacher.export_steps.validate_video_file", return_value=(True, "")):
+            ok, _detail = export_raw_clip(make_state(), tmp_path / "raw.mp4", _Recorder())
+
+        assert ok is True
+        (cmd,) = asked
+        assert cmd[cmd.index("-c:v"):cmd.index("-pix_fmt")] == encoder_arguments()

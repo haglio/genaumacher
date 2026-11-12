@@ -53,15 +53,15 @@ class TestTheDefaultsHaveOneHome:
             "clip in.mp4", "-o", "clip out.mp4", "--loop-mode", "base-tip",
             "--bridge-ms", "120", "--bridge-frames", "4", "--mode", "flow",
             "--append", "--symmetric-blend", "3", "--seam-ms", "0",
-            "--copy-audio", "--crf", "20", "--preset", "veryfast",
+            "--copy-audio", "--qp", "20", "--preset", "p4",
             "--pix-fmt", "yuv444p", "--max-mb", "2.5",
         ])
 
         assert parsed == NormalizeOptions(
             input="clip in.mp4", output="clip out.mp4", loop_mode="base-tip",
             bridge_ms=120.0, bridge_frames=4, mode="flow", keep_length=False,
-            symmetric_blend=3, seam_ms=0.0, copy_audio=True, crf=20,
-            preset="veryfast", pix_fmt="yuv444p", max_mb=2.5,
+            symmetric_blend=3, seam_ms=0.0, copy_audio=True, qp=20,
+            preset="p4", pix_fmt="yuv444p", max_mb=2.5,
         )
 
     def test_the_help_text_quotes_the_default_rather_than_repeating_it(self, capsys):

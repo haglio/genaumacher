@@ -189,7 +189,7 @@ class _RecordingEncoder:
             "frame_count": len(frames),
             "shape": frames[0].shape[:2],
             "fps": fps,
-            "crf": options.crf,
+            "qp": options.qp,
             "preset": options.preset,
             "pix_fmt": options.pix_fmt,
             "input_audio_path": input_audio_path,
@@ -243,7 +243,7 @@ def test_normalize_clip_reports_the_clip_it_actually_encoded(tmp_path, run_pipel
         "encode_attempts": 1,
         "final_scale": 1.0,
         "final_size_bytes": 16,
-        "target_max_mb": 1.0,
+        "target_max_mb": 1.5,
         "output_path": options.output,
     }
     assert len(encoder.calls) == 1
@@ -316,10 +316,10 @@ def test_normalize_clip_keeps_the_input_audio_only_when_asked(
 
 
 def test_normalize_clip_passes_the_encoder_settings_through(tmp_path, run_pipeline):
-    _summary, encoder = run_pipeline(_options(tmp_path, crf=30, preset="veryfast", pix_fmt="yuv444p"))
+    _summary, encoder = run_pipeline(_options(tmp_path, qp=30, preset="p4", pix_fmt="yuv444p"))
 
-    assert encoder.calls[0]["crf"] == 30
-    assert encoder.calls[0]["preset"] == "veryfast"
+    assert encoder.calls[0]["qp"] == 30
+    assert encoder.calls[0]["preset"] == "p4"
     assert encoder.calls[0]["pix_fmt"] == "yuv444p"
 
 
