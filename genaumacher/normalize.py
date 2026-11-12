@@ -83,15 +83,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Try to keep input audio (usually not ideal for seamless loops)",
     )
     ap.add_argument(
-        "--crf",
+        "--qp",
         type=int,
-        default=NormalizeOptions.crf,
-        help="libx264 CRF (default: %(default)s)",
+        default=NormalizeOptions.qp,
+        help="NVENC constant quantizer (default: %(default)s)",
     )
     ap.add_argument(
         "--preset",
         default=NormalizeOptions.preset,
-        help="libx264 preset (default: %(default)s)",
+        help="NVENC preset (default: %(default)s)",
     )
     ap.add_argument(
         "--pix-fmt",

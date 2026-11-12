@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .loop_modes import LoopMode
+from .video_encoder import PRESET, QP
 
 
 @dataclass(frozen=True)
@@ -17,7 +18,7 @@ class NormalizeOptions:
     symmetric_blend: int = 0
     seam_ms: float = 250.0
     copy_audio: bool = False
-    crf: int = 12
-    preset: str = "slow"
+    qp: int = QP
+    preset: str = PRESET
     pix_fmt: str = "yuv420p"
-    max_mb: float = 1.0
+    max_mb: float = 1.5

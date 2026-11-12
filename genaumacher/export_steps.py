@@ -13,6 +13,7 @@ from .export_progress import ExportProgressListener, fraction_in
 from .paths import NORMALIZE_SCRIPT
 from .state import VideoState
 from .timecode import parse_timestamp
+from .video_encoder import encoder_arguments
 
 _SMALLEST_VIDEO_BYTES = 2048
 
@@ -108,7 +109,7 @@ def export_raw_clip(state: VideoState, out_path: Path, progress: ExportProgressL
     cmd = [
         ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-progress", "pipe:1", "-nostats", "-stats_period", "0.1",
         "-ss", f"{seek_sec:.6f}", "-i", state.path, "-map", "0:v:0", "-vf", vf, "-r", f"{state.fps:.12g}", "-an",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out_path),
+        *encoder_arguments(), "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out_path),
     ]
     progress.stage("exporting raw silent clip")
     ok, detail = _run_ffmpeg_with_progress(cmd, clip_duration, progress.clip)
