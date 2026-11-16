@@ -33,14 +33,12 @@ os.environ[haglio_settings.SETTINGS_ENV] = haglio_settings.THE_EXAMPLE
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
+from shared_ui.gui_thread_collection import the_application
 
 
 @pytest.fixture(scope="session", autouse=True)
 def qapp():
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication(sys.argv)
-    return app
+    return the_application(QApplication, sys.argv)
 
 
 @pytest.fixture(autouse=True, scope="session")

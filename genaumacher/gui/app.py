@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QApplication
 from shared_ui.colors import dress_application
+from shared_ui.gui_thread_collection import the_application
 from shared_ui.preview import Preview
 from shared_ui.preview_icon import app_icon
 
@@ -23,9 +24,7 @@ class GenaumacherApp:
 
         # app.main() set the AppUserModelID Windows groups the taskbar button by.
 
-        self._app = QApplication.instance()
-        if self._app is None:
-            self._app = QApplication(sys.argv)
+        self._app = the_application(QApplication, sys.argv)
         self._app.setApplicationName("Genaumacher")
         dress_application(self._app)
 
