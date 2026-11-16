@@ -70,8 +70,9 @@ def main() -> int:
     try:
         # Qt loads here, so a failure to load it reaches the handler below.
         from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
+        from shared_ui.gui_thread_collection import the_application  # noqa: PLC0415
 
-        _app = QApplication.instance() or QApplication(sys.argv)
+        _app = the_application(QApplication, sys.argv)
         _set_the_icon_the_launcher_dialog_inherits(_app, preview)
         from shared_ui.loading_window import Loading, LoadingCanceled  # noqa: PLC0415
 
@@ -95,8 +96,9 @@ def main() -> int:
         try:
             # What failed may be the import of Qt itself.
             from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
+            from shared_ui.gui_thread_collection import the_application  # noqa: PLC0415
 
-            _app = QApplication.instance() or QApplication(sys.argv)
+            _app = the_application(QApplication, sys.argv)
             QMessageBox.critical(None, window_title("Genaumacher", preview), f"ERROR: {exc}")
         except Exception:
             print(f"ERROR: {exc}", file=sys.stderr)
