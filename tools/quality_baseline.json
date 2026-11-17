@@ -6,5 +6,8 @@
   "private_imports": {},
   "private_reaches": {},
   "prose_lines": {},
-  "trailing_comments": {}
+  "trailing_comments": {},
+  "wall_clock_waits": {
+    "tests/conftest.py": 1
+  }
 }
