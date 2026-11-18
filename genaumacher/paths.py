@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path, PureWindowsPath
 
 from app_support import haglio_settings
-from app_support.flick_folder import flat_flicks_in, flicks_folder_in, vr_flicks_in
+from app_support.flick_folder import flicks_folder_in, non_ai_flicks_in, vr_flicks_in
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = PACKAGE_DIR.parent
@@ -34,7 +34,7 @@ def _genau_flicks_dir() -> Path:
 
 
 def flicks_dir() -> Path:
-    return flat_flicks_in(_genau_flicks_dir()) / "non_AI"
+    return non_ai_flicks_in(_genau_flicks_dir())
 
 
 def vr_flicks_dir() -> Path:
