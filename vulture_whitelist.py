@@ -3,6 +3,7 @@ from __future__ import annotations
 # Qt calls these from its event loop.
 _.paintEvent
 _.mousePressEvent
+_.mouseMoveEvent
 
 # Read only by the tests, which vulture does not scan.
 _.last_saved_payload
