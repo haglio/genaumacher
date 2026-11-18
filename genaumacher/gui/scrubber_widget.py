@@ -70,8 +70,14 @@ class ScrubberWidget(QWidget):
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
-            idx = self.index_for_x(int(event.position().x()))
-            self.cursor_jumped.emit(idx)
+            self._jump_to(event.position().x())
+
+    def mouseMoveEvent(self, event) -> None:
+        if event.buttons() & Qt.MouseButton.LeftButton:
+            self._jump_to(event.position().x())
+
+    def _jump_to(self, x: float) -> None:
+        self.cursor_jumped.emit(self.index_for_x(int(x)))
 
     def paintEvent(self, event) -> None:
         p = QPainter(self)

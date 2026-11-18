@@ -109,6 +109,32 @@ class TestClickSignal:
         assert results == []
 
 
+    def test_a_drag_emits_each_frame_it_passes(self, widget):
+        widget.set_bounds(0, 100)
+        results = []
+        widget.cursor_jumped.connect(appending_to(results))
+
+        widget.mousePressEvent(_press_in_the_middle_of(widget, Qt.MouseButton.LeftButton))
+        widget.mouseMoveEvent(_move_to(widget, widget.width() * 0.75, held=Qt.MouseButton.LeftButton))
+        widget.mouseMoveEvent(_move_to(widget, widget.width() * 2, held=Qt.MouseButton.LeftButton))
+
+        assert results == [50, 75, 100]
+
+    def test_moving_without_the_button_held_emits_nothing(self, widget):
+        widget.set_bounds(0, 100)
+        results = []
+        widget.cursor_jumped.connect(appending_to(results))
+
+        widget.mouseMoveEvent(_move_to(widget, widget.width() * 0.75, held=Qt.MouseButton.NoButton))
+
+        assert results == []
+
+
+def _move_to(widget, x, *, held):
+    point = QPointF(x, widget.height() / 2)
+    return QMouseEvent(QMouseEvent.Type.MouseMove, point, point, Qt.MouseButton.NoButton, held,
+                       Qt.KeyboardModifier.NoModifier)
+
 _MID_HEIGHT_CLEAR_OF_THE_TICK_DOTS_ALONG_BOTH_EDGES = 12
 
 
