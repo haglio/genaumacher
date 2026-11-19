@@ -8,8 +8,11 @@ from unittest.mock import MagicMock, patch
 import cv2
 import numpy as np
 import pytest
+from app_support.testing import error_popup
 from PySide6.QtWidgets import QDialog
+from shared_ui.alert import Level
 from shared_ui.preview import Preview
+from shared_ui.testing import alert_shown
 
 from genaumacher import create_session as create_session_module
 from genaumacher import session_launch, session_persistence, state_factory
@@ -272,7 +275,21 @@ def test_a_preview_that_crashes_says_which_preview_it_was():
          patch("genaumacher.app._claim_the_taskbar_identity_before_the_first_window"), \
          patch("genaumacher.app._name_this_process"), \
          patch("genaumacher.app._init_logger"), \
-         patch("PySide6.QtWidgets.QMessageBox.critical") as critical:
+         alert_shown() as shown:
         assert app_main() == 1
 
-    assert critical.call_args.args[1] == "Genaumacher \u2014 preview of the new loop"
+    assert shown.call_args.args == ("Genaumacher \u2014 preview of the new loop", "ERROR: no session")
+    assert shown.call_args.kwargs["level"] is Level.ERROR
+
+
+def test_a_crash_the_family_window_cannot_show_still_reaches_the_screen_as_a_windows_popup():
+    with patch("genaumacher.app.preview_of", return_value=Preview(feature="the new loop")), \
+         patch("genaumacher.app.launch_state", side_effect=RuntimeError("no session")), \
+         patch("genaumacher.app._claim_the_taskbar_identity_before_the_first_window"), \
+         patch("genaumacher.app._name_this_process"), \
+         patch("genaumacher.app._init_logger"), \
+         alert_shown(side_effect=RuntimeError("no Qt")), \
+         error_popup() as popup:
+        assert app_main() == 1
+
+    popup.assert_called_once_with("Genaumacher \u2014 preview of the new loop", "ERROR: no session")
