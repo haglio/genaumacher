@@ -61,6 +61,25 @@ def _name_this_process() -> None:
         "Genaumacher", interpreter="python.exe")
 
 
+def _show_the_crash(title: str, message: str, preview: Preview | None, logger: logging.Logger) -> None:
+    try:
+        # What failed may be the import of Qt itself.
+        from PySide6.QtWidgets import QApplication  # noqa: PLC0415
+        from shared_ui.alert import Level, show_alert  # noqa: PLC0415
+        from shared_ui.gui_thread_collection import the_application  # noqa: PLC0415
+
+        _app = the_application(QApplication, sys.argv)
+        show_alert(title, message, icon=app_icon(genaumacher_icon_path(), preview), level=Level.ERROR)
+    except Exception:
+        logger.exception("Could not open the alert dialog: %s", title)
+        try:
+            from app_support.win32 import show_error_popup  # noqa: PLC0415
+
+            show_error_popup(title, message)
+        except Exception:
+            print(message, file=sys.stderr)
+
+
 def main() -> int:
     preview = preview_of(PROJECT_DIR)
     _claim_the_taskbar_identity_before_the_first_window(preview)
@@ -69,7 +88,7 @@ def main() -> int:
     _warn_at_start_about_a_missing_interpolator(logger)
     try:
         # Qt loads here, so a failure to load it reaches the handler below.
-        from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
+        from PySide6.QtWidgets import QApplication  # noqa: PLC0415
         from shared_ui.gui_thread_collection import the_application  # noqa: PLC0415
 
         _app = the_application(QApplication, sys.argv)
@@ -93,13 +112,5 @@ def main() -> int:
         return genaumacher_app.run()
     except Exception as exc:
         logger.exception("Genaumacher crashed")
-        try:
-            # What failed may be the import of Qt itself.
-            from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: PLC0415
-            from shared_ui.gui_thread_collection import the_application  # noqa: PLC0415
-
-            _app = the_application(QApplication, sys.argv)
-            QMessageBox.critical(None, window_title("Genaumacher", preview), f"ERROR: {exc}")
-        except Exception:
-            print(f"ERROR: {exc}", file=sys.stderr)
+        _show_the_crash(window_title("Genaumacher", preview), f"ERROR: {exc}", preview, logger)
         return 1
