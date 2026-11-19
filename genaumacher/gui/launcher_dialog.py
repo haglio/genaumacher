@@ -23,7 +23,7 @@ from genaumacher.paths import SESSIONS_DIR, vr_video_dir
 class LauncherDialog(QDialog):
     def __init__(self, parent=None, *, last_session: str = ""):
         super().__init__(parent)
-        self.setWindowTitle("Genaumacher Launcher")
+        self.setWindowTitle("Genaumacher launcher")
         self.setMinimumWidth(500)
 
         self.load_radio = QRadioButton("Load existing session")
@@ -120,7 +120,7 @@ class LauncherDialog(QDialog):
     def _browse_session(self) -> None:
         start_dir = str(SESSIONS_DIR) if SESSIONS_DIR.is_dir() else ""
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select Session JSON", start_dir, "JSON Files (*.json)"
+            self, "Select session JSON", start_dir, "JSON files (*.json)"
         )
         if path:
             self.session_json_edit.setText(path)
@@ -132,9 +132,9 @@ class LauncherDialog(QDialog):
     def _browse_video(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Select Video File",
+            "Select video file",
             "",
-            "Video Files (*.mp4 *.mkv *.mov *.avi *.webm)",
+            "Video files (*.mp4 *.mkv *.mov *.avi *.webm)",
         )
         if path:
             self.video_file_edit.setText(path)
@@ -142,9 +142,9 @@ class LauncherDialog(QDialog):
     def _browse_clip_whole(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Select Video to Clip Whole",
+            "Select video to clip whole",
             "",
-            "Video Files (*.mp4 *.mkv *.mov *.avi *.webm)",
+            "Video files (*.mp4 *.mkv *.mov *.avi *.webm)",
         )
         if path:
             self._clip_whole_file = path

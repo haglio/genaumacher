@@ -22,7 +22,7 @@ def open_the_loading_screen(preview: Preview | None):
     from shared_ui.loading_process import LoadingProcess  # noqa: PLC0415
 
     return LoadingProcess.open(
-        caption="Genaumacher Loading", wordmark="Genaumacher", icon=genaumacher_icon_path(), preview=preview,
+        caption="Genaumacher loading", wordmark="Genaumacher", icon=genaumacher_icon_path(), preview=preview,
         steps=STEPS, cancel_hint="Press Esc to cancel opening Genaumacher",
         app_id=taskbar_identity(APP_USER_MODEL_ID, preview) if sys.platform == "win32" else None,
     )

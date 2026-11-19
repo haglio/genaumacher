@@ -56,7 +56,7 @@ def test_the_loading_screen_runs_in_a_process_of_its_own_wearing_genaumachers_ta
         app.open_the_loading_screen(None)
 
     opened.assert_called_once_with(
-        caption="Genaumacher Loading", wordmark="Genaumacher", icon=genaumacher_icon_path(), preview=None,
+        caption="Genaumacher loading", wordmark="Genaumacher", icon=genaumacher_icon_path(), preview=None,
         steps=app.STEPS, cancel_hint="Press Esc to cancel opening Genaumacher",
         app_id=app.APP_USER_MODEL_ID)
 
