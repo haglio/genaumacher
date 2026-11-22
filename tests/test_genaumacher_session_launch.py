@@ -20,6 +20,7 @@ from genaumacher.app import main as app_main
 from genaumacher.launch_choice import ClipWholeVideo, LoadSession, NewSession
 from genaumacher.paths import PROJECT_DIR
 from genaumacher.session_launch import build_clip_whole_state, build_state, launch_state
+from genaumacher.window_icons import genaumacher_icon_path
 
 _FPS_THE_FAKE_FFPROBE_REPORTS = 30.0
 
@@ -292,4 +293,5 @@ def test_a_crash_the_family_window_cannot_show_still_reaches_the_screen_as_a_win
          error_popup() as popup:
         assert app_main() == 1
 
-    popup.assert_called_once_with("Genaumacher \u2014 preview of the new loop", "ERROR: no session")
+    popup.assert_called_once_with("Genaumacher \u2014 preview of the new loop", "ERROR: no session",
+                                  app_icon=genaumacher_icon_path())
