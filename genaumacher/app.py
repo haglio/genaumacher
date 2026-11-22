@@ -75,7 +75,7 @@ def _show_the_crash(title: str, message: str, preview: Preview | None, logger: l
         try:
             from app_support.win32 import show_error_popup  # noqa: PLC0415
 
-            show_error_popup(title, message)
+            show_error_popup(title, message, app_icon=genaumacher_icon_path())
         except Exception:
             print(message, file=sys.stderr)
 
