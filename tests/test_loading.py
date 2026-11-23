@@ -3,6 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from shared_ui.loading_window import LoadingCanceled
+from shared_ui.preview import Preview, window_title
 from shared_ui.testing import loading_at_the_click, loading_process_opened
 
 from genaumacher import app
@@ -58,7 +59,7 @@ def test_the_loading_screen_runs_in_a_process_of_its_own_wearing_genaumachers_ta
     opened.assert_called_once_with(
         caption="Genaumacher loading", wordmark="Genaumacher", icon=genaumacher_icon_path(), preview=None,
         steps=app.STEPS, cancel_hint="Press Esc to cancel opening Genaumacher",
-        app_id=app.APP_USER_MODEL_ID)
+        app_id=app.APP_USER_MODEL_ID, taskbar=None)
 
 
 def test_off_windows_the_loading_screen_wears_no_taskbar_identity(monkeypatch):
@@ -68,3 +69,12 @@ def test_off_windows_the_loading_screen_wears_no_taskbar_identity(monkeypatch):
         app.open_the_loading_screen(None)
 
     assert opened.call_args.kwargs["app_id"] is None
+
+
+def test_a_previews_loading_screen_wears_its_own_letter_on_its_taskbar_button():
+    with loading_process_opened() as opened:
+        app.open_the_loading_screen(Preview("the example"))
+
+    button = opened.call_args.kwargs["taskbar"]
+    assert button.name == window_title("Genaumacher", Preview("the example"))
+    assert button.icon.is_file()
