@@ -8,6 +8,7 @@ from app_support.process_identity import ProcessNamer
 from app_support.win32 import set_app_user_model_id, stamp_pinned_shortcuts
 from shared_ui.preview import Preview, preview_of, taskbar_identity, window_title
 from shared_ui.preview_icon import app_icon
+from shared_ui.preview_taskbar import preview_on_the_taskbar
 
 from .interpolator_environment import complaints
 from .paths import PROJECT_DIR
@@ -25,6 +26,8 @@ def open_the_loading_screen(preview: Preview | None):
         caption="Genaumacher loading", wordmark="Genaumacher", icon=genaumacher_icon_path(), preview=preview,
         steps=STEPS, cancel_hint="Press Esc to cancel opening Genaumacher",
         app_id=taskbar_identity(APP_USER_MODEL_ID, preview) if sys.platform == "win32" else None,
+        taskbar=preview_on_the_taskbar("Genaumacher", genaumacher_icon_path(), preview, PROJECT_DIR,
+                                       PROJECT_DIR / "state"),
     )
 
 
