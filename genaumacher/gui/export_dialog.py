@@ -14,7 +14,7 @@ class ExportDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Exporting")
-        self.setWindowFlags(Qt.WindowType.Tool | Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.WindowType.Window)
         self.setFixedWidth(450)
 
         self.stage_label = QLabel("Preparing export...")
