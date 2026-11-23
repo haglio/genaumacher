@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from PySide6.QtCore import Qt
 
 from genaumacher.gui.export_dialog import ExportDialog
 
@@ -11,6 +12,10 @@ def dialog():
 
 
 class TestConstruction:
+    def test_it_is_a_normal_window(self, dialog):
+        assert dialog.windowType() == Qt.WindowType.Window, (
+            "a tool window wears Windows' thin title bar and small X, unlike every other Haglio window")
+
     def test_has_three_progress_bars(self, dialog):
         assert dialog.clip_bar is not None
         assert dialog.normalize_bar is not None
