@@ -65,11 +65,11 @@ def _show_the_crash(title: str, message: str, preview: Preview | None, logger: l
     try:
         # What failed may be the import of Qt itself.
         from PySide6.QtWidgets import QApplication  # noqa: PLC0415
-        from shared_ui.alert import Level, show_error  # noqa: PLC0415
+        from shared_ui.alert import show_error  # noqa: PLC0415
         from shared_ui.gui_thread_collection import the_application  # noqa: PLC0415
 
         _app = the_application(QApplication, sys.argv)
-        show_error(title, message, icon=app_icon(genaumacher_icon_path(), preview), level=Level.ERROR)
+        show_error(title, message, icon=app_icon(genaumacher_icon_path(), preview))
     except Exception:
         logger.exception("Could not open the alert dialog: %s", title)
         try:

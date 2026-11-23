@@ -280,7 +280,7 @@ def test_a_preview_that_crashes_says_which_preview_it_was():
         assert app_main() == 1
 
     assert shown.call_args.args == ("Genaumacher \u2014 preview of the new loop", "ERROR: no session")
-    assert shown.call_args.kwargs["level"] is Level.ERROR
+    assert shown.call_args.kwargs.get("level", Level.ERROR) is Level.ERROR
 
 
 def test_a_crash_the_family_window_cannot_show_still_reaches_the_screen_as_a_windows_popup():
